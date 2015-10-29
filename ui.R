@@ -94,8 +94,8 @@ shinyUI(navbarPage("",
                                                  ),
                                                  fluidRow(
                                                    column(4, uiOutput("Go")),
-                                                   column(4, uiOutput("refresh_free")),
-                                                   column(4, uiOutput("ok"))
+                                                   column(4, uiOutput("refresh_free"))
+                                                   #column(4, uiOutput("ok"))
                                                    
                                                  )
                                                )

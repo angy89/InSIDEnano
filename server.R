@@ -178,9 +178,9 @@ shinyServer(function(input, output,session){
         actionButton(inputId = "Go",label  = "Start",icon("circle-arrow-right", lib = "glyphicon"))
       })
       
-      output$ok = renderUI({
-        actionButton(inputId = "ok", label = "Stop computation")
-      })
+#       output$ok = renderUI({
+#         actionButton(inputId = "ok", label = "Stop computation")
+#       })
       
       output$refresh_free = renderUI({
         actionButton(inputId = "refresh_free", label  = "Refresh",icon("refresh", lib = "glyphicon"))
