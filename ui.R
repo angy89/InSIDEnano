@@ -287,23 +287,21 @@ shinyUI(navbarPage("",
                             <li>Diseases</li>
                             <li>Genes</li>
                             </ul>"),
-                       p("Data are stored in a network based structure, where the nodes are nanomaterials, drugs, 
-                         chemicals and diseases. The similarity between the nodes is 
-                         evaluated based on gene expression value."),
-                        p("When loaded "),
+                        p("When loaded the home page will appear. On the left user can login to the service. Whitout login analisy can't be performed."),
                        img(src='home.png',width = "80%"),
                         p("From the home page the following operation can be performed:"),
-                      img(src="start_button.png",width = "80%"),
+                      img(src="start_button.png",width = "70%"),
                        HTML("<ul>
-                            <li>Button Query or tab Start Analisys allows the user to query the network in order to find interactions between items</li>
-                            <li>Button Browse Item Network or tab Networks allows the user to visualize the full database of apply some filter</li>
-                            <li>Button Browse Gene Network or tab Gene Network allows the user to visualiza gene network interaction. Genes are grouped by KEGG Pathways.</li>
+                            <li>Free Query allows the user to query the network in order to find interactions between items</li>
+                            <li>Conditional Query allows the user to query the network in order to find interactions between items depending on specific thresholds</li>
+                            <li>Browse Phenotypic Network or tab Networks allows the user to visualize the full database of apply some filter</li>
+                            <li>Browse Gene Network or tab Gene Network allows the user to visualiza gene network interaction. Genes are grouped by KEGG Pathways.</li>
                           </ul>"),
-                       p("In the query section the user can choose between two different kind of query. The former, called free query, allows the user to choose which intems he wants to analyze and a threshold that indicates how strongly the items are connected"),
+                       p("The Free query tool, allows the user to choose which intems he wants to analyze and a threshold that indicates how strongly the items are connected"),
                        img(src = "free_analysis_multiple.png",width = "80%"),
                        p("The system will find out all the connection between the items and their neigboorg in the network. Then it will evaluate the different kinds of connection between nanomaterials, drugs, diseases and chemicals."),
-                       p("The latter, called Filter Analysis, allows the user to query the network by applying different filters. The user can specify each items for each data type, can specify how strongly they are connected and how many of them must be interacting each other in the final results."),
-                       img(src = "start_filter_analisys.png",width = "80%"),
+                       p("The Filter Analysis tool, allows the user to query the network by applying different filters. The user can specify each items for each data type, can specify how strongly they are connected and how many of them must be interacting each other in the final results."),
+                       img(src = "start_filter_analisys.png",width = "70%"),
                        p("Query results are available in tab menu Network Analysis. This menu is divided into two sub-menu. The former (Items Subnetwor) is a visualization tool where the subnetwork related to the query is displayed."),
                        img(src = "network_analisys.png",width = "80%"),
                        #img(src = "network_analisys_stat.png",width = "80%"),
