@@ -1,9 +1,9 @@
-source("./my_igraph_function.R",local = FALSE)
-load("./entities.RData")
-load("./join10.RData")
+source(paste(APP_PATH,"my_igraph_function.R",sep=""),local = FALSE)
+load(paste(APP_PATH,"entities.RData",sep=""))
+load(paste(APP_PATH,"join10.RData",sep=""))
 join10 = unique(join10)
 join10$ATC_lev1 = substr(x = join10$code,start = 1,stop = 1)
-load("./chemicals_classes.RData")
+load(paste(APP_PATH,"chemicals_classes.RData",sep=""))
 
 
 selected_nodes = c()

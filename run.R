@@ -1,4 +1,5 @@
-setwd("~/Scrivania/")
+APP_PATH = "/home/aserra/InsideNano/"
+setwd(APP_PATH)
 
 pkgTest <- function(x)
 {
@@ -14,6 +15,11 @@ pkgTest("igraph")
 pkgTest("plotrix")
 pkgTest("plyr")
 pkgTest("ggplot2")
+pkgTest("httr")
+library(httr)
+
+
+set_config( config( ssl_verifypeer = 0L ) )
 
 if(!require(shiny)){
   if (!require("devtools"))
@@ -41,4 +47,5 @@ library(plotrix)
 library(plyr)
 library(ggplot2)
 
-runApp("inside_nano")
+#runApp("inside_nano")
+runGitHub( "InsideNano", "angy89") 

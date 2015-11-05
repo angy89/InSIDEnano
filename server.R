@@ -231,14 +231,19 @@ shinyServer(function(input, output,session){
       })
       
       withProgress(message = 'Progress...', min = 1,max = 5, {
-        load("./graph_without_genes_also_intra_classes_edges_with_properties80.RData") #prima CLR
+        load(paste(APP_PATH,"graph_without_genes_also_intra_classes_edges_with_properties80.RData",sep=""))
+        #load("./graph_without_genes_also_intra_classes_edges_with_properties80.RData") #prima CLR
         incProgress(1, detail = "Data Loaded 1/4")
-        load("./graph_without_genes_also_intra_classes_edges_network_estimation80_2.RData")#dopo CLR
+        
+        load(paste(APP_PATH,"graph_without_genes_also_intra_classes_edges_network_estimation80_2.RData",sep=""))
         incProgress(1, detail = "Data Loaded 2/4")
-        load("./gene_network_KEGG.RData")
+        
+        load(paste(APP_PATH,"gene_network_KEGG.RData",sep=""))
         incProgress(1, detail = "Data Loaded 3/4")
-        load("./big_net_with_chemical_up_down80_2.RData")
+       
+        load(paste(APP_PATH,"big_net_with_chemical_up_down80_2.RData",sep=""))
         incProgress(1, detail = "Data Loaded 3/4")
+
         incProgress(1, detail = "Data Loaded 4/4")
         incProgress(1, detail = "Waiting For input!")
         
