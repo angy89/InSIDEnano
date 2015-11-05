@@ -1,4 +1,4 @@
-source(paste(APP_PATH,"my_igraph_function.R",sep=""),local = FALSE)
+source("./my_igraph_function.R",local = FALSE)
 load(paste(APP_PATH,"entities.RData",sep=""))
 load(paste(APP_PATH,"join10.RData",sep=""))
 join10 = unique(join10)
