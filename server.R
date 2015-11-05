@@ -4591,7 +4591,7 @@ if(DEBUGGING){
         geni_toPlot = igraph::induced.subgraph(graph = g_geni2,vids = V(g_geni2)$name[good_index])
         
         
-        geni_toPlot = delete_vertices(graph = geni_toPlot,v = which(igraph::degree(geni_toPlot)<1))
+        geni_toPlot = delete.vertices(graph = geni_toPlot,v = which(igraph::degree(geni_toPlot)<1))
         data_frame = get.data.frame(x = geni_toPlot,what = "both")
         edges = data_frame$edges
         edges$value = round(abs(edges$weight * 10),digits = 0)
