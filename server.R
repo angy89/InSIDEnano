@@ -376,7 +376,7 @@ shinyServer(function(input, output,session){
           fluidRow(
             column(9, 
                    selectizeInput(
-                     'gene_nano_query', label = "Select the nanomaterial to start the analysis", choices = c(nano), multiple = TRUE,selected="MWCNT",
+                     'gene_nano_query', label = "Select the nanomaterial to start the analysis", choices = c(nano), multiple = FALSE,selected="MWCNT",
                      options = list(create = TRUE)
                    )       
             )
@@ -384,7 +384,7 @@ shinyServer(function(input, output,session){
           fluidRow(
             column(9, 
                    selectizeInput(
-                     'gene_disease_query', label = "Select the disease to start the analysis", choices = c(disease), multiple = TRUE,selected="Asthma",
+                     'gene_disease_query', label = "Select the disease to start the analysis", choices = c(disease), multiple = FALSE,selected="Asthma",
                      options = list(create = TRUE)
                    )       
             )
@@ -398,8 +398,71 @@ shinyServer(function(input, output,session){
       
       output$gene_net_page4 = renderUI({
         mainPanel(
-          fluidRow(column(12, wellPanel(forceNetworkOutput("geneNetwork"))))   
+          fluidRow(column(12, wellPanel(forceNetworkOutput("geneNetwork_query"))))   
         )
+      })
+      
+      output$geneNetwork_query = renderForceNetwork({
+        
+        nano_query = input$gene_nano_query
+        disease_query = input$gene_disease_query
+        drug_perc = input$th_gene_query
+        
+        validate(
+          need(input$gene_nano_query != "", "Please select a nano")
+        )
+        
+        validate(
+          need(input$gene_disease_query != "", "Please select a disease")
+        )
+        
+        if(DEBUGGING)
+          cat("Query from ",input$gene_nano_query ,input$gene_disease_query,"to: ","\n")
+        
+      
+        geni_toPlot = subgraph_nano_disease = function(g,from_nano = nano_query,to_disease=disease_query,drug_perc = drug_perc/100)
+          
+        data_frame = get.data.frame(x = geni_toPlot,what = "both")
+        edges = data_frame$edges
+        edges$value = round(abs(edges$weight * 10),digits = 0)
+        colnames(edges) = c("source","target","weight","value")
+        
+        vertices = data_frame$vertices
+        vertices$size = igraph::degree(geni_toPlot)
+        colnames(vertices) = c("name","group","type","size")
+        
+        
+        for(i in 1:dim(edges)[1]){
+          edges[i,"source"] = which(vertices[,"name"] %in% edges[i,"source"]) - 1
+          edges[i,"target"] = which(vertices[,"name"] %in% edges[i,"target"]) - 1
+        }
+        
+        vertices$name = as.factor(vertices$name)
+        vertices$group = as.factor(vertices$group)
+        vertices$size = as.numeric(vertices$size)
+        vertices$type = as.factor(vertices$type)
+        
+        edges$source = as.integer(edges$source)
+        edges$target  = as.integer(edges$target)
+        edges$value = as.integer(edges$value)
+        
+        MyClickScript <- 
+          '      d3.select(this).select("circle").transition()
+        .duration(750)
+        .attr("r", 30)'
+        
+        MyClickScript2 <- 
+          'd3.select(this).select(dLink.target).select("circle").transition().duration(750).attr("r",30),
+        d3.select(dLink.target).select("circle").transition().duration(750).attr("r",30)
+        '
+        
+        forceNetwork(Links = edges, Nodes = vertices,
+                     Source = "source", Target = "target",
+                     Value = "value", NodeID = "name",Nodesize="size",
+                     zoom = TRUE,opacity = 0.85,fontSize = 10,Group = "group",
+                     legend = TRUE, height = input$gene_width,width =input$gene_height, 
+                     clickAction = MyClickScript,charge = -input$gene_repulserad,
+                     linkDistance = JS(paste0("function(d){return d.value*",input$gene_length,"}")))
       })
       
       
@@ -4575,6 +4638,8 @@ if(DEBUGGING){
         pie(slices, labels = lbls, main="Network statistics",col = rainbow(length(table(items_type))))
         
       })
+
+     
       
       output$geneNetwork = renderForceNetwork({
         

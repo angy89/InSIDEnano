@@ -1,4 +1,4 @@
-subgraph_nano_disease = function(g,from_nano = "TiO2",to_disease="Alzheimer Disease",drug_perc = 0.99){
+subgraph_nano_disease = function(g,from_nano = "MWCNT",to_disease="Asthma",drug_perc = 0.99){
   library(org.Hs.eg.db)
   library(annotate)
   library(igraph)
@@ -141,7 +141,7 @@ subgraph_nano_disease = function(g,from_nano = "TiO2",to_disease="Alzheimer Dise
   labels[labels %in% "grey"] = paste(E(g2)$weight[labels %in% "grey"],"Genes") 
   g2= set.edge.attribute(graph = g2,name = "labels",value = labels)
   
-  write.graph(g2,paste(from_nano,"_",to_disease,"_with_KT_and_Gsea_already_grouped2.graphml",sep=""),"graphml")
+ # write.graph(g2,paste(from_nano,"_",to_disease,"_with_KT_and_Gsea_already_grouped2.graphml",sep=""),"graphml")
   return(g2)
 }
 
