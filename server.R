@@ -417,10 +417,13 @@ shinyServer(function(input, output,session){
         )
         
         if(DEBUGGING)
-          cat("Query from ",input$gene_nano_query ,input$gene_disease_query,"to: ","\n")
+          cat("Query from ",input$gene_nano_query ,"to: ",input$gene_disease_query,"\n")
         
       
         geni_toPlot = subgraph_nano_disease = function(g,from_nano = nano_query,to_disease=disease_query,drug_perc = drug_perc/100)
+        
+          if(DEBUGGING)
+            cat("Final graph ",ecount(geni_toPlot), " ",vcount(geni_toPlot),"\n")
           
         data_frame = get.data.frame(x = geni_toPlot,what = "both")
         edges = data_frame$edges
