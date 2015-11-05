@@ -553,7 +553,7 @@ shinyServer(function(input, output,session){
           }
           nn_vv = unique(nn_v)
           
-          graph_s = induced_subgraph(graph = graph_gw,vids = c(selected_nodes,nn_vv))
+          graph_s = igraph::induced_subgraph(graph = graph_gw,vids = c(selected_nodes,nn_vv))
           if(DEBUGGING){
             cat("GRAPH_S ", vcount(graph_s), ecount(graph_s))
             cat("Graph_gw and Graph_s classes", class(graph_gw),class(graph_s),"\n")
@@ -1501,11 +1501,11 @@ if(DEBUGGING){
           }
           
           idx_g = which(V(g)$node_type %in% "gene")
-          gto_plot = induced_subgraph(graph = g,vids = c(V(g)$name[idx_g],items))
+          gto_plot = igraph::induced_subgraph(graph = g,vids = c(V(g)$name[idx_g],items))
           
           gto_plot = igraph::delete.vertices(gto_plot,items)
           idx_gg = which(V(gto_plot)$name %in% V(g_geni2)$name)
-          geni_toPlot = induced_subgraph(g_geni2,V(gto_plot)$name[idx_gg])
+          geni_toPlot = igraph::induced_subgraph(g_geni2,V(gto_plot)$name[idx_gg])
           geni_toPlot = igraph::delete.vertices(geni_toPlot,which(igraph::degree(geni_toPlot)<1))
           
           data_frame = get.data.frame(x = geni_toPlot,what = "both")
@@ -1657,11 +1657,11 @@ if(DEBUGGING){
           }
           
           idx_g = which(V(g)$node_type %in% "gene")
-          gto_plot = induced_subgraph(graph = g,vids = c(V(g)$name[idx_g],items))
+          gto_plot = igraph::induced_subgraph(graph = g,vids = c(V(g)$name[idx_g],items))
           
           gto_plot = igraph::delete.vertices(gto_plot,items)
           idx_gg = which(V(gto_plot)$name %in% V(g_geni2)$name)
-          geni_toPlot = induced_subgraph(g_geni2,V(gto_plot)$name[idx_gg])
+          geni_toPlot = igraph::induced_subgraph(g_geni2,V(gto_plot)$name[idx_gg])
           geni_toPlot = igraph::delete.vertices(geni_toPlot,which(igraph::degree(geni_toPlot)<1))
           
           data_frame = get.data.frame(x = geni_toPlot,what = "both")
@@ -4091,11 +4091,11 @@ if(DEBUGGING){
           }
           
           idx_g = which(V(g)$node_type %in% "gene")
-          gto_plot = induced_subgraph(graph = g,vids = c(V(g)$name[idx_g],items))
+          gto_plot = igraph::induced_subgraph(graph = g,vids = c(V(g)$name[idx_g],items))
           
           gto_plot = igraph::delete.vertices(gto_plot,items)
           idx_gg = which(V(gto_plot)$name %in% V(g_geni2)$name)
-          geni_toPlot = induced_subgraph(g_geni2,V(gto_plot)$name[idx_gg])
+          geni_toPlot = igraph::induced_subgraph(g_geni2,V(gto_plot)$name[idx_gg])
           geni_toPlot = igraph::delete.vertices(geni_toPlot,which(igraph::degree(geni_toPlot)<1))
           
           data_frame = get.data.frame(x = geni_toPlot,what = "both")
@@ -4247,11 +4247,11 @@ if(DEBUGGING){
           }
           
           idx_g = which(V(g)$node_type %in% "gene")
-          gto_plot = induced_subgraph(graph = g,vids = c(V(g)$name[idx_g],items))
+          gto_plot = igraph::induced_subgraph(graph = g,vids = c(V(g)$name[idx_g],items))
           
           gto_plot = igraph::delete.vertices(gto_plot,items)
           idx_gg = which(V(gto_plot)$name %in% V(g_geni2)$name)
-          geni_toPlot = induced_subgraph(g_geni2,V(gto_plot)$name[idx_gg])
+          geni_toPlot = igraph::induced_subgraph(g_geni2,V(gto_plot)$name[idx_gg])
           geni_toPlot = igraph::delete.vertices(geni_toPlot,which(igraph::degree(geni_toPlot)<1))
           
           data_frame = get.data.frame(x = geni_toPlot,what = "both")
@@ -4588,7 +4588,7 @@ if(DEBUGGING){
         
         good_index = which(V(g_geni2)$group %in% groups_path)
         
-        geni_toPlot = induced_subgraph(graph = g_geni2,vids = V(g_geni2)$name[good_index])
+        geni_toPlot = igraph::induced_subgraph(graph = g_geni2,vids = V(g_geni2)$name[good_index])
         
         
         geni_toPlot = delete_vertices(graph = geni_toPlot,v = which(igraph::degree(geni_toPlot)<1))

@@ -1,4 +1,4 @@
-APP_PATH = "/home/aserra/InsideNano/"
+APP_PATH = "~/Scrivania/inside_nano/"
 setwd(APP_PATH)
 
 pkgTest <- function(x)
