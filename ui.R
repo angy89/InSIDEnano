@@ -269,10 +269,10 @@ shinyUI(navbarPage("",
                        htmlOutput("checkLOGIN_gene")
                    ),
                    fluidRow(uiOutput("gene_net_page1"),
-                            uiOutput("gene_net_page2")),
+                            uiOutput("gene_net_page2"))
                    
-                   fluidRow(uiOutput("gene_net_page3"),
-                            uiOutput("gene_net_page4"))
+#                    fluidRow(uiOutput("gene_net_page3"),
+#                             uiOutput("gene_net_page4"))
                    
                    
           ),

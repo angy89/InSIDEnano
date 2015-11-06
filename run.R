@@ -16,6 +16,8 @@ pkgTest("plotrix")
 pkgTest("plyr")
 pkgTest("ggplot2")
 pkgTest("httr")
+pkgTest("org.Hs.eg.db")
+pkgTest("annotate")
 library(httr)
 
 
@@ -46,6 +48,9 @@ library(networkD3)
 library(plotrix) 
 library(plyr)
 library(ggplot2)
+
+library(org.Hs.eg.db)
+library(annotate)
 
 #runApp("inside_nano")
 runGitHub( "InsideNano", "angy89") 
