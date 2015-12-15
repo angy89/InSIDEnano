@@ -217,7 +217,7 @@ shinyUI(navbarPage("",
                                 tabsetPanel( 
                                        tabPanel("Items Subnetwork", 
                                                wellPanel(forceNetworkOutput("Subnetwork_plot")),
-                                               wellPanel(plotOutput("dig_dist")),       
+                                               #wellPanel(plotOutput("dig_dist")),       
                                                wellPanel(plotOutput("Subnetwork_plot_statistic"))
                                                 
                                        ), 
