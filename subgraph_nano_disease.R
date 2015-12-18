@@ -1,11 +1,5 @@
 load("./matrix_gene_cmap_01.RData")
-load("./matrix_gene_disease_01_80.RData")
-load("./matrix_gene_nano_01.RData")
-load("./matrix_gene_chemical_01_inc_dec.RData")
-load("./chemical_disease_gene80.RData")
-load("./degree.RData")
-load("./KTDD_adjacency_red.RData")
-  
+
 subgraph_nano_disease = function(g,from_nano = "MWCNT",to_disease="Asthma",drug_perc = 0.99){
 
   if(DEBUGGING){

@@ -1,6 +1,14 @@
 source("./my_igraph_function.R",local = FALSE)
 source("./subgraph_nano_disease.R",local = FALSE)
 library(network)
+
+load(paste(APP_PATH,"matrix_gene_disease_01_80.RData",sep=""))
+load(paste(APP_PATH,"matrix_gene_nano_01.RData",sep=""))
+load(paste(APP_PATH,"matrix_gene_chemical_01_inc_dec.RData",sep=""))
+load(paste(APP_PATH,"chemical_disease_gene80.RData",sep=""))
+load(paste(APP_PATH,"degree.RData",sep=""))
+load(paste(APP_PATH,"KTDD_adjacency_red.RData",sep=""))
+
 load(paste(APP_PATH,"entities.RData",sep=""))
 load(paste(APP_PATH,"join10.RData",sep=""))
 join10 = unique(join10)
