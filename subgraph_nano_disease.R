@@ -1,5 +1,3 @@
-load("./matrix_gene_cmap_01.RData")
-
 subgraph_nano_disease = function(g,from_nano = "MWCNT",to_disease="Asthma",drug_perc = 0.99){
 
   if(DEBUGGING){
