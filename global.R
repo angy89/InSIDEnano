@@ -1,4 +1,6 @@
 source("./my_igraph_function.R",local = FALSE)
+source("./subgraph_nano_disease.R",local = FALSE)
+library(network)
 load(paste(APP_PATH,"entities.RData",sep=""))
 load(paste(APP_PATH,"join10.RData",sep=""))
 join10 = unique(join10)
@@ -261,6 +263,8 @@ internal_render_plot = function(Mi,gr4,s,proxyList){
   ndrug = which(V(g)$name %in% drugs)
   nchem = which(V(g)$name %in% chemical)
   ndisease = which(V(g)$name %in% disease)
+  
+  
   
   intersect(nchem,ndrug) -> ii
   if(length(ii)>0){

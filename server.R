@@ -238,7 +238,7 @@ shinyServer(function(input, output,session){
         load(paste(APP_PATH,"graph_without_genes_also_intra_classes_edges_network_estimation80_2.RData",sep=""))
         incProgress(1, detail = "Data Loaded 2/4")
         
-        load(paste(APP_PATH,"gene_network_KEGG.RData",sep=""))
+        load(paste(APP_PATH,"gene_network_KEGG_th99.RData",sep=""))
         incProgress(1, detail = "Data Loaded 3/4")
        
         load(paste(APP_PATH,"big_net_with_chemical_up_down80_2.RData",sep=""))
@@ -393,16 +393,29 @@ shinyServer(function(input, output,session){
             column(9, sliderInput("th_gene_query", label = "Percentage of drugs",
                                   min = 1, max = 100, value = 99,step=1))
           )
+#           ,
+#           fluidRow(
+#             column(9, sliderInput("th_gene_query_repulseration", label = "Repulseration Strenght",
+#                                   min = 100, max = 1000, value = 100,step=1))
+#           ),
+#           fluidRow(
+#             column(9, sliderInput("th_gene_query_el", label = "Edge Length",
+#                                   min = 2, max = 10, value = 2,step=1))
+#           )
         )
       })
       
       output$gene_net_page4 = renderUI({
+#         mainPanel(
+#           fluidRow(column(12, wellPanel(forceNetworkOutput("geneNetwork_query"))))   
+#         )
         mainPanel(
-          fluidRow(column(12, wellPanel(forceNetworkOutput("geneNetwork_query"))))   
+          fluidRow(column(12, wellPanel(plotOutput("geneNetwork_net3"))))   
         )
+        
       })
       
-      output$geneNetwork_query = renderForceNetwork({
+      output$geneNetwork_net3 = renderPlot({
         
         nano_query = input$gene_nano_query
         disease_query = input$gene_disease_query
@@ -417,56 +430,88 @@ shinyServer(function(input, output,session){
         )
         
         if(DEBUGGING)
-          cat("Query from ",input$gene_nano_query ,"to: ",input$gene_disease_query,"\n")
+          cat("Query from ",input$gene_nano_query ,"to: ",input$gene_disease_query,"\n with th -> ",drug_perc/100,"\n v(count) and e(count)",vcount(g)," ",ecount(g),"\n")
         
-      
-        geni_toPlot = subgraph_nano_disease = function(g,from_nano = nano_query,to_disease=disease_query,drug_perc = drug_perc/100)
-        
-          if(DEBUGGING)
-            cat("Final graph ",ecount(geni_toPlot), " ",vcount(geni_toPlot),"\n")
-          
-        data_frame = get.data.frame(x = geni_toPlot,what = "both")
-        edges = data_frame$edges
-        edges$value = round(abs(edges$weight * 10),digits = 0)
-        colnames(edges) = c("source","target","weight","value")
-        
-        vertices = data_frame$vertices
-        vertices$size = igraph::degree(geni_toPlot)
-        colnames(vertices) = c("name","group","type","size")
+        geni_toPlot = subgraph_nano_disease(g,from_nano = nano_query,to_disease=disease_query,drug_perc = drug_perc/100)
+        net3 = geni_toPlot$net
+        plot(net3, vertex.cex=(net3 %v% "size")/2, vertex.col=net3 %v% "col" ,label=network.vertex.names(net3),label.pad=0,edge.col = net3 %e% "color")
+        legend(x = "topleft",legend = names(table(net3 %v% "node_type")),fill = c("yellow","green","pink","skyblue","red"))  
         
         
-        for(i in 1:dim(edges)[1]){
-          edges[i,"source"] = which(vertices[,"name"] %in% edges[i,"source"]) - 1
-          edges[i,"target"] = which(vertices[,"name"] %in% edges[i,"target"]) - 1
-        }
-        
-        vertices$name = as.factor(vertices$name)
-        vertices$group = as.factor(vertices$group)
-        vertices$size = as.numeric(vertices$size)
-        vertices$type = as.factor(vertices$type)
-        
-        edges$source = as.integer(edges$source)
-        edges$target  = as.integer(edges$target)
-        edges$value = as.integer(edges$value)
-        
-        MyClickScript <- 
-          '      d3.select(this).select("circle").transition()
-        .duration(750)
-        .attr("r", 30)'
-        
-        MyClickScript2 <- 
-          'd3.select(this).select(dLink.target).select("circle").transition().duration(750).attr("r",30),
-        d3.select(dLink.target).select("circle").transition().duration(750).attr("r",30)
-        '
-        
-        forceNetwork(Links = edges, Nodes = vertices,
-                     Source = "source", Target = "target",
-                     Value = "value", NodeID = "name",Nodesize="size",
-                     zoom = TRUE,opacity = 0.85,fontSize = 10,Group = "group",
-                     legend = TRUE, height = input$gene_width,width =input$gene_height, 
-                     clickAction = MyClickScript,charge = -input$gene_repulserad,
-                     linkDistance = JS(paste0("function(d){return d.value*",input$gene_length,"}")))
       })
+      
+#       output$geneNetwork_query = renderForceNetwork({
+#         
+#         nano_query = input$gene_nano_query
+#         disease_query = input$gene_disease_query
+#         drug_perc = input$th_gene_query
+#         
+#         validate(
+#           need(input$gene_nano_query != "", "Please select a nano")
+#         )
+#         
+#         validate(
+#           need(input$gene_disease_query != "", "Please select a disease")
+#         )
+#         
+#         if(DEBUGGING)
+#           cat("Query from ",input$gene_nano_query ,"to: ",input$gene_disease_query,"\n with th -> ",drug_perc/100,"\n v(count) and e(count)",vcount(g)," ",ecount(g),"\n")
+#       
+#         geni_toPlot = subgraph_nano_disease(g,from_nano = nano_query,to_disease=disease_query,drug_perc = drug_perc/100)
+#         geni_toPlot = geni_toPlot$g2
+#         
+#         net3 = geni_toPlot$net
+#         
+#           if(DEBUGGING)
+#             cat("geni_toPlot", class(geni_toPlot), "\n")
+#         
+#           
+#           
+#           if(DEBUGGING)
+#             cat("Final graph ",ecount(geni_toPlot), " ",vcount(geni_toPlot),"\n")
+#           
+#         data_frame = get.data.frame(x = geni_toPlot,what = "both")
+#         edges = data_frame$edges
+#         edges$value = round(abs(edges$weight * 10),digits = 0)
+#         colnames(edges) = c("source","target","weight","value")
+#         
+#         vertices = data_frame$vertices
+#         vertices$size = igraph::degree(geni_toPlot)
+#         colnames(vertices) = c("name","group","type","size")
+#         
+#         
+#         for(i in 1:dim(edges)[1]){
+#           edges[i,"source"] = which(vertices[,"name"] %in% edges[i,"source"]) - 1
+#           edges[i,"target"] = which(vertices[,"name"] %in% edges[i,"target"]) - 1
+#         }
+#         
+#         vertices$name = as.factor(vertices$name)
+#         vertices$group = as.factor(vertices$group)
+#         vertices$size = as.numeric(vertices$size)
+#         vertices$type = as.factor(vertices$type)
+#         
+#         edges$source = as.integer(edges$source)
+#         edges$target  = as.integer(edges$target)
+#         edges$value = as.integer(edges$value)
+#         
+#         MyClickScript <- 
+#           '      d3.select(this).select("circle").transition()
+#         .duration(750)
+#         .attr("r", 30)'
+#         
+#         MyClickScript2 <- 
+#           'd3.select(this).select(dLink.target).select("circle").transition().duration(750).attr("r",30),
+#         d3.select(dLink.target).select("circle").transition().duration(750).attr("r",30)
+#         '
+#         
+#         forceNetwork(Links = edges, Nodes = vertices,
+#                      Source = "source", Target = "target",
+#                      Value = "value", NodeID = "name",Nodesize="size",
+#                      zoom = TRUE,opacity = 0.85,fontSize = 10,Group = "group",
+#                      legend = TRUE, 
+#                      clickAction = MyClickScript,charge = -input$th_gene_query_repulseration,
+#                      linkDistance = JS(paste0("function(d){return d.value*",input$th_gene_query_el,"}")))
+#       })
       
       
       toRem = which(chemical %in% drugs)
@@ -837,7 +882,7 @@ shinyServer(function(input, output,session){
           nElem_c = length(columns_)
           
           d_id = input$InterestingNodes_totale
-          d_node_type = get.vertex.attribute(graph = graph_gw,name = "type",index = d_id)
+          d_node_type = igraph::get.vertex.attribute(graph = graph_gw,name = "type",index = d_id)
           column_index = which(c("disease","nano","drugs","chemical") %in% d_node_type)
           
           indexes_c = 1:(dim(Mi_count)[2]-1)
@@ -878,7 +923,9 @@ shinyServer(function(input, output,session){
         output$ggplot = renderPlot({
           type = input$NetworkPattern #type of clique
           triple_type = input$plotTripel
-          
+          validate(
+            need(input$percentuale != "", "Please select a percentage")
+          )
           validate(
             need(input$NetworkPattern != "", "Please select a pattern type")
           )
@@ -915,40 +962,50 @@ shinyServer(function(input, output,session){
           drug_id = unique(Mi_count$Drug)
           disease_id = unique(Mi_count$Disease)
           
-          Mi_count = Mi_count[order(Mi_count$freq),]
+          Mi_count = Mi_count[order(Mi_count$freq,decreasing = FALSE),]
+          
+          if(DEBUGGING)
+          cat("Mi_count FREQUENCIES ",Mi_count$freq,"\n")
+          
           nElem_c = length(columns_)
           
           d_id = input$InterestingNodes_items
-          d_node_type = get.vertex.attribute(graph = graph_gw,name = "type",index = d_id)
+          d_node_type = igraph::get.vertex.attribute(graph = graph_gw,name = "type",index = d_id)
           column_index = which(c("disease","nano","drugs","chemical") %in% d_node_type)
           
-          validate(
-            need(input$percentuale != "", "Please select a percentage")
-          )
           
-if(DEBUGGING){
-          cat("INPUT PERCENTUALE CAMBIATA: ",input$percentuale,"\n")
-}
+          if(DEBUGGING){
+                    cat("INPUT PERCENTUALE CAMBIATA: ",input$percentuale,"\n")
+          }
+          
           if(length(columns_)>2){
             indexes_c = 1:(dim(Mi_count)[2]-1)
             indexes_c = indexes_c[-column_index]
             nElem = round((dim(Mi_count)[1]) * (input$percentuale)/100,digits = 0)
-            Mi_count2 = Mi_count$freq[1:nElem]
-            names(Mi_count2) =  paste(Mi_count[1:nElem,indexes_c[1]],Mi_count[1:nElem,indexes_c[2]],sep="-")
-            
+            dim(Mi_count)[1] -> up_b
+            low_b = up_b - nElem
+            Mi_count2 = Mi_count$freq[low_b:up_b]
+            names(Mi_count2) =  paste(Mi_count[low_b:up_b,indexes_c[1]],Mi_count[low_b:up_b,indexes_c[2]],sep="-")
+            #Mi_count2 = Mi_count$freq[1:nElem]
+            #names(Mi_count2) =  paste(Mi_count[1:nElem,indexes_c[1]],Mi_count[1:nElem,indexes_c[2]],sep="-")
           }
           if(length(columns_) == 2){
             indexes_c = 1:(dim(Mi_count)[2]-1)
             indexes_c = indexes_c[-column_index]
             nElem = round((dim(Mi_count)[1]) * (input$percentuale)/100,digits = 0)
-            Mi_count2 = Mi_count$freq[1:nElem]
-            #names(Mi_count2) =  paste(Mi_count[1:nElem,columns_[2:nElem_c]],sep=" ")#,Mi_count[1:nElem,3],sep=" ")
-            names(Mi_count2) =  paste(Mi_count[1:nElem,indexes_c],sep=" ")#,Mi_count[1:nElem,3],sep=" ")
+            dim(Mi_count)[1] -> up_b
+            low_b = up_b - nElem
+            Mi_count2 = Mi_count$freq[low_b:up_b]
+            names(Mi_count2) =  paste(Mi_count[low_b:up_b,indexes_c],sep=" ")#,Mi_count[1:nElem,3],sep=" ")
             
+            #Mi_count2 = Mi_count$freq[1:nElem]
+            #names(Mi_count2) =  paste(Mi_count[1:nElem,columns_[2:nElem_c]],sep=" ")#,Mi_count[1:nElem,3],sep=" ")
           }
           
           
-          index = which(Mi_count[1:nElem,column_index] %in% d_id)
+          #index = which(Mi_count[1:nElem,column_index] %in% d_id)
+          index = which(Mi_count[low_b:up_b,column_index] %in% d_id)
+          
           
           validate(
             need(length(index)>0, "No cliques for the selected node!")
@@ -964,6 +1021,43 @@ if(DEBUGGING){
           
           
         })
+
+
+
+output$xx = renderPlot({
+  s = input$clique_data_table_rows_selected
+  type = input$NetworkPattern
+  
+  validate(
+    need(input$NetworkPattern != "", "Please select a pattern type")
+  )
+  
+  type = as.integer(gsub(pattern = "M",x =type,replacement = ""))
+  
+  
+  if(DEBUGGING){
+    cat("Il tipo selezionato : ",type,"\n")
+    cat("Il numero selezionato : ",type,"\n")
+    cat("class input$clique_data_table: ",class(input$clique_data_table))
+  }
+  
+  #s = input$clique_data_table_rows_selected
+  if(DEBUGGING){
+    cat("s = input$clique_data_table_rows_selected: ",input$clique_data_table_rows_selected,"\n")
+  }
+  g_= internal_render_plot(MM_list[[type]],gr4=graph_s,s,proxyList = proxy)
+  
+  if(DEBUGGING){
+    cat("s vale: ",s,"\n")
+    cat("g_class: ",class(g_),"\n")
+  }
+  
+  plot(g_,vertex.color = V(g_)$color,
+       vertex.size = 50,edge.width = abs(E(g_)$weight)+2,
+       vertex.label.color = "black")
+  legend(x = "bottom",legend = c("Positive Correlation","Negative Correlation"),fill = c("red","darkgreen"))
+  
+})
         
         
         output$xx = renderPlot({
@@ -1001,173 +1095,166 @@ if(DEBUGGING){
           
         })
         
-        output$Subnetwork_plot = renderForceNetwork({
-          if(DEBUGGING){
-            cat("Subnetwork plot function\n")
-          }
-          ADJ_toPlot = ADJ_S
-          nano_s = colnames(ADJ_S)[which(colnames(ADJ_S) %in% nano)]
-          chemical_s = colnames(ADJ_S)[which(colnames(ADJ_S) %in% chemical)]
-          drug_s = colnames(ADJ_S)[which(colnames(ADJ_S) %in% drugs)]
-          disease_s = colnames(ADJ_S)[which(colnames(ADJ_S) %in% disease)]
-          
-          chemMat_index = which(chemMat[,1] %in% chemical_s)
-          chemMat = chemMat[chemMat_index,]
-          
-          d = input$InterestingNodes
-          if(DEBUGGING) cat("INTERESTING NODES: ",d,"\n")
-          
-          validate(
-            need(input$InterestingNodes != "", "SELECT A NODE!")
-          )
-          if(DEBUGGING)
-          cat("INTERESTING NODES: ",d,"\n")
-          
-          neig = lapply(X = good_cliques,FUN = function(i_cliques){
-            v_names = names(i_cliques)
-            if(sum(v_names %in% d)>0){
-              return(v_names)
-            }
-          })
-          
-          vds = unique(unlist(neig))
-          
-          edges_type = input$sub_Edges
-          if(DEBUGGING)
-          cat("Edges_type ",edges_type,"\n")
-          type = input$sub_checkGroup
-          
-          validate(
-            need(input$sub_checkGroup != "", "Please select an object group")
-          )
-          if(DEBUGGING)
-          cat("Tipi selezionati",length(type),"\n",type,"\n")
-          ATC_code = input$sub_ATCGroup
-          if(ATC_code == "ALL"){
-            ATC_code = ATC_letter_vector
-          }
-          
-          if(DEBUGGING)
-          cat("ATC code",length(ATC_code),"\n",ATC_code,"\n")
-          chem_group = input$sub_ChemicalGroup
-          if(chem_group == "ALL"){
-            chem_group = chemical_group_vector
-          }
-          if(DEBUGGING)
-          cat("Chemical Group",length(chem_group),"\n",chem_group,"\n")
-          
-          items = c() 
-          items_type = c()
-          items_lengt = c()
-          #items_color = c()
-          for(i in 1:length(type)){
-            if(type[i]=="nano"){
-              items = c(items,nano_s)
-              items_type = c(items_type,"nano")
-              items_lengt = c(items_lengt,length(nano_s))
-              #items_color = c(items_color,"pink")
-            }
-            if(type[i]=="drugs"){
-            validate(
-              need(input$sub_ATCGroup != "", "Please select an ATC group")
-            )
-              already_selected = c()
-              for(j in 1:length(ATC_code)){
-                ATC_lev1 = substr(join10$code,1,1)
-                ATC_index = which(ATC_lev1 %in% ATC_code[j])
-                new_drugs = unique(join10$name[ATC_index])
-                new_drugs = new_drugs[which(new_drugs %in% drug_s)]
-                index_new_drugs = which((new_drugs %in% already_selected)==FALSE)
-                already_selected = new_drugs[index_new_drugs]
-                
-                toRem = which(new_drugs[index_new_drugs] %in% items)
-                if(length(toRem)>0){
-                  index_new_drugs = index_new_drugs[-toRem]
-                }
-                
-                items = c(items,new_drugs[index_new_drugs])
-                items_type = c(items_type,paste("Drugs ATC: ", ATC_code[j],sep=""))
-                items_lengt = c(items_lengt,length(new_drugs[index_new_drugs]))
-              }
-            }
-            if(type[i]=="chemical"){
-              validate(
-                need(input$sub_ChemicalGroup != "", "Please select a chemical group")
-              )
-              
-              already_selected = c()
-              for(j in 1:length(chem_group)){
-                chem_index = which(chemMat[,2] %in% chem_group[j])
-                new_chem = unique(chemMat[chem_index,1])
-                index_new_chem = which((new_chem %in% already_selected)==FALSE)
-                already_selected = new_chem[index_new_chem]
-                
-                toRem = which(new_chem[index_new_chem] %in% items)
-                if(length(toRem)>0){
-                  index_new_chem = index_new_chem[-toRem]
-                }
-                
-                items = c(items,new_chem[index_new_chem])
-                items_type = c(items_type,paste("Chemical class: ", chem_group[j],sep=""))
-                items_lengt = c(items_lengt,length(new_chem[index_new_chem]))
-              }
-              
-            }
-            if(type[i]=="disease"){
-              good_disease = disease[disease %in% colnames(ADJ_toPlot)]
-              items = c(items,good_disease)
-              items_type = c(items_type,"disease")
-              items_lengt = c(items_lengt,length(good_disease))
-            }
-          }
-          if(DEBUGGING){
-          cat("item_type: ",items_type,"\n")
-          cat("items_lengt: ",items_lengt,"\n")
-          }
-          if(edges_type == "P"){
-            ADJ_toPlot[which(ADJ_toPlot < 0)] = 0
-          }
-          if(edges_type == "N"){
-            ADJ_toPlot[which(ADJ_toPlot>0)] = 0
-          }
-          
-          if(DEBUGGING)
-          cat("Graph creation... \n")
-          gto_plot = graph.adjacency(adjmatrix = ADJ_toPlot[items,items],mode = "undirected",weighted = TRUE)
-          V(gto_plot)$type = rep(items_type,items_lengt)
-          gto_plot = igraph::delete.vertices(gto_plot,which(degree(gto_plot)<1))
-          gto_plot = igraph::simplify(gto_plot)
-          
-          di = which(selected_nodes %in% d)
-          if(length(di)>0){
-            pd = selected_nodes[-di]
-            pd[which(pd %in% V(gto_plot)$name)]->pd
-            gto_plot = delete.vertices(gto_plot,pd)
-          }
-          if(DEBUGGING)
-          cat("Data frame creation... \n")
-          data_frame = from_igraph_to_data_frame(gto_plot)
-          
-          MyClickScript <- 
-            '      d3.select(this).select("circle").transition()
-          .duration(750)
-          .attr("r", 30)'
-          
-          if(DEBUGGING){
-            cat("Force Networks plot... \n")
-            cat("Repulserad ",input$sub_repulserad,"\n")
-            cat("Edges length: ",input$sub_length,"\n")
-          }
-          forceNetwork(Links = data_frame$edges, Nodes = data_frame$vertices,
-                       Source = "source", Target = "target",
-                       Value = "value", NodeID = "name",Nodesize="size",
-                       Group = "type",zoom = TRUE,opacity = 0.95,fontSize = 10,
-                       legend = TRUE,
-                       clickAction = MyClickScript,
-                       charge = -input$sub_repulserad,
-                       linkDistance = JS(paste0("function(d){return d.value*",input$sub_length,
-                                                "}")))
-        })
+output$Subnetwork_plot = renderForceNetwork({ 
+  if(DEBUGGING)
+    cat("Subnetwork plot function\n")
+  ADJ_toPlot = ADJ_S
+  nano_s = colnames(ADJ_S)[which(colnames(ADJ_S) %in% nano)]
+  chemical_s = colnames(ADJ_S)[which(colnames(ADJ_S) %in% chemical)]
+  drug_s = colnames(ADJ_S)[which(colnames(ADJ_S) %in% drugs)]
+  disease_s = colnames(ADJ_S)[which(colnames(ADJ_S) %in% disease)]
+  
+  chemMat_index = which(chemMat[,1] %in% chemical_s)
+  chemMat = chemMat[chemMat_index,]
+  
+  d = input$InterestingNodes
+  if(DEBUGGING)
+    cat("INTERESTING NODES: ",d,"\n")
+  
+  validate(
+    need(input$InterestingNodes != "", "SELECT A NODE!")
+  )
+  if(DEBUGGING)
+    cat("INTERESTING NODES: ",d,"\n")
+  
+  neig = lapply(X = good_cliques,FUN = function(i_cliques){
+    v_names = names(i_cliques)
+    if(sum(v_names %in% d)>0){
+      return(v_names)
+    }
+  })
+  
+  vds = unique(unlist(neig))
+  
+  edges_type = input$sub_Edges
+  if(DEBUGGING)
+    cat("Edges_type ",edges_type,"\n")
+  type = input$sub_checkGroup
+  
+  validate(
+    need(input$sub_checkGroup != "", "Please select an object group")
+  )
+  if(DEBUGGING)
+    cat("Tipi selezionati",length(type),"\n",type,"\n")
+  ATC_code = input$sub_ATCGroup
+  if(ATC_code == "ALL"){
+    ATC_code = ATC_letter_vector
+  }
+  if(DEBUGGING)
+    cat("ATC code",length(ATC_code),"\n",ATC_code,"\n")
+  chem_group = input$sub_ChemicalGroup
+  if(chem_group == "ALL"){
+    chem_group = chemical_group_vector
+  }
+  if(DEBUGGING)
+    cat("Chemical Group",length(chem_group),"\n",chem_group,"\n")
+  
+  items = c() 
+  items_type = c()
+  items_lengt = c()
+  #items_color = c()
+  for(i in 1:length(type)){
+    if(type[i]=="nano"){
+      items = c(items,nano_s)
+      items_type = c(items_type,"nano")
+      items_lengt = c(items_lengt,length(nano_s))
+      #items_color = c(items_color,"pink")
+    }
+    if(type[i]=="drugs"){
+      validate(
+        need(input$sub_ATCGroup != "", "Please select an ATC group")
+      )
+      already_selected = c()
+      for(j in 1:length(ATC_code)){
+        ATC_lev1 = substr(join10$code,1,1)
+        ATC_index = which(ATC_lev1 %in% ATC_code[j])
+        new_drugs = unique(join10$name[ATC_index])
+        new_drugs = new_drugs[which(new_drugs %in% drug_s)]
+        index_new_drugs = which((new_drugs %in% already_selected)==FALSE)
+        already_selected = new_drugs[index_new_drugs]
+        
+        toRem = which(new_drugs[index_new_drugs] %in% items)
+        if(length(toRem)>0){
+          index_new_drugs = index_new_drugs[-toRem]
+        }
+        
+        items = c(items,new_drugs[index_new_drugs])
+        items_type = c(items_type,paste("Drugs ATC: ", ATC_code[j],sep=""))
+        items_lengt = c(items_lengt,length(new_drugs[index_new_drugs]))
+      }
+    }
+    if(type[i]=="chemical"){
+      validate(
+        need(input$sub_ChemicalGroup != "", "Please select a chemical group")
+      )
+      
+      already_selected = c()
+      for(j in 1:length(chem_group)){
+        chem_index = which(chemMat[,2] %in% chem_group[j])
+        new_chem = unique(chemMat[chem_index,1])
+        index_new_chem = which((new_chem %in% already_selected)==FALSE)
+        already_selected = new_chem[index_new_chem]
+        
+        toRem = which(new_chem[index_new_chem] %in% items)
+        if(length(toRem)>0){
+          index_new_chem = index_new_chem[-toRem]
+        }
+        
+        items = c(items,new_chem[index_new_chem])
+        items_type = c(items_type,paste("Chemical class: ", chem_group[j],sep=""))
+        items_lengt = c(items_lengt,length(new_chem[index_new_chem]))
+      }
+      
+    }
+    if(type[i]=="disease"){
+      good_disease = disease[disease %in% colnames(ADJ_toPlot)]
+      items = c(items,good_disease)
+      items_type = c(items_type,"disease")
+      items_lengt = c(items_lengt,length(good_disease))
+    }
+  }
+  if(DEBUGGING){
+    cat("item_type: ",items_type,"\n")
+    cat("items_lengt: ",items_lengt,"\n")
+  }
+  if(edges_type == "P"){
+    ADJ_toPlot[which(ADJ_toPlot < 0)] = 0
+  }
+  if(edges_type == "N"){
+    ADJ_toPlot[which(ADJ_toPlot>0)] = 0
+  }
+  
+  if(DEBUGGING)
+    cat("Graph creation... \n")
+  gto_plot = graph.adjacency(adjmatrix = ADJ_toPlot[items,items],mode = "undirected",weighted = TRUE)
+  V(gto_plot)$type = rep(items_type,items_lengt)
+  gto_plot = igraph::delete.vertices(gto_plot,which(degree(gto_plot)<1))
+  gto_plot = igraph::simplify(gto_plot)
+  
+  if(DEBUGGING)
+    cat("Data frame creation... \n")
+  data_frame = from_igraph_to_data_frame(gto_plot)
+  
+  MyClickScript <- 
+    '      d3.select(this).select("circle").transition()
+  .duration(750)
+  .attr("r", 30)'
+  
+  if(DEBUGGING){
+    cat("Force Networks plot... \n")
+    cat("Repulserad ",input$sub_repulserad,"\n")
+    cat("Edges length: ",input$sub_length,"\n")
+  }
+  forceNetwork(Links = data_frame$edges, Nodes = data_frame$vertices,
+               Source = "source", Target = "target",
+               Value = "value", NodeID = "name",Nodesize="size",
+               Group = "type",zoom = TRUE,opacity = 0.95,fontSize = 10,
+               legend = TRUE,
+               clickAction = MyClickScript,
+               charge = -input$sub_repulserad,
+               linkDistance = JS(paste0("function(d){return d.value*",input$sub_length,
+                                        "}")))
+})
         
         
         output$dig_dist = renderPlot({
@@ -1322,443 +1409,542 @@ if(DEBUGGING){
           legend(x = "top",legend = c("Degree","Closeness","Betwenness","Eccentricity"),fill=c("red","green","yellow","purple"))
         })
         
-        output$Subnetwork_plot_statistic = renderPlot({
-          if(DEBUGGING)
-          cat("STATISTICHE SOTTONETWORK...\n")
-          ADJ_toPlot = ADJ_S
-          nano_s = colnames(ADJ_S)[which(colnames(ADJ_S) %in% nano)]
-          chemical_s = colnames(ADJ_S)[which(colnames(ADJ_S) %in% chemical)]
-          drug_s = colnames(ADJ_S)[which(colnames(ADJ_S) %in% drugs)]
-          disease_s = colnames(ADJ_S)[which(colnames(ADJ_S) %in% disease)]
-          
-          chemMat_index = which(chemMat[,1] %in% chemical_s)
-          chemMat = chemMat[chemMat_index,]
-          
-          d = input$InterestingNodes
-          if(DEBUGGING)
-          cat("INTERESTING NODES: ",d,"\n")
-          
-          validate(
-            need(input$InterestingNodes != "", "SELECT A NODE!")
-          )
-          if(DEBUGGING)
-          cat("INTERESTING NODES: ",d,"\n")
-          
-          neig = lapply(X = good_cliques,FUN = function(i_cliques){
-            v_names = names(i_cliques)
-            if(sum(v_names %in% d)>0){
-              return(v_names)
-            }
-          })
-          
-          vds = unique(unlist(neig))
-          
-          edges_type = input$sub_Edges
-          if(DEBUGGING)
-          cat("Edges_type ",edges_type,"\n")
-          type = input$sub_checkGroup
-          if(DEBUGGING)
-          cat("type: ",type,"\n")
-          
-          validate(
-            need(input$sub_checkGroup != "", "Please select an object group")
-          )
-          if(DEBUGGING)
-          cat("Tipi selezionati",length(type),"\n",type,"\n")
-          ATC_code = input$sub_ATCGroup
-          if(DEBUGGING)
-          cat("ATC_code ",ATC_code,"\n")
-          
-          if(ATC_code == "ALL"){
-            ATC_code = ATC_letter_vector
-          }
-          if(DEBUGGING)
-          cat("ATC code",length(ATC_code),"\n",ATC_code,"\n")
-          
-          chem_group = input$sub_ChemicalGroup
-          if(chem_group == "ALL"){
-            chem_group = chemical_group_vector
-          }
-          if(DEBUGGING)
-          cat("Chemical Group",length(chem_group),"\n",chem_group,"\n")
-          
-          items = c() 
-          items_type = c()
-          items_lengt = c()
-          #items_color = c()
-          for(i in 1:length(type)){
-            if(type[i]=="nano"){
-              items = c(items,nano_s)
-              items_type = c(items_type,"nano")
-              items_lengt = c(items_lengt,length(nano_s))
-              #items_color = c(items_color,"pink")
-            }
-            if(type[i]=="drugs"){
-              validate(
-                need(input$sub_ATCGroup != "", "Please select an ATC group")
-              )
-              already_selected = c()
-              for(j in 1:length(ATC_code)){
-                ATC_lev1 = substr(join10$code,1,1)
-                ATC_index = which(ATC_lev1 %in% ATC_code[j])
-                new_drugs = unique(join10$name[ATC_index])
-                new_drugs = new_drugs[which(new_drugs %in% drug_s)]
-                index_new_drugs = which((new_drugs %in% already_selected)==FALSE)
-                already_selected = new_drugs[index_new_drugs]
-                
-                toRem = which(new_drugs[index_new_drugs] %in% items)
-                if(length(toRem)>0){
-                  index_new_drugs = index_new_drugs[-toRem]
-                }
-                
-                items = c(items,new_drugs[index_new_drugs])
-                items_type = c(items_type,paste("Drugs ATC: ", ATC_code[j],sep=""))
-                items_lengt = c(items_lengt,length(new_drugs[index_new_drugs]))
-              }
-            }
-            if(type[i]=="chemical"){
-              validate(
-                need(input$sub_ChemicalGroup != "", "Please select a chemical group")
-              )
-              
-              already_selected = c()
-              for(j in 1:length(chem_group)){
-                chem_index = which(chemMat[,2] %in% chem_group[j])
-                new_chem = unique(chemMat[chem_index,1])
-                index_new_chem = which((new_chem %in% already_selected)==FALSE)
-                already_selected = new_chem[index_new_chem]
-                
-                toRem = which(new_chem[index_new_chem] %in% items)
-                if(length(toRem)>0){
-                  index_new_chem = index_new_chem[-toRem]
-                }
-                
-                items = c(items,new_chem[index_new_chem])
-                items_type = c(items_type,paste("Chemical class: ", chem_group[j],sep=""))
-                items_lengt = c(items_lengt,length(new_chem[index_new_chem]))
-              }
-              
-            }
-            if(type[i]=="disease"){
-              good_disease = disease[disease %in% colnames(ADJ_toPlot)]
-              items = c(items,good_disease)
-              items_type = c(items_type,"disease")
-              items_lengt = c(items_lengt,length(good_disease))
-            }
-          }
-          
-          slices = items_lengt
-          lbls = items_type
-          pie(slices, labels = lbls, main="Network statistics",col = rainbow(length(table(items_type))))
+output$Subnetwork_plot_statistic = renderPlot({
+  if(DEBUGGING)
+    cat("STATISTICHE SOTTONETWORK...\n")
+  ADJ_toPlot = ADJ_S
+  nano_s = colnames(ADJ_S)[which(colnames(ADJ_S) %in% nano)]
+  chemical_s = colnames(ADJ_S)[which(colnames(ADJ_S) %in% chemical)]
+  drug_s = colnames(ADJ_S)[which(colnames(ADJ_S) %in% drugs)]
+  disease_s = colnames(ADJ_S)[which(colnames(ADJ_S) %in% disease)]
+  
+  chemMat_index = which(chemMat[,1] %in% chemical_s)
+  chemMat = chemMat[chemMat_index,]
+  
+  d = input$InterestingNodes
+  if(DEBUGGING)
+    cat("INTERESTING NODES: ",d,"\n")
+  
+  validate(
+    need(input$InterestingNodes != "", "SELECT A NODE!")
+  )
+  if(DEBUGGING)
+    cat("INTERESTING NODES: ",d,"\n")
+  
+  neig = lapply(X = good_cliques,FUN = function(i_cliques){
+    v_names = names(i_cliques)
+    if(sum(v_names %in% d)>0){
+      return(v_names)
+    }
+  })
+  
+  vds = unique(unlist(neig))
+  
+  edges_type = input$sub_Edges
+  if(DEBUGGING)
+    cat("Edges_type ",edges_type,"\n")
+  type = input$sub_checkGroup
+  if(DEBUGGING)
+    cat("type: ",type,"\n")
+  
+  validate(
+    need(input$sub_checkGroup != "", "Please select an object group")
+  )
+  if(DEBUGGING)
+    cat("Tipi selezionati",length(type),"\n",type,"\n")
+  ATC_code = input$sub_ATCGroup
+  if(DEBUGGING)
+    cat("ATC_code ",ATC_code,"\n")
+  
+  if(ATC_code == "ALL"){
+    ATC_code = ATC_letter_vector
+  }
+  if(DEBUGGING)
+    cat("ATC code",length(ATC_code),"\n",ATC_code,"\n")
+  
+  chem_group = input$sub_ChemicalGroup
+  if(chem_group == "ALL"){
+    chem_group = chemical_group_vector
+  }
+  if(DEBUGGING)
+    cat("Chemical Group",length(chem_group),"\n",chem_group,"\n")
+  
+  items = c() 
+  items_type = c()
+  items_lengt = c()
+  #items_color = c()
+  for(i in 1:length(type)){
+    if(type[i]=="nano"){
+      items = c(items,nano_s)
+      items_type = c(items_type,"nano")
+      items_lengt = c(items_lengt,length(nano_s))
+      #items_color = c(items_color,"pink")
+    }
+    if(type[i]=="drugs"){
+      validate(
+        need(input$sub_ATCGroup != "", "Please select an ATC group")
+      )
+      already_selected = c()
+      for(j in 1:length(ATC_code)){
+        ATC_lev1 = substr(join10$code,1,1)
+        ATC_index = which(ATC_lev1 %in% ATC_code[j])
+        new_drugs = unique(join10$name[ATC_index])
+        new_drugs = new_drugs[which(new_drugs %in% drug_s)]
+        index_new_drugs = which((new_drugs %in% already_selected)==FALSE)
+        already_selected = new_drugs[index_new_drugs]
+        
+        toRem = which(new_drugs[index_new_drugs] %in% items)
+        if(length(toRem)>0){
+          index_new_drugs = index_new_drugs[-toRem]
+        }
+        
+        items = c(items,new_drugs[index_new_drugs])
+        items_type = c(items_type,paste("Drugs ATC: ", ATC_code[j],sep=""))
+        items_lengt = c(items_lengt,length(new_drugs[index_new_drugs]))
+      }
+    }
+    if(type[i]=="chemical"){
+      validate(
+        need(input$sub_ChemicalGroup != "", "Please select a chemical group")
+      )
+      
+      already_selected = c()
+      for(j in 1:length(chem_group)){
+        chem_index = which(chemMat[,2] %in% chem_group[j])
+        new_chem = unique(chemMat[chem_index,1])
+        index_new_chem = which((new_chem %in% already_selected)==FALSE)
+        already_selected = new_chem[index_new_chem]
+        
+        toRem = which(new_chem[index_new_chem] %in% items)
+        if(length(toRem)>0){
+          index_new_chem = index_new_chem[-toRem]
+        }
+        
+        items = c(items,new_chem[index_new_chem])
+        items_type = c(items_type,paste("Chemical class: ", chem_group[j],sep=""))
+        items_lengt = c(items_lengt,length(new_chem[index_new_chem]))
+      }
+      
+    }
+    if(type[i]=="disease"){
+      good_disease = disease[disease %in% colnames(ADJ_toPlot)]
+      items = c(items,good_disease)
+      items_type = c(items_type,"disease")
+      items_lengt = c(items_lengt,length(good_disease))
+    }
+  }
+  
+  slices = items_lengt
+  lbls = items_type
+  pie(slices, labels = lbls, main="Network statistics",col = rainbow(length(table(items_type))),
+      radius = 1, cex = 0.7)
+  
+})
+        
+        
+output$gene_Subnetwork_plot = renderForceNetwork({
+  if(DEBUGGING)
+    cat("Subnetwork plot\n")
+  ADJ_toPlot = ADJ_S
+  nano_s = colnames(ADJ_S)[which(colnames(ADJ_S) %in% nano)]
+  chemical_s = colnames(ADJ_S)[which(colnames(ADJ_S) %in% chemical)]
+  drug_s = colnames(ADJ_S)[which(colnames(ADJ_S) %in% drugs)]
+  disease_s = colnames(ADJ_S)[which(colnames(ADJ_S) %in% disease)]
+  
+  chemMat_index = which(chemMat[,1] %in% chemical_s)
+  chemMat = chemMat[chemMat_index,]
+  
+  d = input$InterestingNodes
+  if(DEBUGGING)
+    cat("INTERESTING NODES: ",d,"\n")
+  
+  validate(
+    need(input$InterestingNodes != "", "SELECT A NODE!")
+  )
+  if(DEBUGGING)
+    cat("INTERESTING NODES: ",d,"\n")
+  
+  neig = lapply(X = good_cliques,FUN = function(i_cliques){
+    v_names = names(i_cliques)
+    if(sum(v_names %in% d)>0){
+      return(v_names)
+    }
+  })
+  
+  vds = unique(unlist(neig))
+  
+  edges_type = input$sub_Edges
+  if(DEBUGGING)
+    cat("Edges_type ",edges_type,"\n")
+  type = input$sub_checkGroup
+  
+  validate(
+    need(input$sub_checkGroup != "", "Please select an object group")
+  )
+  
+  ATC_code = input$sub_ATCGroup
+  if(ATC_code == "ALL"){
+    ATC_code = ATC_letter_vector
+  }
+  chem_group = input$sub_ChemicalGroup
+  if(chem_group == "ALL"){
+    chem_group = chemical_group_vector
+  }
+  
+  items = c() 
+  items_type = c()
+  items_lengt = c()
+  #items_color = c()
+  for(i in 1:length(type)){
+    if(type[i]=="nano"){
+      items = c(items,nano_s)
+      items_type = c(items_type,"nano")
+      items_lengt = c(items_lengt,length(nano_s))
+      #items_color = c(items_color,"pink")
+    }
+    if(type[i]=="drugs"){
+      validate(
+        need(input$sub_ATCGroup != "", "Please select an ATC group")
+      )
+      already_selected = c()
+      for(j in 1:length(ATC_code)){
+        ATC_lev1 = substr(join10$code,1,1)
+        ATC_index = which(ATC_lev1 %in% ATC_code[j])
+        new_drugs = unique(join10$name[ATC_index])
+        new_drugs = new_drugs[which(new_drugs %in% drug_s)]
+        index_new_drugs = which((new_drugs %in% already_selected)==FALSE)
+        already_selected = new_drugs[index_new_drugs]
+        
+        toRem = which(new_drugs[index_new_drugs] %in% items)
+        if(length(toRem)>0){
+          index_new_drugs = index_new_drugs[-toRem]
+        }
+        
+        items = c(items,new_drugs[index_new_drugs])
+        items_type = c(items_type,paste("Drugs ATC: ", ATC_code[j],sep=""))
+        items_lengt = c(items_lengt,length(new_drugs[index_new_drugs]))
+      }
+    }
+    if(type[i]=="chemical"){
+      validate(
+        need(input$sub_ChemicalGroup != "", "Please select a chemical group")
+      )
+      
+      already_selected = c()
+      for(j in 1:length(chem_group)){
+        chem_index = which(chemMat[,2] %in% chem_group[j])
+        new_chem = unique(chemMat[chem_index,1])
+        index_new_chem = which((new_chem %in% already_selected)==FALSE)
+        already_selected = new_chem[index_new_chem]
+        
+        toRem = which(new_chem[index_new_chem] %in% items)
+        if(length(toRem)>0){
+          index_new_chem = index_new_chem[-toRem]
+        }
+        items = c(items,new_chem[index_new_chem])
+        items_type = c(items_type,paste("Chemical class: ", chem_group[j],sep=""))
+        items_lengt = c(items_lengt,length(new_chem[index_new_chem]))
+      }
+    }
+    if(type[i]=="disease"){
+      good_disease = disease[disease %in% colnames(ADJ_toPlot)]
+      items = c(items,good_disease)
+      items_type = c(items_type,"disease")
+      items_lengt = c(items_lengt,length(good_disease))
+    }
+  }
+  
+  idx_g = which(V(g)$node_type == "gene")
+  GMAT = igraph::get.adjacency(g)
+  genes_items_interaction = rowSums(as.matrix(GMAT[idx_g,items]))
+  GG_genes = rownames(GMAT)[which(genes_items_interaction>0)]
+  idx_gg = which(GG_genes %in% V(g_geni2)$name)
+  geni_toPlot = igraph::induced.subgraph(g_geni2,GG_genes[idx_gg])
+  geni_toPlot = igraph::delete.vertices(geni_toPlot,which(igraph::degree(geni_toPlot)<1))
+  
+  validate(
+    need(vcount(geni_toPlot)>0, "Empty Network")
+  )
+  
+  #         gto_plot = igraph::induced.subgraph(graph = g,vids = c(V(g)$name[idx_g],items))
+  #         gto_plot = igraph::delete.vertices(gto_plot,items)
+  #         idx_gg = which(V(gto_plot)$name %in% V(g_geni2)$name)
+  #         geni_toPlot = igraph::induced.subgraph(g_geni2,V(gto_plot)$name[idx_gg])
+  #         geni_toPlot = igraph::delete.vertices(geni_toPlot,which(igraph::degree(geni_toPlot)<1))
+  
+  data_frame = get.data.frame(x = geni_toPlot,what = "both")
+  edges = data_frame$edges
+  edges$value = round(abs(edges$weight * 10),digits = 0)
+  colnames(edges) = c("source","target","weight","value")
+  edges$value = edges$value + 0.2
+  vertices = data_frame$vertices
+  vertices$size = igraph::degree(geni_toPlot)
+  colnames(vertices) = c("name","group","type","size")
+  
+  if(dim(edges)[1]>0){
+    for(i in 1:dim(edges)[1]){
+      edges[i,"source"] = which(vertices[,"name"] %in% edges[i,"source"]) - 1
+      edges[i,"target"] = which(vertices[,"name"] %in% edges[i,"target"]) - 1
+    }  
+  }
+  
+  vertices$name = as.factor(vertices$name)
+  vertices$group = as.factor(vertices$group)
+  vertices$size = as.numeric(vertices$size)
+  vertices$type = as.factor(vertices$type)
+  edges$source = as.integer(edges$source)
+  edges$target  = as.integer(edges$target)
+  edges$value = as.integer(edges$value)
+  
+  MyClickScript <- 
+    '      d3.select(this).select("circle").transition()
+  .duration(750)
+  .attr("r", 30)'
+  
+  forceNetwork(Links = edges, Nodes = vertices,
+               Source = "source", Target = "target",
+               Value = "value", NodeID = "name",Nodesize="size",
+               Group = "group",zoom = TRUE,opacity = 0.95,fontSize = 8,
+               legend = TRUE,
+               clickAction = MyClickScript,
+               charge = -input$sub_repulserad,
+               linkDistance = JS(paste0("function(d){return d.value*",input$sub_length,
+                                        "}")))
+})      
+        
+output$gene_Subnetwork_plot_statistics = renderPlot({
+  if(DEBUGGING)
+    cat("Subnetwork plot\n")
+  ADJ_toPlot = ADJ_S
+  nano_s = colnames(ADJ_S)[which(colnames(ADJ_S) %in% nano)]
+  chemical_s = colnames(ADJ_S)[which(colnames(ADJ_S) %in% chemical)]
+  drug_s = colnames(ADJ_S)[which(colnames(ADJ_S) %in% drugs)]
+  disease_s = colnames(ADJ_S)[which(colnames(ADJ_S) %in% disease)]
+  
+  chemMat_index = which(chemMat[,1] %in% chemical_s)
+  chemMat = chemMat[chemMat_index,]
+  
+  d = input$InterestingNodes
+  if(DEBUGGING)
+    cat("INTERESTING NODES: ",d,"\n")
+  
+  validate(
+    need(input$InterestingNodes != "", "SELECT A NODE!")
+  )
+  if(DEBUGGING)
+    cat("INTERESTING NODES: ",d,"\n")
+  
+  neig = lapply(X = good_cliques,FUN = function(i_cliques){
+    v_names = names(i_cliques)
+    if(sum(v_names %in% d)>0){
+      return(v_names)
+    }
+  })
+  
+  vds = unique(unlist(neig))
+  
+  edges_type = input$sub_Edges
+  if(DEBUGGING)
+    cat("Edges_type ",edges_type,"\n")
+  type = input$sub_checkGroup
+  
+  validate(
+    need(input$sub_checkGroup != "", "Please select an object group")
+  )
+  
+  ATC_code = input$sub_ATCGroup
+  if(ATC_code == "ALL"){
+    ATC_code = ATC_letter_vector
+  }
+  chem_group = input$sub_ChemicalGroup
+  if(chem_group == "ALL"){
+    chem_group = chemical_group_vector
+  }
+  
+  items = c() 
+  items_type = c()
+  items_lengt = c()
+  #items_color = c()
+  for(i in 1:length(type)){
+    if(type[i]=="nano"){
+      items = c(items,nano_s)
+      items_type = c(items_type,"nano")
+      items_lengt = c(items_lengt,length(nano_s))
+      #items_color = c(items_color,"pink")
+    }
+    if(type[i]=="drugs"){
+      validate(
+        need(input$sub_ATCGroup != "", "Please select an ATC group")
+      )
+      already_selected = c()
+      for(j in 1:length(ATC_code)){
+        ATC_lev1 = substr(join10$code,1,1)
+        ATC_index = which(ATC_lev1 %in% ATC_code[j])
+        new_drugs = unique(join10$name[ATC_index])
+        new_drugs = new_drugs[which(new_drugs %in% drug_s)]
+        index_new_drugs = which((new_drugs %in% already_selected)==FALSE)
+        already_selected = new_drugs[index_new_drugs]
+        
+        toRem = which(new_drugs[index_new_drugs] %in% items)
+        if(length(toRem)>0){
+          index_new_drugs = index_new_drugs[-toRem]
+        }
+        
+        items = c(items,new_drugs[index_new_drugs])
+        items_type = c(items_type,paste("Drugs ATC: ", ATC_code[j],sep=""))
+        items_lengt = c(items_lengt,length(new_drugs[index_new_drugs]))
+      }
+    }
+    if(type[i]=="chemical"){
+      validate(
+        need(input$sub_ChemicalGroup != "", "Please select a chemical group")
+      )
+      
+      already_selected = c()
+      for(j in 1:length(chem_group)){
+        chem_index = which(chemMat[,2] %in% chem_group[j])
+        new_chem = unique(chemMat[chem_index,1])
+        index_new_chem = which((new_chem %in% already_selected)==FALSE)
+        already_selected = new_chem[index_new_chem]
+        
+        toRem = which(new_chem[index_new_chem] %in% items)
+        if(length(toRem)>0){
+          index_new_chem = index_new_chem[-toRem]
+        }
+        items = c(items,new_chem[index_new_chem])
+        items_type = c(items_type,paste("Chemical class: ", chem_group[j],sep=""))
+        items_lengt = c(items_lengt,length(new_chem[index_new_chem]))
+      }
+    }
+    if(type[i]=="disease"){
+      good_disease = disease[disease %in% colnames(ADJ_toPlot)]
+      items = c(items,good_disease)
+      items_type = c(items_type,"disease")
+      items_lengt = c(items_lengt,length(good_disease))
+    }
+  }
+  
+  idx_g = which(V(g)$node_type == "gene")
+  GMAT = igraph::get.adjacency(g)
+  genes_items_interaction = rowSums(as.matrix(GMAT[idx_g,items]))
+  GG_genes = rownames(GMAT)[which(genes_items_interaction>0)]
+  idx_gg = which(GG_genes %in% V(g_geni2)$name)
+  geni_toPlot = igraph::induced.subgraph(g_geni2,GG_genes[idx_gg])
+  geni_toPlot = igraph::delete.vertices(geni_toPlot,which(igraph::degree(geni_toPlot)<1))
+  
+  validate(
+    need(vcount(geni_toPlot)>0, "Empty Network")
+  )
+  
+  
+  data_frame = get.data.frame(x = geni_toPlot,what = "both")
+  edges = data_frame$edges
+  edges$value = round(abs(edges$weight * 10),digits = 0)
+  colnames(edges) = c("source","target","weight","value")
+  
+  vertices = data_frame$vertices
+  vertices$size = igraph::degree(geni_toPlot)
+  colnames(vertices) = c("name","group","type","size")
+  
+  for(i in 1:dim(edges)[1]){
+    edges[i,"source"] = which(vertices[,"name"] %in% edges[i,"source"]) - 1
+    edges[i,"target"] = which(vertices[,"name"] %in% edges[i,"target"]) - 1
+  }
+  
+  vertices$name = as.factor(vertices$name)
+  vertices$group = as.factor(vertices$group)
+  vertices$size = as.numeric(vertices$size)
+  vertices$type = as.factor(vertices$type)
+  
+  edges$source = as.integer(edges$source)
+  edges$target  = as.integer(edges$target)
+  edges$value = as.integer(edges$value)
+  
+  slices = table(vertices$group)
+  lbls = names(table(vertices$group))  
+  pie(slices, labels = lbls, main="Network statistics",col = rainbow(length(slices)),
+      radius = 1,cex = 0.7,las=1)
+  
+})
+output$genes_data_table = DT::renderDataTable({
+  type = input$NetworkPattern
+  clique_type = input$clique_type
+  
+  validate(
+    need(input$NetworkPattern != "", "Please select a pattern type")
+  )
+  if(DEBUGGING)
+    cat("Il tipo selezionato ??: ",type,"\n")
+  type = as.integer(gsub(pattern = "M",x =type,replacement = ""))
+  if(DEBUGGING)
+    cat("Il numero selezionato ??: ",type,"\n")
+  if(DEBUGGING)
+    cat("class input$clique_data_table: ",class(input$clique_data_table))
+  s = input$clique_data_table_rows_selected
+  if(DEBUGGING)
+    cat("s vale: ",s,"\n")
+  
+  if(clique_type == "NDCD"){
+    g_= internal_render_plot(MM_list[[type]],gr4=graph_s,s,proxyList = proxy)
+  }
+  if(clique_type == "NDD"){
+    g_= internal_render_plotNDD(MM_list[[type]],gr4=graph_s,s,proxyList = proxy)
+  }
+  if(clique_type == "NDC"){
+    g_= internal_render_plotNDC(MM_list[[type]],gr4=graph_s,s,proxyList = proxy)
+  }
+  if(clique_type == "DCD"){
+    g_= internal_render_plotDCD(MM_list[[type]],gr4=graph_s,s,proxyList = proxy)
+  }
+  if(clique_type == "ALL"){
+    if(("" %in% MList[[type]][1,]) == FALSE){
+      g_= internal_render_plot(MM_list[[type]],gr4=graph_s,s,proxyList = proxy)
+    }else{
+      col_idx = which(MList[[type]][1,] %in% "")
+      if(col_idx == 4){
+        g_= internal_render_plotNDD(MM_list[[type]],gr4=graph_s,s,proxyList = proxy)
+      }
+      if(col_idx == 1){
+        g_= internal_render_plotNDC(MM_list[[type]],gr4=graph_s,s,proxyList = proxy)
+      }
+      if(col_idx == 2){
+        g_= internal_render_plotDCD(MM_list[[type]],gr4=graph_s,s,proxyList = proxy)
+      }
+    }
+  }
+  if(DEBUGGING){
+    cat("g_class: ",class(g_),"\n")
+    cat("graph names ",V(g_)$name,"\n")
     
-        })
-        
-        
-        output$gene_Subnetwork_plot = renderForceNetwork({
-          if(DEBUGGING)
-          cat("Subnetwork plot\n")
-          ADJ_toPlot = ADJ_S
-          nano_s = colnames(ADJ_S)[which(colnames(ADJ_S) %in% nano)]
-          chemical_s = colnames(ADJ_S)[which(colnames(ADJ_S) %in% chemical)]
-          drug_s = colnames(ADJ_S)[which(colnames(ADJ_S) %in% drugs)]
-          disease_s = colnames(ADJ_S)[which(colnames(ADJ_S) %in% disease)]
-          
-          chemMat_index = which(chemMat[,1] %in% chemical_s)
-          chemMat = chemMat[chemMat_index,]
-          
-          d = input$InterestingNodes
-          if(DEBUGGING)
-          cat("INTERESTING NODES: ",d,"\n")
-          
-          validate(
-            need(input$InterestingNodes != "", "SELECT A NODE!")
-          )
-          if(DEBUGGING)
-          cat("INTERESTING NODES: ",d,"\n")
-          
-          neig = lapply(X = good_cliques,FUN = function(i_cliques){
-            v_names = names(i_cliques)
-            if(sum(v_names %in% d)>0){
-              return(v_names)
-            }
-          })
-          
-          vds = unique(unlist(neig))
-          
-          edges_type = input$sub_Edges
-          if(DEBUGGING)
-          cat("Edges_type ",edges_type,"\n")
-          type = input$sub_checkGroup
-          
-          validate(
-            need(input$sub_checkGroup != "", "Please select an object group")
-          )
-          
-          ATC_code = input$sub_ATCGroup
-          if(ATC_code == "ALL"){
-            ATC_code = ATC_letter_vector
-          }
-          chem_group = input$sub_ChemicalGroup
-          if(chem_group == "ALL"){
-            chem_group = chemical_group_vector
-          }
-          
-          items = c() 
-          items_type = c()
-          items_lengt = c()
-          for(i in 1:length(type)){
-            if(type[i]=="nano"){
-              items = c(items,nano_s)
-              items_type = c(items_type,"nano")
-              items_lengt = c(items_lengt,length(nano_s))
-            }
-            if(type[i]=="drugs"){
-              validate(
-                need(input$sub_ATCGroup != "", "Please select an ATC group")
-              )
-              already_selected = c()
-              for(j in 1:length(ATC_code)){
-                ATC_lev1 = substr(join10$code,1,1)
-                ATC_index = which(ATC_lev1 %in% ATC_code[j])
-                new_drugs = unique(join10$name[ATC_index])
-                new_drugs = new_drugs[which(new_drugs %in% drug_s)]
-                index_new_drugs = which((new_drugs %in% already_selected)==FALSE)
-                already_selected = new_drugs[index_new_drugs]
-                
-                toRem = which(new_drugs[index_new_drugs] %in% items)
-                if(length(toRem)>0){
-                  index_new_drugs = index_new_drugs[-toRem]
-                }
-                
-                items = c(items,new_drugs[index_new_drugs])
-                items_type = c(items_type,paste("Drugs ATC: ", ATC_code[j],sep=""))
-                items_lengt = c(items_lengt,length(new_drugs[index_new_drugs]))
-              }
-            }
-            if(type[i]=="chemical"){
-              validate(
-                need(input$sub_ChemicalGroup != "", "Please select a chemical group")
-              )
-              
-              already_selected = c()
-              for(j in 1:length(chem_group)){
-                chem_index = which(chemMat[,2] %in% chem_group[j])
-                new_chem = unique(chemMat[chem_index,1])
-                index_new_chem = which((new_chem %in% already_selected)==FALSE)
-                already_selected = new_chem[index_new_chem]
-                
-                toRem = which(new_chem[index_new_chem] %in% items)
-                if(length(toRem)>0){
-                  index_new_chem = index_new_chem[-toRem]
-                }
-                
-                items = c(items,new_chem[index_new_chem])
-                items_type = c(items_type,paste("Chemical class: ", chem_group[j],sep=""))
-                items_lengt = c(items_lengt,length(new_chem[index_new_chem]))
-              }
-              
-            }
-            if(type[i]=="disease"){
-              good_disease = disease[disease %in% colnames(ADJ_toPlot)]
-              items = c(items,good_disease)
-              items_type = c(items_type,"disease")
-              items_lengt = c(items_lengt,length(good_disease))
-            }
-          }
-          
-          idx_g = which(V(g)$node_type %in% "gene")
-          gto_plot = igraph::induced.subgraph(graph = g,vids = c(V(g)$name[idx_g],items))
-          
-          gto_plot = igraph::delete.vertices(gto_plot,items)
-          idx_gg = which(V(gto_plot)$name %in% V(g_geni2)$name)
-          geni_toPlot = igraph::induced.subgraph(g_geni2,V(gto_plot)$name[idx_gg])
-          geni_toPlot = igraph::delete.vertices(geni_toPlot,which(igraph::degree(geni_toPlot)<1))
-          
-          data_frame = get.data.frame(x = geni_toPlot,what = "both")
-          edges = data_frame$edges
-          edges$value = round(abs(edges$weight * 10),digits = 0)
-          colnames(edges) = c("source","target","weight","value")
-          edges$value = edges$value + 0.2
-          vertices = data_frame$vertices
-          vertices$size = igraph::degree(geni_toPlot)
-          colnames(vertices) = c("name","group","type","size")
-          
-          for(i in 1:dim(edges)[1]){
-            edges[i,"source"] = which(vertices[,"name"] %in% edges[i,"source"]) - 1
-            edges[i,"target"] = which(vertices[,"name"] %in% edges[i,"target"]) - 1
-          }
-          
-          vertices$name = as.factor(vertices$name)
-          vertices$group = as.factor(vertices$group)
-          vertices$size = as.numeric(vertices$size)
-          vertices$type = as.factor(vertices$type)
-          
-          edges$source = as.integer(edges$source)
-          edges$target  = as.integer(edges$target)
-          edges$value = as.integer(edges$value)
-          
-          
-          MyClickScript <- 
-            '      d3.select(this).select("circle").transition()
-          .duration(750)
-          .attr("r", 30)'
-          
-          forceNetwork(Links = edges, Nodes = vertices,
-                       Source = "source", Target = "target",
-                       Value = "value", NodeID = "name",Nodesize="size",
-                       Group = "group",zoom = TRUE,opacity = 0.95,fontSize = 8,
-                       legend = TRUE,
-                       clickAction = MyClickScript,
-                       charge = -input$sub_repulserad,
-                       linkDistance = JS(paste0("function(d){return d.value*",input$sub_length,
-                                                "}")))
-        })
-        
-        output$gene_Subnetwork_plot_statistics = renderPlot({
-          if(DEBUGGING)
-          cat("Subnetwork plot\n")
-          ADJ_toPlot = ADJ_S
-          nano_s = colnames(ADJ_S)[which(colnames(ADJ_S) %in% nano)]
-          chemical_s = colnames(ADJ_S)[which(colnames(ADJ_S) %in% chemical)]
-          drug_s = colnames(ADJ_S)[which(colnames(ADJ_S) %in% drugs)]
-          disease_s = colnames(ADJ_S)[which(colnames(ADJ_S) %in% disease)]
-          
-          chemMat_index = which(chemMat[,1] %in% chemical_s)
-          chemMat = chemMat[chemMat_index,]
-          
-          d = input$InterestingNodes
-          if(DEBUGGING)
-          cat("INTERESTING NODES: ",d,"\n")
-          
-          validate(
-            need(input$InterestingNodes != "", "SELECT A NODE!")
-          )
-          if(DEBUGGING)
-          cat("INTERESTING NODES: ",d,"\n")
-          
-          neig = lapply(X = good_cliques,FUN = function(i_cliques){
-            v_names = names(i_cliques)
-            if(sum(v_names %in% d)>0){
-              return(v_names)
-            }
-          })
-          
-          vds = unique(unlist(neig))
-          
-          edges_type = input$sub_Edges
-          if(DEBUGGING)
-          cat("Edges_type ",edges_type,"\n")
-          type = input$sub_checkGroup
-          
-          validate(
-            need(input$sub_checkGroup != "", "Please select an object group")
-          )
-          
-          ATC_code = input$sub_ATCGroup
-          chem_group = input$sub_ChemicalGroup
-          
-          items = c() 
-          items_type = c()
-          items_lengt = c()
-          #items_color = c()
-          for(i in 1:length(type)){
-            if(type[i]=="nano"){
-              items = c(items,nano_s)
-              items_type = c(items_type,"nano")
-              items_lengt = c(items_lengt,length(nano_s))
-              #items_color = c(items_color,"pink")
-            }
-            if(type[i]=="drugs"){
-              validate(
-                need(input$sub_ATCGroup != "", "Please select an ATC group")
-              )
-              already_selected = c()
-              for(j in 1:length(ATC_code)){
-                ATC_lev1 = substr(join10$code,1,1)
-                ATC_index = which(ATC_lev1 %in% ATC_code[j])
-                new_drugs = unique(join10$name[ATC_index])
-                new_drugs = new_drugs[which(new_drugs %in% drug_s)]
-                index_new_drugs = which((new_drugs %in% already_selected)==FALSE)
-                already_selected = new_drugs[index_new_drugs]
-                
-                toRem = which(new_drugs[index_new_drugs] %in% items)
-                if(length(toRem)>0){
-                  index_new_drugs = index_new_drugs[-toRem]
-                }
-                
-                items = c(items,new_drugs[index_new_drugs])
-                items_type = c(items_type,paste("Drugs ATC: ", ATC_code[j],sep=""))
-                items_lengt = c(items_lengt,length(new_drugs[index_new_drugs]))
-              }
-            }
-            if(type[i]=="chemical"){
-              validate(
-                need(input$sub_ChemicalGroup != "", "Please select a chemical group")
-              )
-              
-              already_selected = c()
-              for(j in 1:length(chem_group)){
-                chem_index = which(chemMat[,2] %in% chem_group[j])
-                new_chem = unique(chemMat[chem_index,1])
-                index_new_chem = which((new_chem %in% already_selected)==FALSE)
-                already_selected = new_chem[index_new_chem]
-                
-                toRem = which(new_chem[index_new_chem] %in% items)
-                if(length(toRem)>0){
-                  index_new_chem = index_new_chem[-toRem]
-                }
-                
-                items = c(items,new_chem[index_new_chem])
-                items_type = c(items_type,paste("Chemical class: ", chem_group[j],sep=""))
-                items_lengt = c(items_lengt,length(new_chem[index_new_chem]))
-              }
-              
-            }
-            if(type[i]=="disease"){
-              good_disease = disease[disease %in% colnames(ADJ_toPlot)]
-              items = c(items,good_disease)
-              items_type = c(items_type,"disease")
-              items_lengt = c(items_lengt,length(good_disease))
-            }
-          }
-          
-          idx_g = which(V(g)$node_type %in% "gene")
-          gto_plot = igraph::induced.subgraph(graph = g,vids = c(V(g)$name[idx_g],items))
-          
-          gto_plot = igraph::delete.vertices(gto_plot,items)
-          idx_gg = which(V(gto_plot)$name %in% V(g_geni2)$name)
-          geni_toPlot = igraph::induced.subgraph(g_geni2,V(gto_plot)$name[idx_gg])
-          geni_toPlot = igraph::delete.vertices(geni_toPlot,which(igraph::degree(geni_toPlot)<1))
-          
-          data_frame = get.data.frame(x = geni_toPlot,what = "both")
-          edges = data_frame$edges
-          edges$value = round(abs(edges$weight * 10),digits = 0)
-          colnames(edges) = c("source","target","weight","value")
-          
-          vertices = data_frame$vertices
-          vertices$size = igraph::degree(geni_toPlot)
-          colnames(vertices) = c("name","group","type","size")
-          
-          for(i in 1:dim(edges)[1]){
-            edges[i,"source"] = which(vertices[,"name"] %in% edges[i,"source"]) - 1
-            edges[i,"target"] = which(vertices[,"name"] %in% edges[i,"target"]) - 1
-          }
-          
-          vertices$name = as.factor(vertices$name)
-          vertices$group = as.factor(vertices$group)
-          vertices$size = as.numeric(vertices$size)
-          vertices$type = as.factor(vertices$type)
-          
-          edges$source = as.integer(edges$source)
-          edges$target  = as.integer(edges$target)
-          edges$value = as.integer(edges$value)
-          
-          slices = table(vertices$group)
-          lbls = names(table(vertices$group))
-          pie(slices, labels = lbls, main="Network statistics",col = rainbow(length(table(vertices$group))))
-          
-        })
-        
+  }
+  
+  
+  validate(
+    need(length(s)!=0 , "Please select a clique")
+  )          
+  
+  idx_g = which(V(g)$node_type == "gene")
+  GMAT = igraph::get.adjacency(g)
+  genes_items_interaction = rowSums(as.matrix(GMAT[idx_g,V(g_)$name]))
+  GG_genes = rownames(GMAT)[which(genes_items_interaction>0)]
+  idx_gg = which(GG_genes %in% V(g_geni2)$name)
+  geni_toPlot = igraph::induced.subgraph(g_geni2,GG_genes[idx_gg])
+  
+  GENE_INFO = cbind(V(geni_toPlot)$name,V(geni_toPlot)$group)
+  colnames(GENE_INFO) = c("Gene Symbol","KEGG Pathway")
+  
+  for(row_i in 1:dim(GENE_INFO)[1]){
+    for(col_j in 1:dim(GENE_INFO)[2]){
+      GENE_INFO[row_i,col_j] = paste('<a target="_blank" href=\"https://www.google.com/?q=',GENE_INFO[row_i,col_j],'">',GENE_INFO[row_i,col_j],'</a>',sep="")
+    }
+  }
+  
+  DT::datatable(data =  GENE_INFO,
+                options = list(order = list(list(1, 'desc')),target = 'row+column',scrollX=TRUE,scrollY = "400px", scrollCollapse = TRUE,paging=FALSE),
+                escape=FALSE,
+                selection = "single")
+  
+})
         
       }) #End Listener 1
       
@@ -2150,8 +2336,8 @@ if(DEBUGGING){
           
           V(graph_s)$type = tipes
           V(graph_s)$color = col
-          graph_s = set.edge.attribute(graph_s,name = "color",index = E(graph_s)[which(sign(E(graph_s)$weight)<0)],value = "darkgreen")
-          graph_s = set.edge.attribute(graph_s,name = "color",index = E(graph_s)[which(sign(E(graph_s)$weight)>0)],value = "red")
+          graph_s = igraph::set.edge.attribute(graph_s,name = "color",index = E(graph_s)[which(sign(E(graph_s)$weight)<0)],value = "darkgreen")
+          graph_s = igraph::set.edge.attribute(graph_s,name = "color",index = E(graph_s)[which(sign(E(graph_s)$weight)>0)],value = "red")
           
           ADJ_S = get.adjacency(graph_s,attr = "weight")
           ADJ_S = as.matrix(ADJ_S)
@@ -3091,11 +3277,11 @@ if(DEBUGGING){
             drug_id = unique(Mi_count$Drug)
             disease_id = unique(Mi_count$Disease)
             
-            Mi_count = Mi_count[order(Mi_count$freq),]
+            Mi_count = Mi_count[order(Mi_count$freq,decreasing = FALSE),]
             nElem_c = length(columns_)
             
             d_id = input$InterestingNodes_items
-            d_node_type = get.vertex.attribute(graph = graph_gw,name = "type",index = d_id)
+            d_node_type = igraph::get.vertex.attribute(graph = graph_gw,name = "type",index = d_id)
             column_index = which(classes_elem %in% d_node_type)
             
             validate(
@@ -3106,22 +3292,35 @@ if(DEBUGGING){
               indexes_c = 1:(dim(Mi_count)[2]-1)
               indexes_c = indexes_c[-column_index]
               nElem = round((dim(Mi_count)[1]) * (input$percentuale)/100,digits = 0)
-              Mi_count2 = Mi_count$freq[1:nElem]
-              names(Mi_count2) =  paste(Mi_count[1:nElem,indexes_c[1]],Mi_count[1:nElem,indexes_c[2]],sep=" ")
+              dim(Mi_count)[1] -> up_b
+              low_b = up_b - nElem
+              Mi_count2 = Mi_count$freq[low_b:up_b]
+              names(Mi_count2) =  paste(Mi_count[low_b:up_b,indexes_c[1]],Mi_count[low_b:up_b,indexes_c[2]],sep="-")
+              
+              
+#               Mi_count2 = Mi_count$freq[1:nElem]
+#               names(Mi_count2) =  paste(Mi_count[1:nElem,indexes_c[1]],Mi_count[1:nElem,indexes_c[2]],sep=" ")
               
             }
             if(length(columns_) == 2){
               indexes_c = 1:(dim(Mi_count)[2]-1)
               indexes_c = indexes_c[-column_index]
               nElem = round((dim(Mi_count)[1]) * (input$percentuale)/100,digits = 0)
-              Mi_count2 = Mi_count$freq[1:nElem]
-              #names(Mi_count2) =  paste(Mi_count[1:nElem,columns_[2:nElem_c]],sep=" ")#,Mi_count[1:nElem,3],sep=" ")
-              names(Mi_count2) =  paste(Mi_count[1:nElem,indexes_c],sep=" ")#,Mi_count[1:nElem,3],sep=" ")
+              dim(Mi_count)[1] -> up_b
+              low_b = up_b - nElem
+              Mi_count2 = Mi_count$freq[low_b:up_b]
+              names(Mi_count2) =  paste(Mi_count[low_b:up_b,indexes_c],sep=" ")#,Mi_count[1:nElem,3],sep=" ")
+              
+              
+#               Mi_count2 = Mi_count$freq[1:nElem]
+#               #names(Mi_count2) =  paste(Mi_count[1:nElem,columns_[2:nElem_c]],sep=" ")#,Mi_count[1:nElem,3],sep=" ")
+#               names(Mi_count2) =  paste(Mi_count[1:nElem,indexes_c],sep=" ")#,Mi_count[1:nElem,3],sep=" ")
               
             }
             
-            index = which(Mi_count[1:nElem,column_index] %in% d_id)
-            
+            #index = which(Mi_count[1:nElem,column_index] %in% d_id)
+            index = which(Mi_count[low_b:up_b,column_index] %in% d_id)
+
             
             validate(
               need(length(index)>0, paste("No clique for", d_id ,"with this threshold"))
@@ -3195,7 +3394,7 @@ if(DEBUGGING){
             nElem_c = length(columns_)
             
             d_id = input$InterestingNodes_items
-            d_node_type = get.vertex.attribute(graph = graph_gw,name = "type",index = d_id)
+            d_node_type = igraph::get.vertex.attribute(graph = graph_gw,name = "type",index = d_id)
             column_index = which(classes_elem %in% d_node_type)
             
             validate(
@@ -3296,7 +3495,7 @@ if(DEBUGGING){
             nElem_c = length(columns_)
             
             d_id = input$InterestingNodes_items
-            d_node_type = get.vertex.attribute(graph = graph_gw,name = "type",index = d_id)
+            d_node_type = igraph::get.vertex.attribute(graph = graph_gw,name = "type",index = d_id)
             column_index = which(classes_elem %in% d_node_type)
             
             validate(
@@ -3397,7 +3596,7 @@ if(DEBUGGING){
             nElem_c = length(columns_)
             
             d_id = input$InterestingNodes_items
-            d_node_type = get.vertex.attribute(graph = graph_gw,name = "type",index = d_id)
+            d_node_type = igraph::get.vertex.attribute(graph = graph_gw,name = "type",index = d_id)
             column_index = which(classes_elem %in% d_node_type)
             
             validate(
@@ -3497,7 +3696,7 @@ if(DEBUGGING){
             nElem_c = length(columns_)
             
             d_id = input$InterestingNodes_items
-            d_node_type = get.vertex.attribute(graph = graph_gw,name = "type",index = d_id)
+            d_node_type = igraph::get.vertex.attribute(graph = graph_gw,name = "type",index = d_id)
             column_index = which(classes_elem %in% d_node_type)
             
             validate(
@@ -3538,7 +3737,188 @@ if(DEBUGGING){
           
         })
         
-        
+output$drugs_chemical_DT = DT::renderDataTable({
+  type = input$NetworkPattern
+  clique_type = input$clique_type
+  
+  validate(
+    need(input$NetworkPattern != "", "Please select a pattern type")
+  )
+  if(DEBUGGING)
+    cat("Il tipo selezionato ??: ",type,"\n")
+  type = as.integer(gsub(pattern = "M",x =type,replacement = ""))
+  if(DEBUGGING)
+    cat("Il numero selezionato ??: ",type,"\n")
+  if(DEBUGGING)
+    cat("class input$clique_data_table: ",class(input$clique_data_table))
+  s = input$clique_data_table_rows_selected
+  if(DEBUGGING)
+    cat("s vale: ",s,"\n")
+  
+  if(clique_type == "NDCD"){
+    g_= internal_render_plot(MM_list[[type]],gr4=graph_s,s,proxyList = proxy)
+  }
+  if(clique_type == "NDD"){
+    g_= internal_render_plotNDD(MM_list[[type]],gr4=graph_s,s,proxyList = proxy)
+  }
+  if(clique_type == "NDC"){
+    g_= internal_render_plotNDC(MM_list[[type]],gr4=graph_s,s,proxyList = proxy)
+  }
+  if(clique_type == "DCD"){
+    g_= internal_render_plotDCD(MM_list[[type]],gr4=graph_s,s,proxyList = proxy)
+  }
+  if(clique_type == "ALL"){
+    if(("" %in% MList[[type]][1,]) == FALSE){
+      g_= internal_render_plot(MM_list[[type]],gr4=graph_s,s,proxyList = proxy)
+    }else{
+      col_idx = which(MList[[type]][1,] %in% "")
+      if(col_idx == 4){
+        g_= internal_render_plotNDD(MM_list[[type]],gr4=graph_s,s,proxyList = proxy)
+      }
+      if(col_idx == 1){
+        g_= internal_render_plotNDC(MM_list[[type]],gr4=graph_s,s,proxyList = proxy)
+      }
+      if(col_idx == 2){
+        g_= internal_render_plotDCD(MM_list[[type]],gr4=graph_s,s,proxyList = proxy)
+      }
+    }
+  }
+  if(DEBUGGING){
+    cat("g_class: ",class(g_),"\n")
+    cat("graph names ",V(g_)$name,"\n")
+    
+  }
+  
+  
+  if(DEBUGGING){
+    cat("Name ---> ",V(g_)$name,"\n")
+  }
+  
+  validate(
+    need(length(s)!=0 , "Please select a clique")
+  )   
+  
+  if(length(V(g_)$name) == 3){
+    cat("3 VERTICI --> \n")
+
+   cli_drug = V(g_)$name[which(V(g_)$name %in% drugs)]  
+   idx_drug = which(join10$name == cli_drug)
+   idx_drug_letter = which(ATC_letter_vector == join10[idx_drug,3])
+   ATC_l1 = names(ATC_choice_list)[idx_drug_letter + 1]
+   drug_row = c(cli_drug,ATC_l1)
+   INFO = rbind(drug_row,c("",""))
+    
+  }
+  
+  if(length(V(g_)$name) == 4){
+    cat("4 VERTICI ---> \n")
+   
+    cli_drug = V(g_)$name[which(V(g_)$name %in% drugs)]  
+    idx_drug = which(join10$name == cli_drug)
+    idx_drug_letter = which(ATC_letter_vector == join10[idx_drug,3])
+    ATC_l1 = names(ATC_choice_list)[idx_drug_letter + 1]
+    drug_row = c(cli_drug,ATC_l1)
+      
+    
+    cli_chem = V(g_)$name[which(V(g_)$name %in% chemical)]  
+    idx_chem = which(chemMat[,1] == cli_chem) 
+    chem_row = chemMat[idx_chem,]
+      
+    INFO = rbind(drug_row,chem_row)
+     
+  }
+  
+  
+  colnames(INFO) = c("Phenotypic Entity","Class")
+  rownames(INFO) = NULL
+  DT::datatable(data =  INFO,
+                options = list(order = list(list(1, 'desc')),target = 'row+column',scrollX=TRUE,scrollY = "400px", scrollCollapse = TRUE,paging=FALSE),
+                escape=FALSE,
+                selection = "single")
+  
+})    
+
+
+    output$genes_data_table = DT::renderDataTable({
+          type = input$NetworkPattern
+          clique_type = input$clique_type
+          
+          validate(
+            need(input$NetworkPattern != "", "Please select a pattern type")
+          )
+          if(DEBUGGING)
+            cat("Il tipo selezionato ??: ",type,"\n")
+          type = as.integer(gsub(pattern = "M",x =type,replacement = ""))
+          if(DEBUGGING)
+            cat("Il numero selezionato ??: ",type,"\n")
+          if(DEBUGGING)
+            cat("class input$clique_data_table: ",class(input$clique_data_table))
+          s = input$clique_data_table_rows_selected
+          if(DEBUGGING)
+            cat("s vale: ",s,"\n")
+          
+          if(clique_type == "NDCD"){
+            g_= internal_render_plot(MM_list[[type]],gr4=graph_s,s,proxyList = proxy)
+          }
+          if(clique_type == "NDD"){
+            g_= internal_render_plotNDD(MM_list[[type]],gr4=graph_s,s,proxyList = proxy)
+          }
+          if(clique_type == "NDC"){
+            g_= internal_render_plotNDC(MM_list[[type]],gr4=graph_s,s,proxyList = proxy)
+          }
+          if(clique_type == "DCD"){
+            g_= internal_render_plotDCD(MM_list[[type]],gr4=graph_s,s,proxyList = proxy)
+          }
+          if(clique_type == "ALL"){
+            if(("" %in% MList[[type]][1,]) == FALSE){
+              g_= internal_render_plot(MM_list[[type]],gr4=graph_s,s,proxyList = proxy)
+            }else{
+              col_idx = which(MList[[type]][1,] %in% "")
+              if(col_idx == 4){
+                g_= internal_render_plotNDD(MM_list[[type]],gr4=graph_s,s,proxyList = proxy)
+              }
+              if(col_idx == 1){
+                g_= internal_render_plotNDC(MM_list[[type]],gr4=graph_s,s,proxyList = proxy)
+              }
+              if(col_idx == 2){
+                g_= internal_render_plotDCD(MM_list[[type]],gr4=graph_s,s,proxyList = proxy)
+              }
+            }
+          }
+          if(DEBUGGING){
+            cat("g_class: ",class(g_),"\n")
+            cat("graph names ",V(g_)$name,"\n")
+            
+          }
+                
+          
+          validate(
+            need(length(s)!=0 , "Please select a clique")
+          )          
+          
+          idx_g = which(V(g)$node_type == "gene")
+          GMAT = igraph::get.adjacency(g)
+          genes_items_interaction = rowSums(as.matrix(GMAT[idx_g,V(g_)$name]))
+          GG_genes = rownames(GMAT)[which(genes_items_interaction>0)]
+          idx_gg = which(GG_genes %in% V(g_geni2)$name)
+          geni_toPlot = igraph::induced.subgraph(g_geni2,GG_genes[idx_gg])
+          
+          GENE_INFO = cbind(V(geni_toPlot)$name,V(geni_toPlot)$group)
+          colnames(GENE_INFO) = c("Gene Symbol","KEGG Pathway")
+          
+          for(row_i in 1:dim(GENE_INFO)[1]){
+            for(col_j in 1:dim(GENE_INFO)[2]){
+              GENE_INFO[row_i,col_j] = paste('<a target="_blank" href=\"https://www.google.com/?q=',GENE_INFO[row_i,col_j],'">',GENE_INFO[row_i,col_j],'</a>',sep="")
+            }
+          }
+          
+          DT::datatable(data =  GENE_INFO,
+                        options = list(order = list(list(1, 'desc')),target = 'row+column',scrollX=TRUE,scrollY = "400px", scrollCollapse = TRUE,paging=FALSE),
+                        escape=FALSE,
+                        selection = "single")
+          
+        })
+                
         output$xx = renderPlot({
           type = input$NetworkPattern
           clique_type = input$clique_type
@@ -4037,7 +4417,8 @@ if(DEBUGGING){
           
           slices = items_lengt
           lbls = items_type
-          pie(slices, labels = lbls, main="Network statistics",col = rainbow(length(table(items_type))))
+          pie(slices, labels = lbls, main="Network statistics",col = rainbow(length(table(items_type))),
+              radius = 1, cex = 0.7)
           
         })
         
@@ -4141,12 +4522,10 @@ if(DEBUGGING){
                 if(length(toRem)>0){
                   index_new_chem = index_new_chem[-toRem]
                 }
-                
                 items = c(items,new_chem[index_new_chem])
                 items_type = c(items_type,paste("Chemical class: ", chem_group[j],sep=""))
                 items_lengt = c(items_lengt,length(new_chem[index_new_chem]))
               }
-              
             }
             if(type[i]=="disease"){
               good_disease = disease[disease %in% colnames(ADJ_toPlot)]
@@ -4156,13 +4535,23 @@ if(DEBUGGING){
             }
           }
           
-          idx_g = which(V(g)$node_type %in% "gene")
-          gto_plot = igraph::induced.subgraph(graph = g,vids = c(V(g)$name[idx_g],items))
-          
-          gto_plot = igraph::delete.vertices(gto_plot,items)
-          idx_gg = which(V(gto_plot)$name %in% V(g_geni2)$name)
-          geni_toPlot = igraph::induced.subgraph(g_geni2,V(gto_plot)$name[idx_gg])
+          idx_g = which(V(g)$node_type == "gene")
+          GMAT = igraph::get.adjacency(g)
+          genes_items_interaction = rowSums(as.matrix(GMAT[idx_g,items]))
+          GG_genes = rownames(GMAT)[which(genes_items_interaction>0)]
+          idx_gg = which(GG_genes %in% V(g_geni2)$name)
+          geni_toPlot = igraph::induced.subgraph(g_geni2,GG_genes[idx_gg])
           geni_toPlot = igraph::delete.vertices(geni_toPlot,which(igraph::degree(geni_toPlot)<1))
+          
+          validate(
+            need(vcount(geni_toPlot)>0, "Empty Network")
+          )
+          
+#         gto_plot = igraph::induced.subgraph(graph = g,vids = c(V(g)$name[idx_g],items))
+#         gto_plot = igraph::delete.vertices(gto_plot,items)
+#         idx_gg = which(V(gto_plot)$name %in% V(g_geni2)$name)
+#         geni_toPlot = igraph::induced.subgraph(g_geni2,V(gto_plot)$name[idx_gg])
+#         geni_toPlot = igraph::delete.vertices(geni_toPlot,which(igraph::degree(geni_toPlot)<1))
           
           data_frame = get.data.frame(x = geni_toPlot,what = "both")
           edges = data_frame$edges
@@ -4172,21 +4561,21 @@ if(DEBUGGING){
           vertices = data_frame$vertices
           vertices$size = igraph::degree(geni_toPlot)
           colnames(vertices) = c("name","group","type","size")
-          
-          for(i in 1:dim(edges)[1]){
-            edges[i,"source"] = which(vertices[,"name"] %in% edges[i,"source"]) - 1
-            edges[i,"target"] = which(vertices[,"name"] %in% edges[i,"target"]) - 1
+        
+          if(dim(edges)[1]>0){
+            for(i in 1:dim(edges)[1]){
+              edges[i,"source"] = which(vertices[,"name"] %in% edges[i,"source"]) - 1
+              edges[i,"target"] = which(vertices[,"name"] %in% edges[i,"target"]) - 1
+            }  
           }
-          
+                    
           vertices$name = as.factor(vertices$name)
           vertices$group = as.factor(vertices$group)
           vertices$size = as.numeric(vertices$size)
           vertices$type = as.factor(vertices$type)
-          
           edges$source = as.integer(edges$source)
           edges$target  = as.integer(edges$target)
           edges$value = as.integer(edges$value)
-          
           
           MyClickScript <- 
             '      d3.select(this).select("circle").transition()
@@ -4206,7 +4595,7 @@ if(DEBUGGING){
         
         output$gene_Subnetwork_plot_statistics = renderPlot({
           if(DEBUGGING)
-          cat("Subnetwork plot\n")
+            cat("Subnetwork plot\n")
           ADJ_toPlot = ADJ_S
           nano_s = colnames(ADJ_S)[which(colnames(ADJ_S) %in% nano)]
           chemical_s = colnames(ADJ_S)[which(colnames(ADJ_S) %in% chemical)]
@@ -4218,13 +4607,13 @@ if(DEBUGGING){
           
           d = input$InterestingNodes
           if(DEBUGGING)
-          cat("INTERESTING NODES: ",d,"\n")
+            cat("INTERESTING NODES: ",d,"\n")
           
           validate(
             need(input$InterestingNodes != "", "SELECT A NODE!")
           )
           if(DEBUGGING)
-          cat("INTERESTING NODES: ",d,"\n")
+            cat("INTERESTING NODES: ",d,"\n")
           
           neig = lapply(X = good_cliques,FUN = function(i_cliques){
             v_names = names(i_cliques)
@@ -4237,7 +4626,7 @@ if(DEBUGGING){
           
           edges_type = input$sub_Edges
           if(DEBUGGING)
-          cat("Edges_type ",edges_type,"\n")
+            cat("Edges_type ",edges_type,"\n")
           type = input$sub_checkGroup
           
           validate(
@@ -4245,7 +4634,13 @@ if(DEBUGGING){
           )
           
           ATC_code = input$sub_ATCGroup
+          if(ATC_code == "ALL"){
+            ATC_code = ATC_letter_vector
+          }
           chem_group = input$sub_ChemicalGroup
+          if(chem_group == "ALL"){
+            chem_group = chemical_group_vector
+          }
           
           items = c() 
           items_type = c()
@@ -4297,12 +4692,10 @@ if(DEBUGGING){
                 if(length(toRem)>0){
                   index_new_chem = index_new_chem[-toRem]
                 }
-                
                 items = c(items,new_chem[index_new_chem])
                 items_type = c(items_type,paste("Chemical class: ", chem_group[j],sep=""))
                 items_lengt = c(items_lengt,length(new_chem[index_new_chem]))
               }
-              
             }
             if(type[i]=="disease"){
               good_disease = disease[disease %in% colnames(ADJ_toPlot)]
@@ -4312,13 +4705,18 @@ if(DEBUGGING){
             }
           }
           
-          idx_g = which(V(g)$node_type %in% "gene")
-          gto_plot = igraph::induced.subgraph(graph = g,vids = c(V(g)$name[idx_g],items))
-          
-          gto_plot = igraph::delete.vertices(gto_plot,items)
-          idx_gg = which(V(gto_plot)$name %in% V(g_geni2)$name)
-          geni_toPlot = igraph::induced.subgraph(g_geni2,V(gto_plot)$name[idx_gg])
+          idx_g = which(V(g)$node_type == "gene")
+          GMAT = igraph::get.adjacency(g)
+          genes_items_interaction = rowSums(as.matrix(GMAT[idx_g,items]))
+          GG_genes = rownames(GMAT)[which(genes_items_interaction>0)]
+          idx_gg = which(GG_genes %in% V(g_geni2)$name)
+          geni_toPlot = igraph::induced.subgraph(g_geni2,GG_genes[idx_gg])
           geni_toPlot = igraph::delete.vertices(geni_toPlot,which(igraph::degree(geni_toPlot)<1))
+          
+          validate(
+            need(vcount(geni_toPlot)>0, "Empty Network")
+          )
+          
           
           data_frame = get.data.frame(x = geni_toPlot,what = "both")
           edges = data_frame$edges
@@ -4342,10 +4740,41 @@ if(DEBUGGING){
           edges$source = as.integer(edges$source)
           edges$target  = as.integer(edges$target)
           edges$value = as.integer(edges$value)
-          
+        
+
+
+
           slices = table(vertices$group)
           lbls = names(table(vertices$group))
-          pie(slices, labels = lbls, main="Network statistics",col = rainbow(length(table(vertices$group))))
+#           df = data.frame(as.vector(slices),lbls)
+#           colnames(df) = c("slices","KEGG")
+# p <- ggplot(df, aes(x=1, y=slices, fill=KEGG)) +
+#   ggtitle("Network Composition") +
+#   # black border around pie slices
+#   geom_bar(stat="identity", color='black') +
+#   # remove black diagonal line from legend
+#   guides(fill=guide_legend(override.aes=list(colour=NA))) +
+#   # polar coordinates
+#   coord_polar(theta='y') +
+#   # label aesthetics
+#   theme(axis.ticks=element_blank(),  # the axis ticks
+#         axis.title=element_blank(),  # the axis labels
+#         axis.text.y=element_blank(), # the 0.75, 1.00, 1.25 labels
+#         axis.text.x=element_text(color='black')) +
+#   # pie slice labels
+#   scale_y_continuous(
+#     breaks=cumsum(df$slices) - df$slices/2,
+#     labels=df$KEGG
+#   )
+# 
+# print(p)
+
+
+#radial.pie(slices,labels=lbls,main="Network statistics")
+
+
+          pie(slices, labels = lbls, main="Network statistics",col = rainbow(length(slices)),
+              radius = 1,cex = 0.7,las=1)
           
         })
         
@@ -4643,7 +5072,6 @@ if(DEBUGGING){
       })
 
      
-      
       output$geneNetwork = renderForceNetwork({
         
         groups_path = input$Patway_g
@@ -4654,21 +5082,16 @@ if(DEBUGGING){
         if(DEBUGGING)
         cat("Number of groups ",length(groups_path),"\n")
         
-        good_index = which(V(g_geni2)$group %in% groups_path)
-        
+        good_index = which(V(g_geni2)$group %in% groups_path)  
         geni_toPlot = igraph::induced.subgraph(graph = g_geni2,vids = V(g_geni2)$name[good_index])
-        
-        
-        geni_toPlot = delete.vertices(graph = geni_toPlot,v = which(igraph::degree(geni_toPlot)<1))
+        geni_toPlot = igraph::delete.vertices(graph = geni_toPlot,v = which(igraph::degree(geni_toPlot)<1))
         data_frame = get.data.frame(x = geni_toPlot,what = "both")
         edges = data_frame$edges
         edges$value = round(abs(edges$weight * 10),digits = 0)
         colnames(edges) = c("source","target","weight","value")
-        
         vertices = data_frame$vertices
         vertices$size = igraph::degree(geni_toPlot)
         colnames(vertices) = c("name","group","type","size")
-        
         
         for(i in 1:dim(edges)[1]){
           edges[i,"source"] = which(vertices[,"name"] %in% edges[i,"source"]) - 1
@@ -4679,20 +5102,14 @@ if(DEBUGGING){
         vertices$group = as.factor(vertices$group)
         vertices$size = as.numeric(vertices$size)
         vertices$type = as.factor(vertices$type)
-        
         edges$source = as.integer(edges$source)
         edges$target  = as.integer(edges$target)
         edges$value = as.integer(edges$value)
         
-        MyClickScript <- 
-          '      d3.select(this).select("circle").transition()
-        .duration(750)
-        .attr("r", 30)'
+        MyClickScript <- 'd3.select(this).select("circle").transition().duration(750).attr("r", 30)'
         
-        MyClickScript2 <- 
-          'd3.select(this).select(dLink.target).select("circle").transition().duration(750).attr("r",30),
-        d3.select(dLink.target).select("circle").transition().duration(750).attr("r",30)
-        '
+        MyClickScript2 <- 'd3.select(this).select(dLink.target).select("circle").transition().duration(750).attr("r",30),
+        d3.select(dLink.target).select("circle").transition().duration(750).attr("r",30)'
         
         forceNetwork(Links = edges, Nodes = vertices,
                      Source = "source", Target = "target",

@@ -1,10 +1,30 @@
-subgraph_nano_disease = function(g,from_nano = "MWCNT",to_disease="Asthma",drug_perc = 0.99){
+load("./matrix_gene_cmap_01.RData")
+load("./matrix_gene_disease_01_80.RData")
+load("./matrix_gene_nano_01.RData")
+load("./matrix_gene_chemical_01_inc_dec.RData")
+load("./chemical_disease_gene80.RData")
+load("./degree.RData")
+load("./KTDD_adjacency_red.RData")
   
+subgraph_nano_disease = function(g,from_nano = "MWCNT",to_disease="Asthma",drug_perc = 0.99){
+
+  if(DEBUGGING){
+    cat("Inside subgraph_nano_disease function... \n")
+    cat("Query from ",from_nano, " to ",to_disease, "\n")
+  }
   sp = get.all.shortest.paths(graph = g,from = from_nano,to = to_disease,weights = NA)
+  
+  if(DEBUGGING){
+    cat("shortest paths: ",length(sp),"\n")
+  }
   
   genes = c()
   for(i in 1:length(sp$res)){
     genes = c(genes,sp$res[[i]][2])
+  }
+  
+  if(DEBUGGING){
+    cat("genes: ",genes,"\n")
   }
   
   #all genes between nano and disease
@@ -16,7 +36,28 @@ subgraph_nano_disease = function(g,from_nano = "MWCNT",to_disease="Asthma",drug_
     load("./gsea_drug_disease.RData")
     gsea_pvalue = gsea_res$pvalue[to_disease,-1]
     gsea_stat = gsea_res$statistica[to_disease,-1]
+
+
+  entrexID = gsub(pattern = "_at",replacement = "",x = rownames(MatBig_cmap))
+  symbols = lookUp(entrexID, 'org.Hs.eg', 'SYMBOL')   
+  symbols = unlist(symbols)
+  rownames(MatBig_cmap) = symbols
+
+  entrexID = gsub(pattern = "_at",replacement = "",x = rownames(MatBig_chemical))
+  symbols = lookUp(entrexID, 'org.Hs.eg', 'SYMBOL')   
+  symbols = unlist(symbols)
+  rownames(MatBig_chemical) = symbols
+
+  entrexID = gsub(pattern = "_at",replacement = "",x = rownames(MatBig_disease))
+  symbols = lookUp(entrexID, 'org.Hs.eg', 'SYMBOL')   
+  symbols = unlist(symbols)
+  rownames(MatBig_disease) = symbols
   
+  entrexID = gsub(pattern = "_at",replacement = "",x = rownames(MatBig_nano))
+  symbols = lookUp(entrexID, 'org.Hs.eg', 'SYMBOL')   
+  symbols = unlist(symbols)
+  rownames(MatBig_nano) = symbols
+
   colSums(abs(MatBig_cmap[names(genes),])) -> somme
   KTd = KTDD[from_nano,colnames(MatBig_cmap)]
   
@@ -54,9 +95,11 @@ subgraph_nano_disease = function(g,from_nano = "MWCNT",to_disease="Asthma",drug_
   }
   
   
-  entrexID = gsub(pattern = "_at",replacement = "",x = names(genes))
-  symbols = lookUp(entrexID, 'org.Hs.eg', 'SYMBOL')   
-  symbols = unlist(symbols)
+#   entrexID = gsub(pattern = "_at",replacement = "",x = names(genes))
+#   symbols = lookUp(entrexID, 'org.Hs.eg', 'SYMBOL')   
+#   symbols = unlist(symbols)
+  
+  symbols = names(genes)
   
   ADJ = matrix(data = 0,nrow = length(genes)+length(dd) + 2,ncol = length(genes)+length(dd) + 2)
   rownames(ADJ) = colnames(ADJ) = c(symbols,dd,from_nano,to_disease)
@@ -111,6 +154,7 @@ subgraph_nano_disease = function(g,from_nano = "MWCNT",to_disease="Asthma",drug_
   S = gsea_res$statistica
   
   gseav = sign(-log(P[to_disease,dd] * sign(S[to_disease,dd])))
+  #gseav[is.na(gseav)]=2
   gseav[gseav<0] = 2
   ADJ3__[to_disease,dd] = gseav
   ADJ3__[dd, to_disease] = gseav
@@ -120,10 +164,10 @@ subgraph_nano_disease = function(g,from_nano = "MWCNT",to_disease="Asthma",drug_
   Col = cbind(names(tab),rainbow(length(tab)))
   rownames(Col) = Col[,1]
   Col["disease",2] = "yellow"
-  Col["nano",2] = "green"
+  Col["nano",2] = "skyblue"
   Col["up",2] = "red"
   Col["down",2] = "green"
-  Col["drug",2] = "purple"
+  Col["drug",2] = "pink"
   
   ADJ3__[which(ADJ3__>10)] = ADJ3__[which(ADJ3__>10)]/10
   g2 = graph.adjacency(adjmatrix = ADJ3__,mode = "undirected",weighted = TRUE)
@@ -133,21 +177,48 @@ subgraph_nano_disease = function(g,from_nano = "MWCNT",to_disease="Asthma",drug_
   edge_color = c("red","green","black")
   
   
-  g2= set.vertex.attribute(graph = g2,name = "node_type",value = type)
-  g2= set.edge.attribute(graph = g2,name = "color",value = edge_color[E(g2)$weight])
+  g2= igraph::set.vertex.attribute(graph = g2,name = "node_type",value = type)
+  g2= igraph::set.vertex.attribute(graph = g2,name = "color",value = Col[V(g2)$node_type,2])
+
+  g2= igraph::set.edge.attribute(graph = g2,name = "color",value = edge_color[E(g2)$weight])
   
   labels = edge_color[E(g2)$weight]
   labels[which(labels != "grey")] = ""
   labels[labels %in% "grey"] = paste(E(g2)$weight[labels %in% "grey"],"Genes") 
-  g2= set.edge.attribute(graph = g2,name = "labels",value = labels)
+  g2= igraph::set.edge.attribute(graph = g2,name = "labels",value = labels)
 
-  g2=delete.vertices(g2, which(igraph::degree(g2)==0))
+  g2=igraph::delete.vertices(g2, which(igraph::degree(g2)==0))
 
-  plot(g2,vertex.label.cex = 0.6,layout = layout.kamada.kawai,vertex.color = Col[type,2],
-     edge.width = E(g2)$weight,edge.color = edge_color[E(g2)$weight],vertex.size = 4)
+#   plot(g2,vertex.label.cex = 0.6,vertex.color = Col[type,2],
+#      edge.width = E(g2)$weight,edge.color = edge_color[E(g2)$weight],vertex.size = 4)
 
  # write.graph(g2,paste(from_nano,"_",to_disease,"_with_KT_and_Gsea_already_grouped2.graphml",sep=""),"graphml")
-  return(g2)
+ 
+  net3 = network(as.matrix(get.adjacency(g2,names = TRUE,attr = "weight")),directed = FALSE,loops=FALSE,multiple=FALSE)
+  net3 %n% "net.name" = "Query network"
+  net3 %v% "col" = V(g2)$color
+  net3 %v% "name" = V(g2)$name
+  net3 %v% "node_type" = V(g2)$node_type
+  net3 %v% "size" = igraph::degree(g2)
+  
+  net3 %e% "weight" = E(g2)$weight
+  net3 %e% "color" = E(g2)$color
+  net3 %e% "labels" = E(g2)$labels
+
+# plot(net3, vertex.cex=(net3 %v% "size")/2, vertex.col=net3 %v% "col" ,label=network.vertex.names(net3),label.pad=0,edge.col = net3 %e% "color")
+# legend(x = "topleft",legend = names(table(net3 %v% "node_type")),fill = c("yellow","green","pink","skyblue","red"))  
+
+# render.d3movie(net3,vertex.col =  net3 %v% "col",edge.col=net3 %e% "color",
+#                vertex.tooltip=paste(net3%v%'name',
+#                                     net3%v%'bide_type',
+#                                     sep="<br>"))
+
+
+# tkid <- tkplot(g2) #tkid is the id of the tkplot that will open
+# l <- tkplot.getcoords(tkid) # grab the coordinates from tkplot
+# plot(g2, layout=l)
+
+  return(list(g2=g2,net=net3))
 }
 
 group_up_down = function(g2){

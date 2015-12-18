@@ -1,4 +1,4 @@
-APP_PATH = "~/Scrivania/inside_nano/"
+APP_PATH = "/run/media/neuronelab/Seagate Expansion Drive/NANOMINER/InsideNano/"
 setwd(APP_PATH)
 
 pkgTest <- function(x)
@@ -52,5 +52,6 @@ library(ggplot2)
 library(org.Hs.eg.db)
 library(annotate)
 
+runApp("/run/media/neuronelab/Seagate Expansion Drive/NANOMINER/InsideNano/")
 #runApp("inside_nano")
-runGitHub( "InsideNano", "angy89") 
+#runGitHub( "InsideNano", "angy89") 

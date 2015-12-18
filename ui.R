@@ -10,10 +10,10 @@ shinyUI(navbarPage("",
                               column(4, 
                                 wellPanel(
                                       fluidRow(
-                                          column(7, textInput("username", "Username",value="", width = NULL))
+                                          column(7, textInput("username", "Username",value="user2015", width = NULL))
                                       ),
                                       fluidRow(
-                                        column(7, passwordInput("password", "Password",value="", width = NULL))
+                                        column(7, passwordInput("password", "Password",value="helsinki2015", width = NULL))
                                       ),
                                       fluidRow(
                                         column(7,actionButton(inputId = "login",label  = "Login",icon("circle-arrow-right", lib = "glyphicon"))),
@@ -185,7 +185,7 @@ shinyUI(navbarPage("",
                                                                label = "Object Network", 
                                                                choices = list("Nanomaterials" = "nano", 
                                                                               "Drugs" = "drugs", "Chemical" = "chemical",
-                                                                              "Disease" = "disease"),selected = c("nano","drugs","chemical","disease")))
+                                                                              "Disease" = "disease"),selected = c("nano","drugs","disease")))
                                ),
                                fluidRow(column(12,selectInput("sub_Edges",
                                                               label="Select the type of edges",
@@ -196,13 +196,14 @@ shinyUI(navbarPage("",
                                fluidRow(
                                  column(12, selectInput("sub_ATCGroup", 
                                                         label ="Drugs ATC code", multiple = TRUE,
-                                                        choices = ATC_choice_list,selected = "A"))
+                                                        choices = ATC_choice_list,selected = "ALL"))
+                                 
                                ),
                                fluidRow(
                                  column(12, selectInput("sub_ChemicalGroup", 
                                                         label ="Chemical Classes", multiple = TRUE,
                                                         choices = chemical_choice_list,
-                                                        selected = "Amino acids"))
+                                                        selected = "ALL"))
                                ),
                                fluidRow(
                                  column(9, sliderInput("sub_repulserad", label = "Repulseration Strenght",
@@ -218,12 +219,12 @@ shinyUI(navbarPage("",
                                        tabPanel("Items Subnetwork", 
                                                wellPanel(forceNetworkOutput("Subnetwork_plot")),
                                                #wellPanel(plotOutput("dig_dist")),       
-                                               wellPanel(plotOutput("Subnetwork_plot_statistic"))
+                                               wellPanel(plotOutput("Subnetwork_plot_statistic",width = "100%"))
                                                 
                                        ), 
                                        tabPanel("Genes", 
                                                 wellPanel(forceNetworkOutput("gene_Subnetwork_plot")),
-                                                wellPanel(plotOutput("gene_Subnetwork_plot_statistics"))
+                                                wellPanel(plotOutput("gene_Subnetwork_plot_statistics",width = "100%"))
                                                 
                                        )
                                 )
@@ -234,7 +235,7 @@ shinyUI(navbarPage("",
                              fluidRow(column(4,wellPanel(plotOutput('xx', height = 500))),
                                       column(8,wellPanel(DT::dataTableOutput('clique_data_table')))
                              ),
-                             fluidRow(column(4,selectInput("plotTripel",label = "Plot of Association Frequencies",
+                             fluidRow(column(2,selectInput("plotTripel",label = "Plot of Association Frequencies",
                                                            choices = list("Disease-Nano-Drug" = 1,
                                                                           "Disease-Nano-Chemical"= 2,
                                                                           "Disease-Nano"=3,
@@ -243,13 +244,16 @@ shinyUI(navbarPage("",
                                                                           "Chemical-Nano" = 6,
                                                                           "Chemical-Drug" = 7,
                                                                           "Nano-Drug" = 8),selected = 1)),
-                                       column(4,numericInput(inputId = "percentuale",label = "% of elements to show",
+                                       column(2,numericInput(inputId = "percentuale",label = "% of elements to show",
                                                             value = 10,min = 1,max = 100,step=5)),
-                                      column(4,uiOutput("NodesOfInterest_items"))
+                                      column(2,uiOutput("NodesOfInterest_items"))
                              ),
                              fluidRow(
-                               column(4,"  "),
-                               column(8,wellPanel(plotOutput('ggplot',height=900)))
+                               column(6,wellPanel(plotOutput('ggplot',height=900))),
+                               column(6,
+                                      #fluidRow(wellPanel(DT::dataTableOutput('drugs_chemical_DT'))),
+                                      fluidRow(wellPanel(DT::dataTableOutput('genes_data_table')) )
+                               )
                              )
                              
                             )#End tabpanel Pattern
@@ -269,12 +273,9 @@ shinyUI(navbarPage("",
                        htmlOutput("checkLOGIN_gene")
                    ),
                    fluidRow(uiOutput("gene_net_page1"),
-                            uiOutput("gene_net_page2"))
-                   
-#                    fluidRow(uiOutput("gene_net_page3"),
-#                             uiOutput("gene_net_page4"))
-                   
-                   
+                            uiOutput("gene_net_page2")),
+                   fluidRow(uiOutput("gene_net_page3"),
+                            uiOutput("gene_net_page4"))                   
           ),
           tabPanel("Demo",
                    wellPanel(
