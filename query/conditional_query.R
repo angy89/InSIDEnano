@@ -1117,7 +1117,7 @@ conditional_query = function(input,output,disease_list,selected_nodes,W_ADJ,th_p
   dim(LOG_CONDITIONAL)[1] -> log_counter
   log_counter + 1 -> log_counter
   save(CLIQUE_TYPE,query_th,nElem_cliques,query_nodes,disease_list,selected_nodes,info_text,W_ADJ,MList,MM_list,graph_gw,g,g_geni2,graph_s,ADJ_S,chemMat,good_cliques,join10,estimated_tyme,cliques_groups,
-       file=paste("./Log_folder/",log_counter,".RData",sep=""))
+       file=paste(APP_PATH,"Log_folder/",log_counter,".RData",sep=""))
   
   if(DEBUGGING){
     nano_query = input$nano_input
