@@ -1,25 +1,53 @@
+
 source("./my_igraph_function.R",local = FALSE)
 source("./subgraph_nano_disease.R",local = FALSE)
+source("check_login.R")
+source("observer.R")
+source("GUI/fenotypic_network_UI.R")
+source("GUI/free_query_UI.R")
+source("GUI/conditional_query_UI.R")
+source("GUI/gene_network_UI.R")
+source("GUI/patterns_UI.R")
+source("GUI/gene_query_UI.R")
+
+source("GUI/query_outputs.R")
+source("GUI/conditional_query_outputs.R")
+source("GUI/browse_dataset.R")
+
+source("query/save_free_query.R")
+source("query/my_cliques_function.R")
+source("query/gene_network_NANO_DISEASE_query.R")
+source("query/query_utilities.R")
+source("query/conditional_query_clique_search.R")
+
+source("query/gene_query_like_conditional.R")
+source("query/gene_query.R")
+source("query/free_query.R")
+source("query/conditional_query.R")
+
+source("query/check_already_existing_conditional_query.R")
+source("query/loa_conditional_query.R")
+source("login.R")
+
 library(network)
 
-load(paste(APP_PATH,"matrix_gene_disease_01_80.RData",sep=""))
-load(paste(APP_PATH,"matrix_gene_nano_01.RData",sep=""))
-load(paste(APP_PATH,"matrix_gene_cmap_01.RData",sep=""))
-load(paste(APP_PATH,"gsea_drug_disease.RData",sep=""))
-load(paste(APP_PATH,"gsea_drug_disease.RData",sep=""))
-
-
-
-load(paste(APP_PATH,"matrix_gene_chemical_01_inc_dec.RData",sep=""))
-load(paste(APP_PATH,"chemical_disease_gene80.RData",sep=""))
-load(paste(APP_PATH,"degree.RData",sep=""))
-load(paste(APP_PATH,"KTDD_adjacency_red.RData",sep=""))
+# #for gene_query
+# load(paste(APP_PATH,"matrix_gene_disease_01_80.RData",sep=""))
+# load(paste(APP_PATH,"matrix_gene_nano_01.RData",sep=""))
+# load(paste(APP_PATH,"matrix_gene_cmap_01.RData",sep=""))
+# load(paste(APP_PATH,"gsea_drug_disease.RData",sep=""))
+# load(paste(APP_PATH,"gsea_drug_disease.RData",sep=""))
+# load(paste(APP_PATH,"matrix_gene_chemical_01_inc_dec.RData",sep=""))
+# load(paste(APP_PATH,"chemical_disease_gene80.RData",sep=""))
+# load(paste(APP_PATH,"degree.RData",sep=""))
+# load(paste(APP_PATH,"KTDD_adjacency_red.RData",sep=""))
 
 load(paste(APP_PATH,"entities.RData",sep=""))
 load(paste(APP_PATH,"join10.RData",sep=""))
 join10 = unique(join10)
 join10$ATC_lev1 = substr(x = join10$code,start = 1,stop = 1)
 load(paste(APP_PATH,"chemicals_classes.RData",sep=""))
+
 
 
 selected_nodes = c()
@@ -33,6 +61,7 @@ password = "helsinki2015"
 LOGGED_IN = FALSE
 proxy = NULL
 DEBUGGING = TRUE
+genes_input = c()
 
 
 ATC_choice_list = list("All" = "ALL",

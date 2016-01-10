@@ -19,7 +19,8 @@ shinyUI(navbarPage("",
                                         column(7,actionButton(inputId = "login",label  = "Login",icon("circle-arrow-right", lib = "glyphicon"))),
                                           singleton(
                                             tags$head(tags$script(src = "message-handler.js"))
-                                          )
+                                          ),
+                                        column(5,textOutput("loglog"))
                                       )
                                 ) #end login panel    
                               ),
@@ -41,14 +42,20 @@ shinyUI(navbarPage("",
                                                              if(typeMessage == 3){
                                                              $("a:contains(Gene Network)").click();
                                                              }
+                                                             if(typeMessage == 6){
+                                                             $("a:contains(Gene Query)").click();
+                                                             }
                                                              if(typeMessage == 4){
                                                              $("a:contains(Demo)").click();
                                                              }
                                                              });
                                                              ')),
                                      wellPanel(
-                                       fluidRow(column(6, div(style="display:inline-block",actionButton("action1", label = "Free Query",width = 400, icon=icon("search",lib = "glyphicon")), style="align:center")),
-                                                column(6, div(style="display:inline-block",actionButton("action4", label = "Conditional Query",width = 400, icon=icon("search",lib = "glyphicon")), style="align:center")))
+                                       fluidRow(column(4, div(style="display:inline-block",actionButton("action1", label = "Free Query",width = 400, icon=icon("search",lib = "glyphicon")), style="align:center")),
+                                                
+                                                # column(4, div(style="display:inline-block",actionButton("action5", label = "Gene Query",width = 400, icon=icon("search",lib = "glyphicon")), style="align:center")),
+                                                
+                                                column(4, div(style="display:inline-block",actionButton("action4", label = "Conditional Query",width = 400, icon=icon("search",lib = "glyphicon")), style="align:center")))
                                      ),
                                      wellPanel(
                                         fluidRow(column(6, div(style="display:inline-block",actionButton("action2", label = "Browse Phenotypic Network",width = 400,icon=icon("search",lib = "glyphicon")), style="align:center")),
@@ -118,6 +125,62 @@ shinyUI(navbarPage("",
                                        
                                        
                               ),
+#                               tabPanel("Gene Query",
+#                                        fluidRow(
+#                                          column(8,
+#                                                 fluidRow(
+#                                                 wellPanel(
+#                                                   fluidRow(
+#                                                     column(6, uiOutput("gene_input")),
+#                                                     column(6, uiOutput("Go3"))
+#                                                   )
+#                                                 )),
+#                                                 fluidRow(
+#                                                   column(12,
+#                                                          wellPanel(
+#                                                            fluidRow(
+#                                                              column(3, uiOutput("gene_query_nano_input")),
+#                                                              column(3, uiOutput("gene_query_drug_input")),
+#                                                              column(3, uiOutput("gene_query_disease_input")),
+#                                                              column(3, uiOutput("gene_query_chemical_input"))
+#                                                            )
+#                                                          ),
+#                                                          wellPanel(
+#                                                            fluidRow(
+#                                                              column(3, uiOutput("th_slider3")),
+#                                                              column(3, uiOutput("gene_query_percentuale_somma")),
+#                                                              column(3, uiOutput("gene_query_nroCliques")),
+#                                                              column(3, uiOutput("gene_query_clique_type"))
+#                                                              
+#                                                            )
+#                                                          ),
+#                                                          wellPanel(
+#                                                            fluidRow(
+#                                                              column(2,uiOutput("Go4")),
+#                                                              column(2,uiOutput("gene_query_Refresh"))
+#                                                              
+#                                                            )
+#                                                          )
+#                                                   )
+#                                                   
+#                                                 )
+#                                          ),
+#                                          column(4,
+#                                                 wellPanel(
+#                                                   HTML("</br>The Free Analysis allows to extrapolate subnetworks of nodes that have influence on a group of genes</br>"),
+#                                                   HTML("The results of the query depends on the strenght of similarity. </br>
+#                                                        In case of multiple query items, the final subnetwork will be the union of all the subtenetwork related to each gene
+#                                                        </br></br></br>"),
+#                                                   htmlOutput("checkLOGIN_geneQuery")
+#                                                   ))
+#                                          )
+#                                        
+#                                        wellPanel(
+#                                          fluidRow(column(8,uiOutput("plotTripel_total"))),
+#                                          fluidRow(uiOutput("NodesOfInterest_totale")),
+#                                          fluidRow( plotOutput('ggplot_totale',height=900))
+#                                        )    
+#                              ),
                               tabPanel("Conditional Query",
                                        fluidRow(
                                          column(8,
@@ -231,7 +294,8 @@ shinyUI(navbarPage("",
                              )#End mainPanel
                     ),#end tabPanel subnetwork
                     tabPanel("Patterns",
-                             fluidRow(column(4,uiOutput("NetworkPattern"))),
+                             fluidRow(column(4,uiOutput("NetworkPattern")),
+                                      column(4,downloadButton('downloadData', 'Download'))),
                              fluidRow(column(4,wellPanel(plotOutput('xx', height = 500))),
                                       column(8,wellPanel(DT::dataTableOutput('clique_data_table')))
                              ),
