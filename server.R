@@ -81,7 +81,8 @@ shinyServer(function(input, output,session){
       
       #ANGELA
       observeEvent(input$Go2, {
-        load("./LOG.RData")
+        load(paste(APP_PATH,"LOG.RData",sep=""))
+        
         
         if(DEBUGGING){
           cat("LOG file loaded \n")  

@@ -1147,7 +1147,7 @@ conditional_query = function(input,output,disease_list,selected_nodes,W_ADJ,th_p
   
   LOG_CONDITIONAL = as.data.frame(LOG_CONDITIONAL)
   
-  save(LOG_CONDITIONAL,file="./LOG.RData")
+  save(LOG_CONDITIONAL,file=paste(APP_PATH,"LOG.RData",sep=""))
   
   barplot_pattern_conditional_query(input,output,MList,graph_gw) #in conditional_query_output.R
   genes_data_table_output(input,output,MList,MM_list,proxy,graph_s,g,g_geni2) #in conditional_query_output.R
