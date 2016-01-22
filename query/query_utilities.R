@@ -1,3 +1,112 @@
+parse_nano_query_input = function(inserted_nano,nano){
+  if(length(inserted_nano)==0){
+    return("") 
+  }
+  if("ALL" %in% inserted_nano){
+    inserted_nano = nano 
+  }
+  inserted_nano = unique(inserted_nano)
+  return(inserted_nano)
+}
+
+parse_drug_query_input = function(inserted_drug,drugs,ATC_letter_vector){
+  if(length(inserted_drug)==0){
+    return(NULL) 
+  }
+  
+  drug_parsed = c()
+  
+  idx = which(inserted_drug %in% ATC_letter_vector)
+  categories_inserted = inserted_drug[idx]
+  
+  if(length(idx)>0){
+    remaining_drug = inserted_drug[-idx]
+  }
+  
+  if("ALL" %in% inserted_drug){
+    return(drugs)
+  }
+  if(length(categories_inserted)>0){
+    index_D= which(join10$ATC_lev1 %in% categories_inserted)
+    drug_parsed = c(drug_parsed,unique(join10[index_D,]$name))
+  }
+  return(unique(c(drug_parsed,remaining_drug)))
+}
+
+parse_chemical_query_input = function(inserted_chemical,chemical,chemical_group_vector){
+  chemical_parsed = c()
+  
+  idx = which(inserted_chemical %in% chemical_group_vector)
+  categories_inserted = inserted_chemical[idx]
+  
+  if(length(idx)>0){
+    remaining_chemical = inserted_chemical[-idx]
+  }
+  
+  if("ALL" %in% inserted_chemical){
+    return(chemical)
+  }
+  if(length(categories_inserted)>0){
+      index_C = which(chemMat[,2] %in% categories_inserted)
+      chemical_query = unique(chemMat[index_C,1])
+    
+    
+    index_D= which(join10$ATC_lev1 %in% categories_inserted)
+    drug_parsed = c(drug_parsed,unique(join10[index_D,]$name))
+  }
+  return(unique(c(drug_parsed,remaining_drug)))
+}
+
+
+find_items_type = function(items,nano,drugs,chemical,disease){
+  # "nano"     "drugs"    "chemical" "disease"
+  
+  items_subtype = c()
+  for(i in items){
+    if(i %in% nano){
+      items_subtype = c(items_subtype,"NC")
+      next
+    }
+    if(i %in% disease){
+      items_subtype = c(items_subtype,"NC")
+      next
+    }
+    if(i %in% drugs){
+      idx = which(join10$name %in% i)
+      code = paste(join10[idx,]$ATC1,collapse = ";")
+      items_subtype = c(items_subtype,code)
+      next
+    }
+    if(i %in% chemical){
+      idx = which(chemMat[,1] %in% i)
+      code = paste(chemMat[idx,2],collapse = ";")
+      items_subtype = c(items_subtype,code)
+      next
+    }
+  }
+  
+  names(items_subtype) = items
+  
+  items_type = rep("nano",length(items))
+  items_type[items %in% chemical] = "chemical"
+  items_type[items %in% drugs] = "drugs"
+  items_type[items %in% disease] = "disease"
+  names(items_type) = items
+  
+  nano_el = items[items %in% nano]
+  chemical_el = items[items %in% chemical]
+  drugs_el = items[items %in% drugs]
+  disease_el = items[items %in% disease]
+  
+  
+  return(list(items_type = items_type,items_subtype=items_subtype,elems = list("nano" = nano_el,
+                                                                               "drugs"= drugs_el,
+                                                                               "disease" = disease_el,
+                                                                               "chemical" = chemical_el)))
+  
+}
+
+
 select_node_query = function(input,output,disease_list,selected_nodes){
   for(i in input$disease){
     disease_list[[i]] = i
@@ -303,8 +412,8 @@ clickable_cliques_list = function(MList,cliques_groups){
 conditional_query_nodes = function(input,output){
   xx = paste(input$nano_input,input$drug_input, input$chemical_input, input$disease_input,sep="")
   if(DEBUGGING){
-    cat("concatenazione: ",xx,"\n")
-    cat("length(xx): ",length(xx),"\n")
+    message("query_utilities::conditional_query_nodes. Concatenazione: ",xx,"\n")
+    message("query_utilities::conditional_query_nodes. length(xx): ",length(xx),"\n")
   }
   if(length(xx)==0){
     output$info2_1 <- renderUI({
@@ -320,7 +429,15 @@ conditional_query_nodes = function(input,output){
     }
   }
   
+  if(DEBUGGING){
+    message("query_utilities::conditional_query_nodes {nano_query = ",nano_query, "}\n")
+  }
+  
   drug_query = input$drug_input
+  if(DEBUGGING){
+    message("query_utilities::conditional_query_nodes {drug_query before checking= ",drug_query, "}\n")
+  }
+  
   if(length(drug_query) !=0 ){
     if(drug_query=="ALL"){
       drug_query = drugs
@@ -330,8 +447,12 @@ conditional_query_nodes = function(input,output){
        drug_query=="L" || drug_query=="M" || drug_query=="N" ||
        drug_query=="P" || drug_query=="R" || drug_query=="S"){
       index_D= which(join10$ATC_lev1 ==drug_query)
-      drug_query = unique(join10[index_D,1])
+      drug_query = unique(join10[index_D,]$name)
     }
+  }
+  
+  if(DEBUGGING){
+    message("query_utilities::conditional_query_nodes {drug_query = ",drug_query, "}\n")
   }
   
   chemical_query = input$chemical_input
@@ -345,150 +466,85 @@ conditional_query_nodes = function(input,output){
     }
   }
   
+  if(DEBUGGING){
+    message("query_utilities::conditional_query_nodes {chemical_query = ",chemical_query, "}\n")
+  }
+  
   disease_query = input$disease_input
   if(length(disease_query)!=0){
     if(disease_query=="ALL"){
       disease_query = disease
     }
   }
-  query_nodes = c(nano_query,drug_query,chemical_query,disease_query)
+  
+  if(DEBUGGING){
+    message("query_utilities::conditional_query_nodes {disease_query = ",disease_query, "}\n")
+  }
+  query_nodes = c(nano_query,drug_query,disease_query,chemical_query)
+  type_qn = c(rep("nano",length(nano_query)),
+              rep("drugs",length(drug_query)),
+              rep("disease",length(disease_query)),
+              rep("chemical",length(chemical_query)))
+  
   for(i in query_nodes){
     disease_list[[i]] = i
     selected_nodes = c(selected_nodes,i)
   }
   
-  return(list(query_nodes=query_nodes,disease_list=disease_list,selected_nodes=selected_nodes))
+  if(DEBUGGING){
+    message("query_utilities::conditional_query_nodes {query_nodes = ",query_nodes, "}\n")
+  }
+  
+  
+  combination_vect=c(paste(nano_query,collapse = "")!="",paste(drug_query,collapse = "")!="",
+                     paste(disease_query,collapse = "")!="",paste(chemical_query,collapse = "")!="")
+  
+  names(combination_vect)=c("nano","drug","dis","chem")
+  
+  if(DEBUGGING){
+    message("query_utilities::conditional_query_nodes {combination_vect = ",combination_vect, "}\n")
+  }
+  
+  return(list(query_nodes=query_nodes,
+              nano_query = nano_query,
+              drug_query = drug_query,
+              chemical_query = chemical_query,
+              disease_query = disease_query,
+              combination_vect=combination_vect,
+              disease_list=disease_list,selected_nodes=selected_nodes))
 }
 
-conditional_query_items = function(input,output,query_nodes,W_ADJ,query_th){
+conditional_query_items = function(input,output,nano_qn_e,drug_qn_e,
+                                   dis_qn_e,chem_qn_e,type_qn,combination_vect,
+                                   query_nodes,W_ADJ,query_th,selected_nodes){
+#   
+#   nano_qn_e = c("ZnO","ZnO1")
+#   drug_qn_e = c()
+#   dis_qn_e=c("Asthma")
+#   chem_qn_e = c()
   
-  nano_qn = which(query_nodes %in% nano)
-  drug_qn = which(query_nodes %in% drugs)
-  dis_qn = which(query_nodes %in% disease)
-  chem_qn = which(query_nodes %in% chemical)
+  query_elements = list(nano_qn_e = nano_qn_e, drug_qn_e=drug_qn_e,dis_qn_e=dis_qn_e,chem_qn_e=chem_qn_e)
+
   
-  type_qn = rep("nano",length(query_nodes))
-  type_qn[drug_qn] = "drugs"
-  type_qn[dis_qn] = "disease"
-  type_qn[chem_qn] = "chemical"
-  
-  nano_qn_e = query_nodes[which(query_nodes %in% nano)]
-  drug_qn_e = query_nodes[which(query_nodes %in% drugs)]
-  dis_qn_e = query_nodes[which(query_nodes %in% disease)]
-  chem_qn_e = query_nodes[which(query_nodes %in% chemical)]
-  
-  if(DEBUGGING){
-    cat("nano_qn_e:",nano_qn_e,"\n")
-    cat("drug_qn_e:",drug_qn_e,"\n")
-    cat("dis_qn_e:",dis_qn_e,"\n")
-    cat("chem_qn_e:",chem_qn_e,"\n")
-    cat("is.null(drug_qn_e ",is.null(drug_qn_e),"\n")
-    cat("(length(nano_qn_e) == 0)", (length(nano_qn_e) == 0), "\n")
-  }
-  #solo chemical
-  if((length(nano_qn_e) == 0) & (length(drug_qn_e)==0) & (length(dis_qn_e)==0)){
-    if(DEBUGGING)
-      cat("Only chemical is not null\n")
-    expand.grid(chem_qn_e) -> combinations
-  }
-  #solo disease
-  else if((length(nano_qn_e) == 0) & (length(drug_qn_e)==0) & (length(chem_qn_e)==0)){
-    if(DEBUGGING)
-      cat("Only disease is not null\n")
-    expand.grid(dis_qn_e) -> combinations
-  }
-  
-  #solo nano
-  else if((length(dis_qn_e) == 0) & (length(drug_qn_e)==0) & (length(chem_qn_e)==0)){
-    if(DEBUGGING)
-      cat("Only nano is not null\n")
-    
-    expand.grid(nano_qn_e) -> combinations
-  }
-  
-  #solo drug
-  else if((length(dis_qn_e) == 0) & (length(nano_qn_e)==0) & (length(chem_qn_e)==0)){
-    if(DEBUGGING)
-      cat("Only drug is not null\n")
-    
-    expand.grid(drug_qn_e) -> combinations
-  }
-  
-  #solo nano chemical
-  else if((length(nano_qn_e)==0) & (length(chem_qn_e)==0)){
-    if(DEBUGGING)
-      cat("Nano and chemical are null\n")
-    
-    expand.grid(dis_qn_e,drug_qn_e) -> combinations
-  }
-  #solo nano drug
-  else if((length(nano_qn_e)==0) & (length(drug_qn_e)==0)){
-    if(DEBUGGING)
-      cat("drug and chemical are null\n")
-    
-    expand.grid(chem_qn_e,dis_qn_e) -> combinations
-  }
-  #solo nano disease
-  else if((length(nano_qn_e)==0) & (length(dis_qn_e)==0)){
-    if(DEBUGGING)
-      cat("nano and disease are null\n")
-    
-    expand.grid(chem_qn_e,drug_qn_e) -> combinations
-  }
-  
-  #solo chem drug
-  else if((length(chem_qn_e)==0) & (length(drug_qn_e)==0)){
-    if(DEBUGGING)
-      cat("drug and chemical are null\n")
-    
-    expand.grid(nano_qn_e,dis_qn_e) -> combinations
-  }
-  #solo chem dis
-  else if((length(chem_qn_e)==0) & (length(dis_qn_e)==0)){
-    if(DEBUGGING)
-      cat("dis and chemical are null\n")
-    
-    expand.grid(nano_qn_e,drug_qn_e) -> combinations
-  }
-  
-  #solo drug dis
-  else if((length(drug_qn_e)==0) & (length(dis_qn_e)==0)){
-    if(DEBUGGING)
-      cat("drug and dis are null\n")
-    
-    expand.grid(nano_qn_e,chem_qn_e) -> combinations
-  }
-  
-  else if(length(nano_qn_e)==0){
-    if(DEBUGGING)
-      cat("Nano is null\n")
-    
-    expand.grid(drug_qn_e,dis_qn_e,chem_qn_e) -> combinations
-  }
-  else if(length(drug_qn_e)==0){
-    if(DEBUGGING)
-      cat("drug is null\n")
-    
-    expand.grid(nano_qn_e,dis_qn_e,chem_qn_e) -> combinations
-  }
-  else if(length(dis_qn_e)==0){
-    if(DEBUGGING)
-      cat("dis is null\n")
-    
-    expand.grid(nano_qn_e,drug_qn_e,chem_qn_e) -> combinations
-  }
-  else if(length(chem_qn_e)==0){
-    if(DEBUGGING)
-      cat("chem is null\n")
-    
-    expand.grid(nano_qn_e,drug_qn_e,dis_qn_e) -> combinations
-  }
-  
-  if(DEBUGGING){
-    cat("class(combinations) ",class(combinations),"\n")
-    cat("colnames(combinations) ",colnames(combinations),"\n")
-  }
+#   expand.grid(nano_qn_e,drug_qn_e,dis_qn_e,chem_qn_e)
+#   expand.grid(nano_qn_e,dis_qn_e)
+#   expand.grid(nano_qn_e)
+#   combination_vect = c(TRUE,FALSE,TRUE,FALSE)
+  combinations = expand.grid(query_elements[combination_vect])
   combinations = as.matrix(combinations)
+  
+  
+  if(DEBUGGING){
+    message("In conditional_query_items::: nano_qn_e:",nano_qn_e,"\n")
+    message("In conditional_query_items::: drug_qn_e:",drug_qn_e,"\n")
+    message("In conditional_query_items::: dis_qn_e:",dis_qn_e,"\n")
+    message("In conditional_query_items::: chem_qn_e:",chem_qn_e,"\n")
+    message("In conditional_query_items::: combination_vect:",combination_vect,"\n")
+    message("In conditional_query_items::: is.null(drug_qn_e ",is.null(drug_qn_e),"\n")
+    message("In conditional_query_items::: (length(nano_qn_e) == 0)", (length(nano_qn_e) == 0), "\n")
+    message("In conditional_query_items::: class(combinations) ",class(combinations),"\n")
+    message("In conditional_query_items::: colnames(combinations) ",colnames(combinations),"\n")
+  }
   
   Col_Sum_list = list()
   for(index_qn in 1:dim(combinations)[1]){
@@ -522,17 +578,29 @@ conditional_query_items = function(input,output,query_nodes,W_ADJ,query_th){
   if(DEBUGGING)
     cat("dim(W_ADJ)[1]--> ",dim(W_ADJ)[1],"\n")
   
+  
+  if(dim(W_ADJ)[1] < 3){
+    info_text = "No results! \n"
+    output$info2_1 <- renderUI({
+      HTML(info_text)
+    }) 
+  }
+  
+  validate(
+    need(dim(W_ADJ)[1] > 2, "No items to display! Try to decreases the threshold.")
+  )
+  
   if(DEBUGGING)
     cat("Max th--> ",max(unlist(Col_Sum_list)),"\n")
   if(DEBUGGING)
     cat("dim(W_ADJ)[1]--> ",dim(W_ADJ)[1],"\n")
   
   
-  return(list(W_ADJ=W_ADJ,toREM=toREM,Col_Sum_list=Col_Sum_list))
+  return(list(W_ADJ=W_ADJ,combinations=combinations,toREM=toREM,Col_Sum_list=Col_Sum_list))
   
 }
 
-conditional_query_subgraph_creation = function(input,output,W_ADJ,toREM,info_text,graph_gw,node_type){
+conditional_query_subgraph_creation = function(input,output,W_ADJ,toREM,info_text,node_type){
   
   graph_gw = graph.adjacency(W_ADJ,mode="undirected",weighted=TRUE)
   V(graph_gw)$type = node_type[-toREM]
@@ -575,6 +643,186 @@ conditional_query_subgraph_creation = function(input,output,W_ADJ,toREM,info_tex
   ADJ_S = get.adjacency(graph_s,attr = "weight")
   ADJ_S = as.matrix(ADJ_S)
   
-  return(list(graph_s=graph_s,ADJ_S = ADJ_S,info_text=info_text))
+  return(list(graph_s=graph_s,ADJ_S = ADJ_S,info_text=info_text,graph_gw=graph_gw))
+}
+
+conditional_check_cliques = function(obj,ADJ_S){
+  vertices = names(obj)
+  v_nano = vertices[which(vertices %in% nano)]
+  v_drug = vertices[which(vertices %in% drugs)]
+  v_chem = vertices[which(vertices %in% chemical)]
+  v_dis = vertices[which(vertices %in% disease)]
   
+  intersect(v_chem,v_drug) -> ii
+  if(length(ii)>0){
+    which(v_chem %in% v_drug) -> index_ii
+    v_chem = v_chem[-index_ii]
+  }
+  
+  type_query = c(length(v_nano) * length(v_dis),
+                 length(v_nano) * length(v_chem),
+                 length(v_nano) * length(v_drug),
+                 length(v_drug) * length(v_dis),
+                 length(v_drug) * length(v_chem),
+                 length(v_dis) * length(v_chem))
+  
+  type_query[type_query>0] = 1
+  
+  row = sign(c(ADJ_S[v_nano,v_dis],
+               ADJ_S[v_nano,v_chem],
+               ADJ_S[v_nano,v_drug],
+               ADJ_S[v_drug,v_dis],
+               ADJ_S[v_drug,v_chem],
+               ADJ_S[v_dis,v_chem]))
+  
+  row = row * type_query
+  
+#   if((length(v_nano) > 0) & (length(v_drug)>0) & (length(v_chem)>0) & (length(v_dis)>0)){
+#     row = sign(c(ADJ_S[v_nano,v_dis],
+#                  ADJ_S[v_nano,v_chem],
+#                  ADJ_S[v_nano,v_drug],
+#                  ADJ_S[v_drug,v_dis],
+#                  ADJ_S[v_drug,v_chem],
+#                  ADJ_S[v_dis,v_chem]))
+#   }
+#   if((length(v_nano) > 0) & (length(v_drug)>0) & (length(v_chem)==0) & (length(v_dis)>0)){
+#     row = sign(c(ADJ_S[v_nano,v_dis],
+#                  0,
+#                  ADJ_S[v_nano,v_drug],
+#                  ADJ_S[v_drug,v_dis],
+#                  0,
+#                  0
+#     ))
+#   }
+#   if((length(v_nano) > 0) & (length(v_drug)>0) & (length(v_chem)>0) & (length(v_dis)==0)){
+#     row = sign(c(0,
+#                  ADJ_S[v_nano,v_chem],
+#                  ADJ_S[v_nano,v_drug],
+#                  0,
+#                  ADJ_S[v_drug,v_chem],
+#                  0
+#     ))
+#   }
+#   if((length(v_nano) > 0) & (length(v_drug)==0) & (length(v_chem)>0) & (length(v_dis)==0)){
+#     row =  row = sign(c(ADJ_S[v_nano,v_dis],
+#                         ADJ_S[v_nano,v_chem],
+#                         0,
+#                         0,
+#                         0,
+#                         ADJ_S[v_dis,v_chem]
+#     ))
+#   }
+#   if((length(v_nano) == 0) & (length(v_drug)>0) & (length(v_chem)>0) & (length(v_dis)>0)){
+#     row = sign(c(0,
+#                  0,
+#                  0,
+#                  ADJ_S[v_drug,v_dis],
+#                  ADJ_S[v_drug,v_chem],
+#                  ADJ_S[v_dis,v_chem]
+#     ))
+#   }
+  return(row)
+}
+
+conditional_clustering_cliques = function(input,output,good_cliques,ADJ_S){
+  a = lapply(X = good_cliques,FUN = function(obj){
+    row = conditional_check_cliques(obj,ADJ_S)
+  })
+  
+  if(DEBUGGING)
+    cat("length(a): ",length(a),"\n")
+  
+  MAT = do.call(rbind, a)
+  if(DEBUGGING)
+    cat("dim MAT ",dim(MAT),"\n")
+  
+  uniqueMAT = unique(MAT)
+  
+  cliques_groups = lapply(1:nrow(uniqueMAT),function(i){
+    unlist(lapply(1:nrow(MAT),function(j){
+      if(sum(uniqueMAT[i,]!=MAT[j,])==0){
+        j
+      }
+    }))
+  })
+  
+  return(cliques_groups)
+}
+
+build_query_list = function(input,output,cliques_groups,nano,drugs,chemical,disease,good_cliques){
+  MList = lapply(cliques_groups,FUN=function(obj){
+    idx = obj
+    good_cliques_i = good_cliques[idx]
+    vertices_list = lapply(good_cliques_i,FUN = names)
+    ord_vertices = lapply(vertices_list,FUN = function(vertices){
+      v_nano = vertices[which(vertices %in% nano)]
+      v_drug = vertices[which(vertices %in% drugs)]
+      v_chem = vertices[which(vertices %in% chemical)]
+      v_dis = vertices[which(vertices %in% disease)]
+      
+      intersect(v_chem,v_drug) -> ii
+      if(length(ii)>0){
+        which(v_chem %in% v_drug) -> index_ii
+        v_chem = v_chem[-index_ii]
+      }
+      
+      if((length(v_nano) > 0) & (length(v_drug)>0) & (length(v_chem)>0) & (length(v_dis)>0)){
+        row = c(v_dis,v_nano,v_drug,v_chem)
+        
+      }
+      if((length(v_nano) > 0) & (length(v_drug)>0) & (length(v_chem)==0) & (length(v_dis)>0)){
+        row = c(v_dis,v_nano,v_drug,"")
+        
+      }
+      if((length(v_nano) > 0) & (length(v_drug)>0) & (length(v_chem)>0) & (length(v_dis)==0)){
+        row = c("",v_nano,v_drug,v_chem)
+        
+      }
+      if((length(v_nano) > 0) & (length(v_drug)==0) & (length(v_chem)>0) & (length(v_dis)==0)){
+        row = c(v_dis,v_nano,"",v_chem)
+        
+      }
+      if((length(v_nano) == 0) & (length(v_drug)>0) & (length(v_chem)>0) & (length(v_dis)>0)){
+        row = c(v_dis,"",v_drug,v_chem)
+        
+      }
+      row
+    })
+    M = do.call(rbind,ord_vertices)
+  })
+  
+  
+  # M_output_list = list()
+  MM_list = list()
+  nType = length(cliques_groups)
+  
+  for(i in 1:nType){
+    Mi = MList[[i]]
+    
+    Mi_link = apply(X = Mi,MARGIN = 1,FUN = function(row_i){
+      xx = paste('<a target="_blank" href=\"https://www.google.com/?q=',row_i,'">',row_i,'</a>',sep="")
+      new_row = c(xx[1],xx[2],xx[3],xx[4])
+    })
+    Mi = t(Mi_link)
+    rownames(Mi) = 1:dim(Mi)[1]
+    Mi = as.data.frame(Mi)
+    colnames(Mi)=c("Disease","Nano","Drug","Chemical")
+    MM_list[[i]] = Mi
+    #M_output_list[[i]] = DT::renderDataTable(Mi,options = list(order = list(list(1, 'desc')),target = 'row+column',scrollX=TRUE),escape = FALSE)
+  }
+  
+  return(list(MM_list = MM_list,MList=MList))
+  
+}
+
+estimate_query_tyme = function(input,output,graph_s){
+  n_nodi = vcount(graph_s)
+  estimated_tyme = (n_nodi^3 * 9) + (n_nodi^4 * 16)
+  if(DEBUGGING)
+    cat("estimated_tyme: ",estimated_tyme,"\n")
+  
+  output$extimatedTime = renderUI({
+    HTML(paste("How to estimate iteration:  O(n^k * k^2) where n is the number of nodes and k is the clique size<br/> <strong>Estimated Iteration: ",estimated_tyme,"<strong/><br/>"))
+  })
+  return(estimated_tyme)
 }

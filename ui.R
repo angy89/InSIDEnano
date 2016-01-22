@@ -51,15 +51,15 @@ shinyUI(navbarPage("",
                                                              });
                                                              ')),
                                      wellPanel(
-                                       fluidRow(column(4, div(style="display:inline-block",actionButton("action1", label = "Free Query",width = 400, icon=icon("search",lib = "glyphicon")), style="align:center")),
+                                       fluidRow(column(6, div(style="display:inline-block",actionButton("action1", label = "Free Query",width = 350, icon=icon("search",lib = "glyphicon")), style="align:center")),
                                                 
                                                 # column(4, div(style="display:inline-block",actionButton("action5", label = "Gene Query",width = 400, icon=icon("search",lib = "glyphicon")), style="align:center")),
                                                 
-                                                column(4, div(style="display:inline-block",actionButton("action4", label = "Conditional Query",width = 400, icon=icon("search",lib = "glyphicon")), style="align:center")))
+                                                column(6, div(style="display:inline-block",actionButton("action4", label = "Conditional Query",width = 350, icon=icon("search",lib = "glyphicon")), style="align:center")))
                                      ),
                                      wellPanel(
-                                        fluidRow(column(6, div(style="display:inline-block",actionButton("action2", label = "Browse Phenotypic Network",width = 400,icon=icon("search",lib = "glyphicon")), style="align:center")),
-                                                column(6, div(style="display:inline-block",actionButton("action3", label = "Browse Gene Network",width = 400,icon=icon("search",lib = "glyphicon")), style="align:center")))
+                                        fluidRow(column(6, div(style="display:inline-block",actionButton("action2", label = "Browse Phenotypic Network",width = 350,icon=icon("search",lib = "glyphicon")), style="align:center")),
+                                                column(6, div(style="display:inline-block",actionButton("action3", label = "Browse Gene Network",width = 350,icon=icon("search",lib = "glyphicon")), style="align:center")))
                                      )  
                                      
                               ) #end buttonAction column
@@ -85,10 +85,7 @@ shinyUI(navbarPage("",
                                        )
                                          ) #end description wellPanel
                                        ) 
-                              
                             )
-                                      
-                            
                    ),
 
                               tabPanel("Free Query",
@@ -282,20 +279,20 @@ shinyUI(navbarPage("",
                                        tabPanel("Items Subnetwork", 
                                                wellPanel(forceNetworkOutput("Subnetwork_plot")),
                                                #wellPanel(plotOutput("dig_dist")),       
-                                               wellPanel(plotOutput("Subnetwork_plot_statistic",width = "100%"))
+                                               wellPanel(plotlyOutput("Subnetwork_plot_statistic",width = "100%",height = 500))
                                                 
                                        ), 
                                        tabPanel("Genes", 
                                                 wellPanel(forceNetworkOutput("gene_Subnetwork_plot")),
-                                                wellPanel(plotOutput("gene_Subnetwork_plot_statistics",width = "100%"))
+                                                wellPanel(plotlyOutput("gene_Subnetwork_plot_statistics",width = "100%"))
                                                 
                                        )
                                 )
                              )#End mainPanel
                     ),#end tabPanel subnetwork
                     tabPanel("Patterns",
-                             fluidRow(column(4,uiOutput("NetworkPattern")),
-                                      column(4,downloadButton('downloadData', 'Download'))),
+                             fluidRow(column(4,uiOutput("NetworkPattern"))),
+                                     # column(4,downloadButton('downloadData', 'Download'))),
                              fluidRow(column(4,wellPanel(plotOutput('xx', height = 500))),
                                       column(8,wellPanel(DT::dataTableOutput('clique_data_table')))
                              ),
@@ -337,9 +334,109 @@ shinyUI(navbarPage("",
                        htmlOutput("checkLOGIN_gene")
                    ),
                    fluidRow(uiOutput("gene_net_page1"),
-                            uiOutput("gene_net_page2")),
-                   fluidRow(uiOutput("gene_net_page3"),
-                            uiOutput("gene_net_page4"))                   
+                            uiOutput("gene_net_page2"))
+#                    fluidRow(uiOutput("gene_net_page3"),
+#                             uiOutput("gene_net_page4"))                   
+          ),
+          tabPanel("Cluster Analysis",
+                   tabsetPanel(
+                   tabPanel("Nano based clustering",
+                            sidebarPanel(
+                              fluidRow(
+                                column(6, uiOutput("nano_cluster_input")),
+                                column(6, uiOutput("drug_cluster_input"))
+                              ),
+                              fluidRow(
+                                column(6, uiOutput("disease_cluster_input")),
+                                column(6, uiOutput("chemical_cluster_input"))  
+                              ),
+                              fluidRow(
+                                column(9, sliderInput("repulseration_cluster", label = "Repulseration Strenght",
+                                                      min = 100, max = 10000, value = 4000,step=1))
+                              ),
+                              fluidRow(
+                                column(9, sliderInput("edge_length_cluster", label = "Edge length",
+                                                      min = 2, max = 100, value =2 ,step=1))
+                              ),
+                              fluidRow(
+                                column(4, actionButton("action1_cluster", label = "Start", icon=icon("search",lib = "glyphicon")))
+                                
+                              )
+                            ), #end Sidebar
+                            mainPanel(
+                              wellPanel(nanoClusterOutput("cluster_output"))
+                            )        
+                           
+                   ),
+                  tabPanel("Nano clustering",radialNetworkOutput("nano_radial")),
+#                     tabPanel("Nano clustering interactive",
+#                              tags$head(tags$script(src="/home/aserra/InsideNano/www/d3/d3.v3.min.js")),
+#                              tags$head(tags$script(src="/home/aserra/InsideNano/www/js/hclust.js")),     
+#                               tags$head(tags$style('.node {
+#                                                       cursor: pointer;
+#                                                    }
+#                                                    .node circle {
+#                                                    fill: #fff;
+#                                                    stroke: steelblue;
+#                                                    stroke-width: 1.5px;
+#                                                    }
+#                                                    
+#                                                    .node text {
+#                                                    font: 10px sans-serif;
+#                                                    }
+#                                                    
+#                                                    .link {
+#                                                    fill: none;
+#                                                    stroke: #ccc;
+#                                                    stroke-width: 0.8px;
+#                                                    }')),
+#                               tags$body(tags$script('var margin = {top: 20, right: 120, bottom: 20, left: 120},
+#                                                     width = 960 - margin.right - margin.left,
+#                                                     height = 800 - margin.top - margin.bottom;
+#                                                     
+#                                                     var i = 0,
+#                                                     duration = 750,
+#                                                     root;
+#                                                     
+#                                                     var tree = d3.layout.tree()
+#                                                     .size([height, width]);
+#                                                     
+#                                                     var diagonal = d3.svg.diagonal()
+#                                                     .projection(function(d) { return [d.y, d.x]; });
+#                                                     
+#                                                     var svg = d3.select("body").append("svg")
+#                                                     .attr("width", width + margin.right + margin.left)
+#                                                     .attr("height", height + margin.top + margin.bottom)
+#                                                     .append("g")
+#                                                     .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+#                                                     
+#                                                     d3.json("/home/aserra/InsideNano/www/flare.json", function(error, flare) {
+#                                                     if (error) throw error;
+#                                                     
+#                                                     root = flare;
+#                                                     root.x0 = height / 2;
+#                                                     root.y0 = 0;
+#                                                     
+#                                                     function collapse(d) {
+#                                                     if (d.children) {
+#                                                     d._children = d.children;
+#                                                     d._children.forEach(collapse);
+#                                                     d.children = null;
+#                                                     }
+#                                                     }
+#                                                     
+#                                                     root.children.forEach(collapse);
+#                                                     update(root);
+#                                                     });
+#                                                     
+#                                                     d3.select(self.frameElement).style("height", "800px");
+#                                                     '
+#                               ))
+#                     ),
+                     tabPanel("Drug clustering",radialNetworkOutput("drugs_radial",width = 4000,height = 4000)),
+                     tabPanel("Disease clustering",radialNetworkOutput("disease_radial",width = 4000,height = 4000)),
+                     tabPanel("Chemical clustering",radialNetworkOutput("chemical_radial",width = 6000,height = 6000))
+                   )
           ),
           tabPanel("Demo",
                    wellPanel(

@@ -1,3 +1,32 @@
+conditional_table_proxy = function(input,output,MM_list){
+  output$clique_data_table = DT::renderDataTable({
+    type = input$NetworkPattern
+    validate(
+      need(input$NetworkPattern != "", "Please select a pattern type")
+    )
+    type = as.integer(gsub(pattern = "M",x =type,replacement = ""))  
+    
+    DT::datatable(data =  MM_list[[type]],
+                  options = list(order = list(list(1, 'desc')),target = 'row+column',scrollX=TRUE,scrollY = "400px", scrollCollapse = TRUE,paging=FALSE),
+                  escape=FALSE,
+                  selection = "single")
+  })
+  proxy = dataTableProxy("clique_data_table")
+  return(proxy)
+}
+
+
+plot_list_pattern = function(input,output,cliques_groups){
+  output$NetworkPattern <- renderUI({
+    cliques_LL = list()
+    
+    for(i in 1:length(cliques_groups)){
+      cliques_LL[[paste0("Type",i)]] = paste0("M",i)
+    }
+    selectInput("NetworkPattern",label = "Select Pattern",choices = cliques_LL,selected = "M1")
+  })
+}
+
 clique_graph_cq_plot = function(input,output,MList,MM_list,proxy,graph_s){
   output$xx = renderPlot({
     type = input$NetworkPattern
@@ -48,10 +77,18 @@ clique_graph_cq_plot = function(input,output,MList,MM_list,proxy,graph_s){
     if(DEBUGGING)
       cat("g_class: ",class(g_),"\n")
     
+    if(vcount(g_) == 4){
+      #plot(c(-1,0,1,0),c(0,1,0,-1))
+      my_layout = matrix(c(-1,0,0,1,1,0,0,-1),4,2,byrow = TRUE)
+    }
+    if(vcount(g_)==3){
+      #plot(c(-1,0,1),c(0,1,0))
+      my_layout = matrix(c(-1,0,0,0.5,1,0),3,2,byrow = TRUE)
+    }
     
     plot(g_,vertex.color = V(g_)$color,
          vertex.size = 50,edge.width = abs(E(g_)$weight)+2,
-         vertex.label.color = "black")
+         vertex.label.color = "black",layout = my_layout)
     legend(x = "bottom",legend = c("Positive Correlation","Negative Correlation"),fill = c("red","darkgreen"))
     
   })

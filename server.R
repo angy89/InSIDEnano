@@ -15,8 +15,13 @@ shinyServer(function(input, output,session){
      
       
       phenotypic_network_UI(input,output)
+      gene_network_UI(input,output)
+      render_clustering_radial_network(input,output,NANO,CHEMICAL,DISEASE,DRUGS)
+        
       free_query_UI(input,output)
       conditionl_query_UI(input,output)
+      UI_query(input,output,nano,drugs,chemical,disease)
+      
      
       withProgress(message = 'Progress...', min = 1,max = 5, {
         load(paste(APP_PATH,"graph_without_genes_also_intra_classes_edges_with_properties80.RData",sep=""))
@@ -107,6 +112,43 @@ shinyServer(function(input, output,session){
         }  
           
       }) #End Listener 2
+      
+      observeEvent(input$action1_cluster, {
+        res = ADJ_matrix(W_ADJ, input,output,nano,drugs,chemical,disease,chemMat,join10)
+        ADJ2 = res$ADJ2
+        g_clust = res$g_clust
+        
+        message("class(g_clust)",class(g_clust),"\n")
+        
+        data_frame = from_igraph_to_data_frame_cluster(g_clust,ADJ2)
+        edges = data_frame$edges
+        vertices = data_frame$vertices
+        
+        message("class(g_clust)",class(g_clust),"\n")
+        
+        output$cluster_output<- renderNanoCluster(
+          nanocluster(Links = edges, Nodes = vertices,
+                      Source = "source", Target = "target",
+                      Value = "value", NodeID = "name",
+                      Group = "group",zoom = TRUE,opacity = 0.95,fontSize = 20,
+                      legend = TRUE,
+                      charge = -input$repulseration_cluster,
+                      linkDistance = JS(paste0("function(d){return d.value*",input$edge_length_cluster,
+                                               "}")))
+        )
+        
+        message("END Graph plotted!\n")
+        
+#         nanocluster(Links = edges, Nodes = vertices,
+#                     Source = "source", Target = "target",
+#                     Value = "value", NodeID = "name",
+#                     Group = "group",zoom = TRUE,opacity = 0.95,fontSize = 20,
+#                     legend = TRUE,
+#                     charge = -500,
+#                     linkDistance = JS(paste0("function(d){return d.value*",2,
+#                                              "}")))
+        
+      })
       
 #       observeEvent(input$Go3, {
 #         if(DEBUGGING) cat("GENE QUERY\n")

@@ -9,6 +9,7 @@ source("GUI/conditional_query_UI.R")
 source("GUI/gene_network_UI.R")
 source("GUI/patterns_UI.R")
 source("GUI/gene_query_UI.R")
+source("GUI/render_clustering_radial_network.R")
 
 source("GUI/query_outputs.R")
 source("GUI/conditional_query_outputs.R")
@@ -43,12 +44,12 @@ library(network)
 # load(paste(APP_PATH,"KTDD_adjacency_red.RData",sep=""))
 
 load(paste(APP_PATH,"entities.RData",sep=""))
+load(paste(APP_PATH,"nano_based_clustering.RData",sep=""))
+load(paste(APP_PATH,"nano_chemical_disease_drugs_hierarchical_clustering.RData",sep=""))
 load(paste(APP_PATH,"join10.RData",sep=""))
 join10 = unique(join10)
 join10$ATC_lev1 = substr(x = join10$code,start = 1,stop = 1)
 load(paste(APP_PATH,"chemicals_classes.RData",sep=""))
-
-
 
 selected_nodes = c()
 disease_list = list()
@@ -64,7 +65,7 @@ DEBUGGING = TRUE
 genes_input = c()
 
 
-ATC_choice_list = list("All" = "ALL",
+ATC_choice_list = list("ALL" = "ALL",
                        "(A) Alimentary tract and metabolism" = "A", 
                        "(C) Cardiovascular system" = "C", 
                        "(D) Dermatologicals" = "D",
@@ -80,7 +81,7 @@ ATC_choice_list = list("All" = "ALL",
 
 ATC_letter_vector = c("A","C","D","G","H","J","L","M","N","P","R","S")
 
-chemical_choice_list = list("All" = "ALL",
+chemical_choice_list = list("ALL" = "ALL",
                             "Amino acids" = "Amino acids",
                             "Biological factor" = "Biological factor",
                             "Carbohydrates" = "Carbohydrates",
@@ -625,4 +626,204 @@ internal_render_plotDCD = function(Mi,gr4,s,proxyList){
   V(g)$color[ndisease] = "yellow" 
   
   return(g)    
+}
+
+UI_query = function(input,output,nano,drugs,chemical,disease){
+
+  output$nano_cluster_input = renderUI({
+    selectizeInput('nano_cluster_input', label = "Nanomaterials", choices = c("ALL",nano), multiple = TRUE,
+                   options = list(create = TRUE),selected= "ALL")
+  })
+  
+  output$drug_cluster_input = renderUI({
+    selectizeInput('drug_cluster_input', label = "Drugs", choices = c(unlist(ATC_choice_list),drugs), multiple = TRUE,
+                   options = list(create = TRUE))
+  })
+  
+  output$disease_cluster_input = renderUI({
+    selectizeInput('disease_cluster_input', label = "Diseases", choices = c("ALL",disease), multiple = TRUE,
+                   options = list(create = TRUE))
+  })
+  
+  output$chemical_cluster_input = renderUI({
+    selectizeInput('chemical_cluster_input', label = "Chemicals", choices = c(unlist(chemical_choice_list),chemical), multiple = TRUE,
+                   options = list(create = TRUE))
+  })
+}
+
+conditional_query_nodes_cluster = function(input,output,DEBUGGING,nano,drugs,chemical,disease,chemMat,join10){
+  selected_nodes = c()
+  disease_list = list()
+  
+  xx = paste(input$nano_cluster_input,input$drug_cluster_input, input$chemical_cluster_input, input$disease_cluster_input,sep="")
+  if(DEBUGGING){
+    message("query_utilities::conditional_query_nodes. Concatenazione: ",xx,"\n")
+    message("query_utilities::conditional_query_nodes. length(xx): ",length(xx),"\n")
+  }
+  if(length(xx)==0){
+    output$info2_1 <- renderUI({
+      HTML("Please insert at least one object for the query!")
+    }) 
+    validate(need(length(xx)>0, "Please insert at least one object for the query!"))
+  }
+  
+  ALL_TRUE = ("ALL" %in% input$nano_cluster_input) & ("ALL" %in% input$drug_cluster_input) &   
+  ("ALL" %in% input$chemical_cluster_input) & ("ALL" %in% input$disease_cluster_input)
+  
+  nano_query = parse_nano_query_input(input$nano_cluster_input,nano)
+  
+#   if(DEBUGGING){
+#     message("query_utilities::conditional_query_nodes {nano_query = ",nano_query, "}\n")
+#   }
+  
+  drug_query = parse_drug_query_input(input$drug_cluster_input,drugs,ATC_letter_vector)
+  #   if(DEBUGGING){
+#     message("query_utilities::conditional_query_nodes {drug_query before checking= ",drug_query, "}\n")
+#   }
+  
+  
+#   if(DEBUGGING){
+#     message("query_utilities::conditional_query_nodes {drug_query = ",drug_query, "}\n")
+#   }
+#   
+  chemical_query = input$chemical_cluster_input
+  if(length(chemical_query) != 0){
+    if(chemical_query=="ALL"){
+      chemical_query = chemical
+    }
+    else{
+      if(chemical_query %in% names(table(chemMat[,2]))){
+         index_C = which(chemMat[,2] %in% chemical_query)
+         chemical_query = unique(chemMat[index_C,1])
+      }
+    }
+  }
+  
+#   if(DEBUGGING){
+#     message("query_utilities::conditional_query_nodes {chemical_query = ",chemical_query, "}\n")
+#   }
+  
+  disease_query = input$disease_cluster_input
+  if(length(disease_query)!=0){
+    if(disease_query=="ALL"){
+      disease_query = disease
+    }
+  }
+  
+#   if(DEBUGGING){
+#     message("query_utilities::conditional_query_nodes {disease_query = ",disease_query, "}\n")
+#   }
+  query_nodes = c(nano_query,drug_query,disease_query,chemical_query)
+  type_qn = c(rep("nano",length(nano_query)),
+              rep("drugs",length(drug_query)),
+              rep("disease",length(disease_query)),
+              rep("chemical",length(chemical_query)))
+  
+  for(i in query_nodes){
+    disease_list[[i]] = i
+    selected_nodes = c(selected_nodes,i)
+  }
+  
+#   if(DEBUGGING){
+#     message("query_utilities::conditional_query_nodes {query_nodes = ",query_nodes, "}\n")
+#   }
+  
+  combination_vect=c(length(nano_query),length(drug_query),length(disease_query),length(chemical_query))
+  combination_vect[combination_vect>0]=1
+  names(combination_vect)=c("nano","drug","dis","chem")
+  
+#   if(DEBUGGING){
+#     message("query_utilities::conditional_query_nodes {combination_vect = ",combination_vect, "}\n")
+#   }
+  
+  return(list(query_nodes=query_nodes,ALL_TRUE=ALL_TRUE,
+              nano_query = nano_query,
+              drug_query = drug_query,
+              chemical_query = chemical_query,
+              disease_query = disease_query,
+              combination_vect=combination_vect,
+              disease_list=disease_list,selected_nodes=selected_nodes))
+}
+
+ADJ_matrix = function(W_ADJ,input,output,nano,drugs,chemical,disease,chemMat,join10,nNano = 29,nNodes = 3866){
+  ADJ = matrix(0,length(cluster),length(cluster))
+  rownames(ADJ) = colnames(ADJ) = V(graph_gw)$name
+  
+  for(i in 1:nNano){
+    idx = which(cluster==i)
+    ADJ[i,idx]=1
+    ADJ[idx,i]=1
+  }
+  
+  ADJ = ADJ[colnames(W_ADJ),colnames(W_ADJ)]
+  ADJ2 = ADJ
+  #ADJ2 = ADJ * as.matrix(W_ADJ)
+  ADJ2[1:nNano,1:nNano] = W_ADJ[1:nNano,1:nNano]
+  
+  CQN = conditional_query_nodes_cluster(input,output,TRUE,nano,drugs,chemical,disease,chemMat,join10)
+  selected_nodes = CQN$selected_nodes
+  ALL_TRUE = CQN$ALL_TRUE
+  #message("ADJ_matrix. selected_nodes: ",selected_nodes,"\n")
+  
+  if(ALL_TRUE){
+    message("Grafo intero \n")
+    g_clust = graph.adjacency(adjmatrix = ADJ2,mode = "undirected",weighted = TRUE)
+    
+    type = find_items_type(items = V(g_clust)$name,nano = nano,drugs = drugs,chemical = chemical,disease = disease)
+    type = type$items_type
+    V(g_clust)$type = type
+    return(list(ADJ2=ADJ2,g_clust=g_clust))
+  }else{
+    clustering_idx = unique(cluster[selected_nodes])
+    sel_n = names(cluster)[cluster %in% clustering_idx]
+    sel_n = unique(c(selected_nodes,sel_n)) 
+    ADJ2 = ADJ2[sel_n,sel_n]
+    nano_selected = sel_n[sel_n %in% nano]
+    ADJ2[nano_selected,nano_selected] = W_ADJ[nano_selected,nano_selected]
+    
+    #message("dim(ADJ2) ",dim(ADJ2),"\n")
+    
+    g_clust = graph.adjacency(adjmatrix = ADJ2,mode = "undirected",weighted = TRUE)
+    idx_n = which(colnames(ADJ2) %in% nano)
+    idx_dr = which(colnames(ADJ2) %in% drugs)
+    idx_c = which(colnames(ADJ2) %in% chemical)
+    idx_di = which(colnames(ADJ2) %in% disease)
+    
+    V(g_clust)$type = rep("nano",dim(ADJ2)[1])
+    V(g_clust)$type[idx_dr] ="drug"
+    V(g_clust)$type[idx_c] ="chem"
+    V(g_clust)$type[idx_di] ="dise"
+    
+    #message("V(g_clust)$type  ",V(g_clust)$type ,"\n")
+    return(list(ADJ2=ADJ2,g_clust=g_clust))
+  }
+}
+
+from_igraph_to_data_frame_cluster= function(g_clust,ADJ2){
+  
+  
+#   edges = get.data.frame(x = g_clust,what = "edge")
+#   colnames(edges) = c("source","target","value")
+#   vertices = data.frame(V(g_clust)$name,V(g_clust)$type)
+#   colnames(vertices) = c("name","group")
+#   vertices$size = igraph::degree(g_clust)
+#   
+#   edges$source = match(edges$source,vertices$name) - 1
+#   edges$target = match(edges$target,vertices$name) - 1
+#   
+#   return(list(edges=edges,vertices=vertices))
+  
+  #edges = get.data.frame(x = g_clust,what = "edge")
+  data_ = get.data.frame(x = g_clust,what = "both")
+  edges = data_[[2]]
+  colnames(edges) = c("source","target","value")
+  #vertices = data.frame(V(g_clust)$name,V(g_clust)$type)
+  vertices = data_[[1]]
+  colnames(vertices) = c("name","group")
+  #vertices$size = igraph::degree(g_clust)
+  
+  edges$source = match(edges$source,vertices$name) - 1
+  edges$target = match(edges$target,vertices$name) - 1
+  
+  return(list(edges=edges,vertices=vertices))
 }
