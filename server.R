@@ -12,12 +12,20 @@ shinyServer(function(input, output,session){
       login_successful(input,output,session)
       check_login(output,TRUE)
       
-     
-      
       phenotypic_network_UI(input,output)
       gene_network_UI(input,output)
       render_clustering_radial_network(input,output,NANO,CHEMICAL,DISEASE,DRUGS)
+      
+      render_nano_collapsible_tree(input,output,NANO)
+      render_drugs_collapsible_tree(input,output,DRUGS)
+      render_disease_collapsible_tree(input,output,DISEASE)
+      render_chemical_collapsible_tree(input,output,CHEMICAL)
         
+      observe({
+        nnode = input$nodeName
+        render_nano_gene_topTable(input,output,nnode,toSave,MYSYMBOL)
+      })
+      
       free_query_UI(input,output)
       conditionl_query_UI(input,output)
       UI_query(input,output,nano,drugs,chemical,disease)

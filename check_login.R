@@ -1,6 +1,14 @@
 
 check_login = function(output,loggedIN){
   if(!loggedIN){
+    output$checkLOGIN_NBC = renderUI({
+      HTML("<strong>Please login to proceed with the analisys! <strong/> <br/>")
+    })
+    
+    output$checkLOGIN_NC = renderUI({
+      HTML("<strong>Please login to proceed with the analisys! <strong/> <br/>")
+    })
+    
     output$checkLOGIN = renderUI({
       HTML("<strong>Please login to proceed with the analisys! <strong/> <br/>")
     })
@@ -25,6 +33,14 @@ check_login = function(output,loggedIN){
       HTML("How to estimate iteration:  O(n^k * k^2) where n is the number of nodes and k is the clique size.<br/>")
     })
   }else{
+    output$checkLOGIN_NBC = renderUI({
+      HTML(" ")
+    })
+    
+    output$checkLOGIN_NC = renderUI({
+      HTML(" ")
+    })
+    
     output$checkLOGIN = renderUI({
       HTML(" ")
     })

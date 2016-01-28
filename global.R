@@ -1,4 +1,3 @@
-
 source("./my_igraph_function.R",local = FALSE)
 source("./subgraph_nano_disease.R",local = FALSE)
 source("check_login.R")
@@ -44,6 +43,17 @@ library(network)
 # load(paste(APP_PATH,"KTDD_adjacency_red.RData",sep=""))
 
 load(paste(APP_PATH,"entities.RData",sep=""))
+load(paste(APP_PATH,"nano_top_table.RData",sep=""))
+
+x <- org.Hs.egSYMBOL
+# Get the gene symbol that are mapped to an entrez gene identifiers
+mapped_genes <- mappedkeys(x)
+# Convert to a list
+xx <- as.list(x[mapped_genes])
+entrez = gsub(x = rownames(toSave[[1]]),pattern = "_at",replacement = "")
+xx[entrez] -> MYSYMBOL
+MYSYMBOL = unlist(MYSYMBOL)
+
 load(paste(APP_PATH,"nano_based_clustering.RData",sep=""))
 load(paste(APP_PATH,"nano_chemical_disease_drugs_hierarchical_clustering.RData",sep=""))
 load(paste(APP_PATH,"join10.RData",sep=""))

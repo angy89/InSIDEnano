@@ -8,18 +8,14 @@ barplot_patter_output = function(input,output,MList,graph_gw){
     validate(
       need(input$NetworkPattern != "", "Please select a pattern type")
     )
-    
     i = as.integer(gsub(pattern = "M",x =type,replacement = ""))
-    
     if(DEBUGGING){
       cat("Il tipo selezionato: ",type,"\n")
       cat("Il numero selezionato: ",i,"\n")
     }
-    
     Mi = MList[[i]]
     Mi = as.data.frame(Mi)
     colnames(Mi)=c("Disease","Nano","Drug","Chemical")
-    
     if(triple_type==1){
       columns_ = c("Disease","Nano","Drug")
     }
@@ -35,28 +31,20 @@ barplot_patter_output = function(input,output,MList,graph_gw){
     if(triple_type==5){
       columns_ = c("Disease","Chemical")
     }
-    
     Mi_count = count(Mi, vars=columns_)
     nano_id = unique(Mi_count$Nano)
     drug_id = unique(Mi_count$Drug)
     disease_id = unique(Mi_count$Disease)
-    
     Mi_count = Mi_count[order(Mi_count$freq,decreasing = FALSE),]
-    
     if(DEBUGGING)
       cat("Mi_count FREQUENCIES ",Mi_count$freq,"\n")
-    
     nElem_c = length(columns_)
-    
     d_id = input$InterestingNodes_items
     d_node_type = igraph::get.vertex.attribute(graph = graph_gw,name = "type",index = d_id)
     column_index = which(c("disease","nano","drugs","chemical") %in% d_node_type)
-    
-    
     if(DEBUGGING){
       cat("INPUT PERCENTUALE CAMBIATA: ",input$percentuale,"\n")
     }
-    
     if(length(columns_)>2){
       indexes_c = 1:(dim(Mi_count)[2]-1)
       indexes_c = indexes_c[-column_index]
@@ -64,9 +52,9 @@ barplot_patter_output = function(input,output,MList,graph_gw){
       dim(Mi_count)[1] -> up_b
       low_b = up_b - nElem
       Mi_count2 = Mi_count$freq[low_b:up_b]
-      names(Mi_count2) =  paste(Mi_count[low_b:up_b,indexes_c[1]],Mi_count[low_b:up_b,indexes_c[2]],sep="-")
+      names(Mi_count2) = paste(Mi_count[low_b:up_b,indexes_c[1]],Mi_count[low_b:up_b,indexes_c[2]],sep="-")
       #Mi_count2 = Mi_count$freq[1:nElem]
-      #names(Mi_count2) =  paste(Mi_count[1:nElem,indexes_c[1]],Mi_count[1:nElem,indexes_c[2]],sep="-")
+      #names(Mi_count2) = paste(Mi_count[1:nElem,indexes_c[1]],Mi_count[1:nElem,indexes_c[2]],sep="-")
     }
     if(length(columns_) == 2){
       indexes_c = 1:(dim(Mi_count)[2]-1)
@@ -75,21 +63,15 @@ barplot_patter_output = function(input,output,MList,graph_gw){
       dim(Mi_count)[1] -> up_b
       low_b = up_b - nElem
       Mi_count2 = Mi_count$freq[low_b:up_b]
-      names(Mi_count2) =  paste(Mi_count[low_b:up_b,indexes_c],sep=" ")#,Mi_count[1:nElem,3],sep=" ")
-      
+      names(Mi_count2) = paste(Mi_count[low_b:up_b,indexes_c],sep=" ")#,Mi_count[1:nElem,3],sep=" ")
       #Mi_count2 = Mi_count$freq[1:nElem]
-      #names(Mi_count2) =  paste(Mi_count[1:nElem,columns_[2:nElem_c]],sep=" ")#,Mi_count[1:nElem,3],sep=" ")
+      #names(Mi_count2) = paste(Mi_count[1:nElem,columns_[2:nElem_c]],sep=" ")#,Mi_count[1:nElem,3],sep=" ")
     }
-    
-    
     #index = which(Mi_count[1:nElem,column_index] %in% d_id)
     index = which(Mi_count[low_b:up_b,column_index] %in% d_id)
-    
-    
     validate(
       need(length(index)>0, "No cliques for the selected node!")
     )
-    
     #par(mfrow = c(1,length(disease_id)))
     #for(d_id in disease_id){
     mar.default = c(5,4,4,2) + 0.1
@@ -608,34 +590,12 @@ plot_subnetwork_statistics = function(input,output,ADJ_S,chemMat,good_cliques,jo
     lbls = items_type[idx]
     
     x_ = 1:length(lbls)
-    #data_ = data.frame(rep(slices,slices),rep(lbls,slices))
     data_ = data.frame(slices,lbls,slices/max(slices))
     colnames(data_) = c("Occurrency","Groups","Frequencies")
-    
-    #barplot con plotry
-    #     gg = ggplot(data_, aes(slices,fill = lbls)) + geom_bar()
-    #     # Convert the ggplot to a plotly
-    #     p <- ggplotly(gg)
-    #     p
     
     plot_ly(data_, x = 1:length(Groups), y = Occurrency, text = Groups,
             mode = "markers",size = Occurrency/max(Occurrency),
             color = Frequencies)
-    
-    #barplot semplice
-    # names(slices) = lbls
-   # par(mai = c(0.2,0.2,0.2,0.2))
-#     colors_=rainbow(length(lbls))
-#     barplot(height = slices, main="Network statistics",
-#             col = colors_)
-#     legend(x = "topleft",legend = lbls,fill = colors_)
-    
-  #Diagramma a torta plot normale  
-#     slices = items_lengt
-#     lbls = items_type
-#     pie(slices, labels = lbls, main="Network statistics",col = rainbow(length(table(items_type))),
-#         radius = 1, cex = 0.7)
-    
   })
 }
 

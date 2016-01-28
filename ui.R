@@ -296,7 +296,7 @@ shinyUI(navbarPage("",
                              fluidRow(column(4,wellPanel(plotOutput('xx', height = 500))),
                                       column(8,wellPanel(DT::dataTableOutput('clique_data_table')))
                              ),
-                             fluidRow(column(2,selectInput("plotTripel",label = "Plot of Association Frequencies",
+                             fluidRow(column(2,selectInput("",label = "Plot of Association Frequencies",
                                                            choices = list("Disease-Nano-Drug" = 1,
                                                                           "Disease-Nano-Chemical"= 2,
                                                                           "Disease-Nano"=3,
@@ -310,7 +310,7 @@ shinyUI(navbarPage("",
                                       column(2,uiOutput("NodesOfInterest_items"))
                              ),
                              fluidRow(
-                               column(6,wellPanel(plotOutput('ggplot',height=900))),
+                               column(6,wellPanel(plotOutput('ggplot'))),
                                column(6,
                                       #fluidRow(wellPanel(DT::dataTableOutput('drugs_chemical_DT'))),
                                       fluidRow(wellPanel(DT::dataTableOutput('genes_data_table')) )
@@ -341,6 +341,10 @@ shinyUI(navbarPage("",
           tabPanel("Cluster Analysis",
                    tabsetPanel(
                    tabPanel("Nano based clustering",
+                            fluidRow(
+                              wellPanel(HTML("<p>The user can investigate what are the items strongly correlated to each nanomaterial.</p>"),
+                              htmlOutput("checkLOGIN_NBC"))
+                            ),
                             sidebarPanel(
                               fluidRow(
                                 column(6, uiOutput("nano_cluster_input")),
@@ -368,74 +372,47 @@ shinyUI(navbarPage("",
                             )        
                            
                    ),
-                  tabPanel("Nano clustering",radialNetworkOutput("nano_radial")),
-#                     tabPanel("Nano clustering interactive",
-#                              tags$head(tags$script(src="/home/aserra/InsideNano/www/d3/d3.v3.min.js")),
-#                              tags$head(tags$script(src="/home/aserra/InsideNano/www/js/hclust.js")),     
-#                               tags$head(tags$style('.node {
-#                                                       cursor: pointer;
-#                                                    }
-#                                                    .node circle {
-#                                                    fill: #fff;
-#                                                    stroke: steelblue;
-#                                                    stroke-width: 1.5px;
-#                                                    }
-#                                                    
-#                                                    .node text {
-#                                                    font: 10px sans-serif;
-#                                                    }
-#                                                    
-#                                                    .link {
-#                                                    fill: none;
-#                                                    stroke: #ccc;
-#                                                    stroke-width: 0.8px;
-#                                                    }')),
-#                               tags$body(tags$script('var margin = {top: 20, right: 120, bottom: 20, left: 120},
-#                                                     width = 960 - margin.right - margin.left,
-#                                                     height = 800 - margin.top - margin.bottom;
-#                                                     
-#                                                     var i = 0,
-#                                                     duration = 750,
-#                                                     root;
-#                                                     
-#                                                     var tree = d3.layout.tree()
-#                                                     .size([height, width]);
-#                                                     
-#                                                     var diagonal = d3.svg.diagonal()
-#                                                     .projection(function(d) { return [d.y, d.x]; });
-#                                                     
-#                                                     var svg = d3.select("body").append("svg")
-#                                                     .attr("width", width + margin.right + margin.left)
-#                                                     .attr("height", height + margin.top + margin.bottom)
-#                                                     .append("g")
-#                                                     .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-#                                                     
-#                                                     d3.json("/home/aserra/InsideNano/www/flare.json", function(error, flare) {
-#                                                     if (error) throw error;
-#                                                     
-#                                                     root = flare;
-#                                                     root.x0 = height / 2;
-#                                                     root.y0 = 0;
-#                                                     
-#                                                     function collapse(d) {
-#                                                     if (d.children) {
-#                                                     d._children = d.children;
-#                                                     d._children.forEach(collapse);
-#                                                     d.children = null;
-#                                                     }
-#                                                     }
-#                                                     
-#                                                     root.children.forEach(collapse);
-#                                                     update(root);
-#                                                     });
-#                                                     
-#                                                     d3.select(self.frameElement).style("height", "800px");
-#                                                     '
-#                               ))
-#                     ),
-                     tabPanel("Drug clustering",radialNetworkOutput("drugs_radial",width = 4000,height = 4000)),
-                     tabPanel("Disease clustering",radialNetworkOutput("disease_radial",width = 4000,height = 4000)),
-                     tabPanel("Chemical clustering",radialNetworkOutput("chemical_radial",width = 6000,height = 6000))
+                     tabPanel("Nano clustering",
+                              fluidRow(
+                                wellPanel(HTML("<p>The user can investigate how nanomaterials are grouped each other and which genes are most important to each of them.</p>"),
+                                htmlOutput("checkLOGIN_NC"))
+                              ),
+                              sidebarPanel(
+                                      fluidRow(
+                                               numericInput(inputId = "GP",label = "% of genes to show",
+                                                            value = 0.05,min = 0,max = 100,step=0.01)),
+                                      fluidRow(wellPanel(DT::dataTableOutput('node_DT')))
+                                      ),
+                               mainPanel(
+#                                       tags$head(tags$style('.node {
+#                                                             cursor: pointer;
+#                                                            }
+#                                                            
+#                                                            .node circle {
+#                                                            fill: #fff;
+#                                                            stroke: steelblue;
+#                                                            stroke-width: 1.5px;
+#                                                            }
+#                                                            
+#                                                            .node text {
+#                                                            font: 12px sans-serif;
+#                                                            }
+#                                                            
+#                                                            .link {
+#                                                            fill: none;
+#                                                            stroke: #ccc;
+#                                                            stroke-width: 0.8px;
+#                                                            }')),
+                                      collapsibleTreeOutput("treeNANO")
+                               )        
+                      ),
+#                      tabPanel("Drug clustering",radialNetworkOutput("drugs_radial",width = 4000,height = 4000)),
+#                      tabPanel("Disease clustering",radialNetworkOutput("disease_radial",width = 4000,height = 4000)),
+#                      tabPanel("Chemical clustering",radialNetworkOutput("chemical_radial",width = 6000,height = 6000))
+
+                      tabPanel("Drug clustering",collapsibleTreeOutput("treeDRUGS",width = 4000,height = 4000)),
+                      tabPanel("Disease clustering",collapsibleTreeOutput("treeDISEASE",width = 4000,height = 4000)),
+                      tabPanel("Chemical clustering",collapsibleTreeOutput("treeCHEMICAL",width = 6000,height = 6000))
                    )
           ),
           tabPanel("Demo",
