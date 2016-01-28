@@ -180,7 +180,7 @@ conditional_query = function(input,output,disease_list,selected_nodes,W_ADJ,th_p
   barplot_pattern_conditional_query(input,output,MList,graph_gw) #in conditional_query_output.R
   genes_data_table_output(input,output,MList,MM_list,proxy,graph_s,g,g_geni2) #in conditional_query_output.R
   
-  save(ADJ_S,chemMat,good_cliques,join10,file = "/home/aserra/InsideNano/www/immagine_per_debugging.RData")
+  #save(ADJ_S,chemMat,good_cliques,join10,file = "/home/aserra/InsideNano/www/immagine_per_debugging.RData")
   
   
   plot_force_based_subnetwork_query_resutls(input,output,ADJ_S,chemMat,good_cliques,join10) #in qury_outputs.R
