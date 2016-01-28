@@ -9,6 +9,8 @@ plot_gene_network = function(input,output,g,g_geni2){
     if(DEBUGGING)
       cat("Number of groups ",length(groups_path),"\n")
     
+    ADJ_g = igraph::as_adjacency_matrix(g_geni2,attr = "weight",type = "both")
+    
     good_index = which(V(g_geni2)$group %in% groups_path)  
     geni_toPlot = igraph::induced.subgraph(graph = g_geni2,vids = V(g_geni2)$name[good_index])
     geni_toPlot = igraph::delete.vertices(graph = geni_toPlot,v = which(igraph::degree(geni_toPlot)<1))

@@ -154,10 +154,16 @@ genes_data_table_output = function(input,output,MList,MM_list,proxy,graph_s,g,g_
     
     idx_g = which(V(g)$node_type == "gene")
     vids = V(g_)$name
-    #vids = c("Asthma","MWCNT","aciclovir","triclopyr")
-    gene_attached = igraph::neighbors(graph = g,v = vids)
+    #vids = c("Asthma","MWCNT","zomepirac","1-aminopyrene")
+
+    gene_attached = c()
+    for(i in vids){
+      gene_attached = c(gene_attached,names(igraph::neighbors(graph = g,v = i)))
+    }
     
-    subgraph = igraph::induced_subgraph(graph = g,vids = c(vids,names(gene_attached)))
+    gene_attached = unique(gene_attached)
+
+    subgraph = igraph::induced_subgraph(graph = g,vids = c(vids,gene_attached))
     
     SUB_ADJ = get.adjacency(subgraph,sparse = FALSE,attr = "weight")
     SUB_ADJ[SUB_ADJ == ""] = 0
@@ -185,15 +191,25 @@ genes_data_table_output = function(input,output,MList,MM_list,proxy,graph_s,g,g_
       GENE_INFO[row_i,1] = paste('<a target="_blank" href=\"https://www.google.com/?q=',GENE_INFO[row_i,1],'">',GENE_INFO[row_i,1],'</a>',sep="")
     #}
     for(i in vids){
-      if(GENE_INFO[row_i,i]=="1"){
-        GENE_INFO[row_i,i] =  '<font color="red"><b>&#9650;</b></font>' 
+      if(i %in% disease){
+        if(GENE_INFO[row_i,i]=="1"){
+          GENE_INFO[row_i,i] =  '<font color="black"><b>&#9666;&#9656;</b></font>' 
+        }
+        if(GENE_INFO[row_i,i]=="0"){
+          GENE_INFO[row_i,i] =  '<font color="black">-</font>'  
+        }
+      }else{
+        if(GENE_INFO[row_i,i]=="1"){
+          GENE_INFO[row_i,i] =  '<font color="red"><b>&#9650;</b></font>' 
+        }
+        if(GENE_INFO[row_i,i]=="-1"){
+          GENE_INFO[row_i,i] =  '<font color="green"><b>&#9660;</b></font>' 
+        }
+        if(GENE_INFO[row_i,i]=="0"){
+          GENE_INFO[row_i,i] =  '<font color="black">-</font>' 
+        }
       }
-      if(GENE_INFO[row_i,i]=="-1"){
-        GENE_INFO[row_i,i] =  '<font color="green"><b>&#9660;</b></font>' 
-      }
-      if(GENE_INFO[row_i,i]=="0"){
-          GENE_INFO[row_i,i] =  '' 
-      }
+     
     }
   }
     
@@ -209,7 +225,7 @@ genes_data_table_output = function(input,output,MList,MM_list,proxy,graph_s,g,g_
 
 
 barplot_pattern_conditional_query = function(input,output,MList,graph_gw){
-  output$ggplot = renderPlot({
+  output$ggplot = renderPlot({ #renderPlotly
     type = input$NetworkPattern #type of clique
     triple_type = input$plotTripel
     validate(
@@ -324,6 +340,14 @@ barplot_pattern_conditional_query = function(input,output,MList,graph_gw){
       par(mar = mar.default+ c(0,15,0,0))
       barplot(as.vector(Mi_count2[index]),horiz = TRUE,col = rainbow(length(index)),main=d_id,
               names.arg=names(Mi_count2)[index], cex.names=1, las=1)
+      
+#       save(MList,graph_gw,Mi_count2,index,file="barplot_debugging2.RData")
+#       
+#       toBePlot = cbind(rep(Mi_count2[index],Mi_count2[index]),rep(names(Mi_count2)[index],Mi_count2[index]))
+#       colnames(toBePlot) = c("value","labels")
+#       toBePlot = as.data.frame(toBePlot)
+#       c = qplot(factor(labels), data=toBePlot, geom="bar", fill=factor(labels)) + scale_fill_brewer()
+#       ggplotly(gg)
     }# end if node_type == ALL
     if(clique_type == "NDCD"){
       if(DEBUGGING)
@@ -639,6 +663,8 @@ barplot_pattern_conditional_query = function(input,output,MList,graph_gw){
       barplot(as.vector(Mi_count2[index]),horiz = TRUE,col = rainbow(length(index)),main=d_id,
               names.arg=names(Mi_count2)[index], cex.names=1, las=1)
     }# end if node_type == DCD
+    
+    ggplotly(c)
   })
 }
 

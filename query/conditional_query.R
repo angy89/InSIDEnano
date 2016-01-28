@@ -175,7 +175,8 @@ conditional_query = function(input,output,disease_list,selected_nodes,W_ADJ,th_p
   save(LOG_CONDITIONAL,file=paste(APP_PATH,"LOG.RData",sep=""))
   
   clique_graph_cq_plot(input,output,MList,MM_list,proxy,graph_s)#in conditional_query_output.R
-  
+  #create_histrogram_condition(input,output,MList)#in pattern_UI.R; genera le combinazioni di items per l'istogramma
+    
   barplot_pattern_conditional_query(input,output,MList,graph_gw) #in conditional_query_output.R
   genes_data_table_output(input,output,MList,MM_list,proxy,graph_s,g,g_geni2) #in conditional_query_output.R
   

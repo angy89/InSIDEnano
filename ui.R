@@ -303,20 +303,22 @@ shinyUI(navbarPage("",
                                column(4,wellPanel(DT::dataTableOutput('genes_data_table'))),
                                column(8,
                                         wellPanel(
-                                          fluidRow(column(2,selectInput("plotTripel",label = "Plot of Association Frequencies",
-                                                                        choices = list("Disease-Nano-Drug" = 1,
-                                                                                       "Disease-Nano-Chemical"= 2,
-                                                                                       "Disease-Nano"=3,
-                                                                                       "Disease-Drug"=4,
-                                                                                       "Disease-Chemical"=5,
-                                                                                       "Chemical-Nano" = 6,
-                                                                                       "Chemical-Drug" = 7,
-                                                                                       "Nano-Drug" = 8),selected = 1)),
+                                          fluidRow(column(2,
+                                                          selectInput("plotTripel",label = "Plot of Association Frequencies",
+                                                                      choices = list("Disease-Nano-Drug" = 1,
+                                                                                     "Disease-Nano-Chemical"= 2,
+                                                                                     "Disease-Nano"=3,
+                                                                                     "Disease-Drug"=4,
+                                                                                     "Disease-Chemical"=5,
+                                                                                     "Chemical-Nano" = 6,
+                                                                                     "Chemical-Drug" = 7,
+                                                                                     "Nano-Drug" = 8),selected = 1)
+                                                          ),
                                                    column(2,numericInput(inputId = "percentuale",label = "% of elements to show",
                                                                          value = 10,min = 1,max = 100,step=5)),
                                                    column(2,uiOutput("NodesOfInterest_items"))
                                           ),
-                                          fluidRow(column(8,plotOutput('ggplot')))
+                                          fluidRow(column(8,plotOutput('ggplot')))#plotlyOutput
                                         )
                                      )
                                
