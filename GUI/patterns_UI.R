@@ -25,10 +25,18 @@ building_table_and_proxy = function(input,output,MM_list){
                   selection = "single")
   })
   
+#   output$
+#   selectInput("",label = "Plot of Association Frequencies",
+#               choices = list("Disease-Nano-Drug" = 1,
+#                              "Disease-Nano-Chemical"= 2,
+#                              "Disease-Nano"=3,
+#                              "Disease-Drug"=4,
+#                              "Disease-Chemical"=5,
+#                              "Chemical-Nano" = 6,
+#                              "Chemical-Drug" = 7,
+#                              "Nano-Drug" = 8),selected = 1)
+  
   proxy = dataTableProxy("clique_data_table")
-  if(DEBUGGING){
-    cat("HO CREATO IL PROXY su Mi : ",class(proxy),"\n")
-  }
   
   return(proxy)
 }
