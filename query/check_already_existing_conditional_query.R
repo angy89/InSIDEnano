@@ -32,7 +32,7 @@ row_to_find <- data.frame(Nano=nano_query,Drugs = "",Disease=disease_query,Chemi
   
   if(dim(xx)[1]>0){
     row_idx = as.numeric(rownames(xx))
-    file_name = paste(APP_PATH,"Log_folder/",as.character(LOG_CONDITIONAL[row_idx,9]),sep="")
+    file_name = paste(LOCAL_PATH,"Log_folder/",as.character(LOG_CONDITIONAL[row_idx,9]),sep="")
     cat("---> END check_already_existing_conditional_query function ---> \n")
     
     return(file_name)

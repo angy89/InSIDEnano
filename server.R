@@ -94,7 +94,7 @@ shinyServer(function(input, output,session){
       
       #ANGELA
       observeEvent(input$Go2, {
-        load(paste(APP_PATH,"LOG.RData",sep=""))
+        load(paste(LOCAL_PATH,"LOG.RData",sep=""))
         
         
         if(DEBUGGING){
