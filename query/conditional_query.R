@@ -142,7 +142,7 @@ conditional_query = function(input,output,disease_list,selected_nodes,W_ADJ,th_p
   dim(LOG_CONDITIONAL)[1] -> log_counter
   log_counter + 1 -> log_counter
   save(CLIQUE_TYPE,query_th,nElem_cliques,query_nodes,disease_list,selected_nodes,info_text,W_ADJ,MList,MM_list,graph_gw,g,g_geni2,graph_s,ADJ_S,chemMat,good_cliques,join10,estimated_tyme,cliques_groups,
-       file=paste(APP_PATH,"Log_folder/",log_counter,".RData",sep=""))
+       file=paste(LOCAL_PATH,"Log_folder/",log_counter,".RData",sep=""))
   
   if(DEBUGGING){
     nano_query = input$nano_input
@@ -172,7 +172,7 @@ conditional_query = function(input,output,disease_list,selected_nodes,W_ADJ,th_p
   
   LOG_CONDITIONAL = as.data.frame(LOG_CONDITIONAL)
   
-  save(LOG_CONDITIONAL,file=paste(APP_PATH,"LOG.RData",sep=""))
+  save(LOG_CONDITIONAL,file=paste(LOCAL_PATH,"LOG.RData",sep=""))
   
   clique_graph_cq_plot(input,output,MList,MM_list,proxy,graph_s)#in conditional_query_output.R
   #create_histrogram_condition(input,output,MList)#in pattern_UI.R; genera le combinazioni di items per l'istogramma
