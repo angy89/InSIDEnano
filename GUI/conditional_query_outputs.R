@@ -338,7 +338,7 @@ barplot_pattern_conditional_query = function(input,output,MList,graph_gw){
       )
       mar.default = c(5,4,4,2) + 0.1
       par(mar = mar.default+ c(0,15,0,0))
-      barplot(as.vector(Mi_count2[index]),horiz = TRUE,col = rainbow(length(index)),main=d_id,
+      bp=barplot(as.vector(Mi_count2[index]),horiz = TRUE,col = rainbow(length(index)),main=d_id,
               names.arg=names(Mi_count2)[index], cex.names=1, las=1)
       
 #       save(MList,graph_gw,Mi_count2,index,file="barplot_debugging2.RData")
@@ -423,7 +423,7 @@ barplot_pattern_conditional_query = function(input,output,MList,graph_gw){
       )
       mar.default = c(5,4,4,2) + 0.1
       par(mar = mar.default+ c(0,15,0,0))
-      barplot(as.vector(Mi_count2[index]),horiz = TRUE,col = rainbow(length(index)),main=d_id,
+      bp=barplot(as.vector(Mi_count2[index]),horiz = TRUE,col = rainbow(length(index)),main=d_id,
               names.arg=names(Mi_count2)[index], cex.names=1, las=1)
     }# end if node_type == NDCD
     if(clique_type == "NDD"){ #Nano Drug Disease
@@ -502,7 +502,7 @@ barplot_pattern_conditional_query = function(input,output,MList,graph_gw){
       )
       mar.default = c(5,4,4,2) + 0.1
       par(mar = mar.default+ c(0,15,0,0))
-      barplot(as.vector(Mi_count2[index]),horiz = TRUE,col = rainbow(length(index)),main=d_id,
+     bp= barplot(as.vector(Mi_count2[index]),horiz = TRUE,col = rainbow(length(index)),main=d_id,
               names.arg=names(Mi_count2)[index], cex.names=1, las=1)
     }# end if node_type == NDD
     if(clique_type == "NDC"){ #Nano Drug Chemical
@@ -581,7 +581,7 @@ barplot_pattern_conditional_query = function(input,output,MList,graph_gw){
       )
       mar.default = c(5,4,4,2) + 0.1
       par(mar = mar.default+ c(0,15,0,0))
-      barplot(as.vector(Mi_count2[index]),horiz = TRUE,col = rainbow(length(index)),main=d_id,
+     bp= barplot(as.vector(Mi_count2[index]),horiz = TRUE,col = rainbow(length(index)),main=d_id,
               names.arg=names(Mi_count2)[index], cex.names=1, las=1)
     }# end if node_type == NDC
     if(clique_type == "DCD"){ #Drug Chemical Disease
@@ -660,11 +660,12 @@ barplot_pattern_conditional_query = function(input,output,MList,graph_gw){
       )
       mar.default = c(5,4,4,2) + 0.1
       par(mar = mar.default+ c(0,15,0,0))
-      barplot(as.vector(Mi_count2[index]),horiz = TRUE,col = rainbow(length(index)),main=d_id,
+     bp= barplot(as.vector(Mi_count2[index]),horiz = TRUE,col = rainbow(length(index)),main=d_id,
               names.arg=names(Mi_count2)[index], cex.names=1, las=1)
     }# end if node_type == DCD
     
-    ggplotly(c)
+    #ggplotly(c)
+    bp
   })
 }
 
