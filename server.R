@@ -14,6 +14,7 @@ shinyServer(function(input, output,session){
       
       phenotypic_network_UI(input,output)
       gene_network_UI(input,output)
+      KEGG_path_network_UI(input,output)
       render_clustering_radial_network(input,output,NANO,CHEMICAL,DISEASE,DRUGS)
       
       render_nano_collapsible_tree(input,output,NANO)
@@ -39,6 +40,7 @@ shinyServer(function(input, output,session){
         incProgress(1, detail = "Data Loaded 2/4")
         
         load(paste(APP_PATH,"gene_network_KEGG_th99.RData",sep=""))
+        load(paste(APP_PATH,"KEGG_PATH_ADJ.RData",sep=""))
         incProgress(1, detail = "Data Loaded 3/4")
        
         load(paste(APP_PATH,"big_net_with_chemical_up_down80_2.RData",sep=""))
@@ -72,7 +74,7 @@ shinyServer(function(input, output,session){
       names(path_group) = unlist(path_group)
       
       output$Patway <- renderUI({
-        selectInput("Patway_g",label = "Gene Pathway",multiple = TRUE, choices = path_group, selected = path_group[[1]])
+        selectInput("Patway_g",label = "Gene Pathway",multiple = TRUE, choices = path_group, selected = input$selected_KEGG)
       })
       
       good_disease = disease[disease %in% colnames(W_ADJ)]
@@ -173,6 +175,8 @@ shinyServer(function(input, output,session){
       plot_item_network(input,output,W2_ADJ)
       plot_item_network_pie(input,output,W2_ADJ)
       plot_gene_network(input,output,g,g_geni2)
+      plot_kegg_path_network(input,output,KEGG_ADJ)
+        
     }
       
   }) #end event login

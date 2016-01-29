@@ -339,6 +339,8 @@ shinyUI(navbarPage("",
                        p("Two genes are connected in the network if they share a significantly amount of phenotipic entities."),
                        htmlOutput("checkLOGIN_gene")
                    ),
+                   fluidRow(uiOutput("KEGG_net_page1"),
+                            uiOutput("KEGG_net_page2")),
                    fluidRow(uiOutput("gene_net_page1"),
                             uiOutput("gene_net_page2"))
 #                    fluidRow(uiOutput("gene_net_page3"),

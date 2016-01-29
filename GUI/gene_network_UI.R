@@ -1,14 +1,39 @@
+KEGG_path_network_UI = function(input,output){
+  output$KEGG_net_page1 = renderUI({
+    sidebarPanel(
+      fluidRow(
+        column(9, sliderInput("KEGG_Similarity", label = "Repulseration Strenght",
+                              min = 1, max = 100, value = 99,step=1))
+      ),
+      fluidRow(
+        column(9, sliderInput("KEGG_repulserad", label = "Repulseration Strenght",
+                              min = 100, max = 1000, value = 500,step=1))
+      ),
+      fluidRow(
+        column(9, sliderInput("KEGG_length", label = "Edge length",
+                              min = 2, max = 10, value = 4,step=1))
+      )
+    )
+  })
+  
+  output$KEGG_net_page2 = renderUI({
+    mainPanel(
+      fluidRow(column(12, wellPanel(forceNetworkOutput("KEGG_Network"))))   
+    )
+  })
+}
+
 gene_network_UI = function(input,output){
   output$gene_net_page1 = renderUI({
     sidebarPanel(
       fluidRow(column(12,uiOutput("Patway"))),
       fluidRow(
         column(9, sliderInput("gene_repulserad", label = "Repulseration Strenght",
-                              min = 100, max = 1000, value = 100,step=1))
+                              min = 100, max = 1000, value = 500,step=1))
       ),
       fluidRow(
         column(9, sliderInput("gene_length", label = "Edge length",
-                              min = 2, max = 10, value = 2,step=1))
+                              min = 2, max = 10, value = 4,step=1))
       )
     )
   })

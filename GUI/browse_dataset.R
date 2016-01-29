@@ -1,3 +1,46 @@
+plot_kegg_path_network = function(input,output,KEGG_ADJ){
+  output$KEGG_Network = renderForceNetwork({
+    
+    rownames(KEGG_ADJ) = colnames(KEGG_ADJ) = gsub(x = rownames(KEGG_ADJ),pattern = "KEGG_",replacement = "")
+    
+    th = input$KEGG_Similarity
+    th = quantile(KEGG_ADJ,th/100)
+    KEGG_ADJ[KEGG_ADJ<th] = 0
+    
+    toRem =which(colSums(KEGG_ADJ)==0)
+    if(length(toRem)>0){
+      KEGG_ADJ = KEGG_ADJ[-toRem,-toRem]
+    }
+    
+    KEGG_path_graph = graph.adjacency(adjmatrix = KEGG_ADJ,mode = "undirected",weighted = TRUE)
+    V(KEGG_path_graph)$size = igraph::degree(KEGG_path_graph)
+    V(KEGG_path_graph)$group = "KEGG Pathways"
+    
+    KEGG_path_data_frame = igraph::get.data.frame(KEGG_path_graph,what = "both")
+    
+    vertices = KEGG_path_data_frame$vertices
+    edges = KEGG_path_data_frame$edges
+    
+    edges$from = match(edges$from,vertices$name) - 1
+    edges$to = match(edges$to,vertices$name) - 1
+    
+    vertices$name = as.factor(vertices$name)
+    vertices$group = as.factor(vertices$group)
+    vertices$size = as.numeric(vertices$size)
+    edges$from = as.integer(edges$from)
+    edges$to  = as.integer(edges$to)
+
+    forceNetwork(Links = edges, Nodes = vertices,
+                 Source = "from", Target = "to",
+                 Value = "weight", NodeID = "name",Nodesize="size",
+                 zoom = TRUE,opacity = 0.85,fontSize = 10,Group = "group",
+                 legend = TRUE, 
+                # clickAction = JS(Shiny.onInputChange("selected_KEGG", d.name)),
+                 charge = -input$KEGG_repulserad,
+                 linkDistance = JS(paste0("function(d){return d.value*",input$KEGG_length,"}")))
+  })
+}
+
 plot_gene_network = function(input,output,g,g_geni2){
   output$geneNetwork = renderForceNetwork({
     
