@@ -176,6 +176,20 @@ genes_data_table_output = function(input,output,MList,MM_list,proxy,graph_s,g,g_
     nSUB_ADJ = nSUB_ADJ[elems,vids]
     genes_elem  = rowSums(abs(nSUB_ADJ))
     genes_elem = sort(genes_elem,decreasing = T)
+    
+    if(length(vids)==4){
+      toRem = which(genes_elem<3)
+      if(length(toRem)>0){
+        genes_elem = genes_elem[-toRem]
+      }
+    }
+    if(length(vids)==3){
+      toRem = which(genes_elem<2)
+      if(length(toRem)>0){
+        genes_elem = genes_elem[-toRem]
+      }
+    }
+    
     nSUB_ADJ = nSUB_ADJ[names(genes_elem),]
 #     GMAT = as_adjacency_matrix(graph = g,attr = "weight",type="both",sparse = FALSE)
 #     genes_items_interaction = rowSums(as.matrix(GMAT[idx_g,V(g_)$name]))
@@ -183,7 +197,16 @@ genes_data_table_output = function(input,output,MList,MM_list,proxy,graph_s,g,g_
 #     idx_gg = which(GG_genes %in% V(g_geni2)$name)
 #     geni_toPlot = igraph::induced.subgraph(g_geni2,GG_genes[idx_gg])
     
-    GENE_INFO = cbind(rownames(nSUB_ADJ),nSUB_ADJ)
+    x <- org.Hs.egSYMBOL
+    # Get the gene symbol that are mapped to an entrez gene identifiers
+    mapped_genes <- mappedkeys(x)
+    # Convert to a list
+    xx <- as.list(x[mapped_genes])
+    entrez = gsub(x = rownames(nSUB_ADJ),pattern = "_at",replacement = "")
+    xx[entrez] -> MYSYMBOL
+    MYSYMBOL = unlist(MYSYMBOL)
+    
+    GENE_INFO = cbind(MYSYMBOL,nSUB_ADJ)
     colnames(GENE_INFO)[1] = "Gene Name"
     
   for(row_i in 1:dim(GENE_INFO)[1]){

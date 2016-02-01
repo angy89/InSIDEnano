@@ -43,7 +43,7 @@ shinyServer(function(input, output,session){
         load(paste(APP_PATH,"KEGG_PATH_ADJ.RData",sep=""))
         incProgress(1, detail = "Data Loaded 3/4")
        
-        load(paste(APP_PATH,"big_net_with_chemical_up_down80_2.RData",sep=""))
+        load(paste(APP_PATH,"big_net_with_chemical_up_down80_2_th_30.RData",sep=""))
         incProgress(1, detail = "Data Loaded 3/4")
 
         incProgress(1, detail = "Data Loaded 4/4")
