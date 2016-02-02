@@ -46,37 +46,40 @@ clique_graph_cq_plot = function(input,output,MList,MM_list,proxy,graph_s){
     if(DEBUGGING)
       cat("s vale: ",s,"\n")
     
-    if(clique_type == "NDCD"){
-      g_= internal_render_plot(MM_list[[type]],gr4=graph_s,s,proxyList = proxy)
-    }
-    if(clique_type == "NDD"){
-      g_= internal_render_plotNDD(MM_list[[type]],gr4=graph_s,s,proxyList = proxy)
-    }
-    if(clique_type == "NDC"){
-      g_= internal_render_plotNDC(MM_list[[type]],gr4=graph_s,s,proxyList = proxy)
-    }
-    if(clique_type == "DCD"){
-      g_= internal_render_plotDCD(MM_list[[type]],gr4=graph_s,s,proxyList = proxy)
-    }
-    if(clique_type == "ALL"){
-      if(("" %in% MList[[type]][1,]) == FALSE){
-        g_= internal_render_plot(MM_list[[type]],gr4=graph_s,s,proxyList = proxy)
-      }else{
-        col_idx = which(MList[[type]][1,] %in% "")
-        if(col_idx == 4){
-          g_= internal_render_plotNDD(MM_list[[type]],gr4=graph_s,s,proxyList = proxy)
-        }
-        if(col_idx == 1){
-          g_= internal_render_plotNDC(MM_list[[type]],gr4=graph_s,s,proxyList = proxy)
-        }
-        if(col_idx == 2){
-          g_= internal_render_plotDCD(MM_list[[type]],gr4=graph_s,s,proxyList = proxy)
-        }
-      }
-    }
-    if(DEBUGGING)
-      cat("g_class: ",class(g_),"\n")
+    g_ = generate_g_cliques(input,output,graph_s,proxy,MM_list,MList)
     
+    
+#     if(clique_type == "NDCD"){
+#       g_= internal_render_plot(MM_list[[type]],gr4=graph_s,s,proxyList = proxy)
+#     }
+#     if(clique_type == "NDD"){
+#       g_= internal_render_plotNDD(MM_list[[type]],gr4=graph_s,s,proxyList = proxy)
+#     }
+#     if(clique_type == "NDC"){
+#       g_= internal_render_plotNDC(MM_list[[type]],gr4=graph_s,s,proxyList = proxy)
+#     }
+#     if(clique_type == "DCD"){
+#       g_= internal_render_plotDCD(MM_list[[type]],gr4=graph_s,s,proxyList = proxy)
+#     }
+#     if(clique_type == "ALL"){
+#       if(("" %in% MList[[type]][1,]) == FALSE){
+#         g_= internal_render_plot(MM_list[[type]],gr4=graph_s,s,proxyList = proxy)
+#       }else{
+#         col_idx = which(MList[[type]][1,] %in% "")
+#         if(col_idx == 4){
+#           g_= internal_render_plotNDD(MM_list[[type]],gr4=graph_s,s,proxyList = proxy)
+#         }
+#         if(col_idx == 1){
+#           g_= internal_render_plotNDC(MM_list[[type]],gr4=graph_s,s,proxyList = proxy)
+#         }
+#         if(col_idx == 2){
+#           g_= internal_render_plotDCD(MM_list[[type]],gr4=graph_s,s,proxyList = proxy)
+#         }
+#       }
+#     }
+#     if(DEBUGGING)
+#       cat("g_class: ",class(g_),"\n")
+#     
     if(vcount(g_) == 4){
       #plot(c(-1,0,1,0),c(0,1,0,-1))
       my_layout = matrix(c(-1,0,0,1,1,0,0,-1),4,2,byrow = TRUE)
@@ -94,6 +97,53 @@ clique_graph_cq_plot = function(input,output,MList,MM_list,proxy,graph_s){
   })
 }
 
+generate_g_cliques = function(input,output,graph_s,proxy,MM_list,MList){
+  type = input$NetworkPattern
+  clique_type = input$clique_type
+  
+  validate(
+    need(input$NetworkPattern != "", "Please select a pattern type")
+  )
+  
+  type = as.integer(gsub(pattern = "M",x =type,replacement = ""))
+  s = input$clique_data_table_rows_selected
+  
+  if(clique_type == "NDCD"){
+    g_= internal_render_plot(MM_list[[type]],gr4=graph_s,s,proxyList = proxy)
+  }
+  if(clique_type == "NDD"){
+    g_= internal_render_plotNDD(MM_list[[type]],gr4=graph_s,s,proxyList = proxy)
+  }
+  if(clique_type == "NDC"){
+    g_= internal_render_plotNDC(MM_list[[type]],gr4=graph_s,s,proxyList = proxy)
+  }
+  if(clique_type == "DCD"){
+    g_= internal_render_plotDCD(MM_list[[type]],gr4=graph_s,s,proxyList = proxy)
+  }
+  if(clique_type == "ALL"){
+    if(("" %in% MList[[type]][1,]) == FALSE){
+      g_= internal_render_plot(MM_list[[type]],gr4=graph_s,s,proxyList = proxy)
+    }else{
+      col_idx = which(MList[[type]][1,] %in% "")
+      if(col_idx == 4){
+        g_= internal_render_plotNDD(MM_list[[type]],gr4=graph_s,s,proxyList = proxy)
+      }
+      if(col_idx == 1){
+        g_= internal_render_plotNDC(MM_list[[type]],gr4=graph_s,s,proxyList = proxy)
+      }
+      if(col_idx == 2){
+        g_= internal_render_plotDCD(MM_list[[type]],gr4=graph_s,s,proxyList = proxy)
+      }
+    }
+  }
+  if(DEBUGGING){
+    cat("g_class: ",class(g_),"\n")
+    cat("graph names ",V(g_)$name,"\n")
+    
+  }
+  return(g_)
+}
+
 genes_data_table_output = function(input,output,MList,MM_list,proxy,graph_s,g,g_geni2){
   output$genes_data_table = DT::renderDataTable({
     type = input$NetworkPattern
@@ -102,51 +152,47 @@ genes_data_table_output = function(input,output,MList,MM_list,proxy,graph_s,g,g_
     validate(
       need(input$NetworkPattern != "", "Please select a pattern type")
     )
-    if(DEBUGGING)
-      cat("Il tipo selezionato ??: ",type,"\n")
+    
     type = as.integer(gsub(pattern = "M",x =type,replacement = ""))
-    if(DEBUGGING)
-      cat("Il numero selezionato ??: ",type,"\n")
-    if(DEBUGGING)
-      cat("class input$clique_data_table: ",class(input$clique_data_table))
     s = input$clique_data_table_rows_selected
-    if(DEBUGGING)
-      cat("s vale: ",s,"\n")
     
-    if(clique_type == "NDCD"){
-      g_= internal_render_plot(MM_list[[type]],gr4=graph_s,s,proxyList = proxy)
-    }
-    if(clique_type == "NDD"){
-      g_= internal_render_plotNDD(MM_list[[type]],gr4=graph_s,s,proxyList = proxy)
-    }
-    if(clique_type == "NDC"){
-      g_= internal_render_plotNDC(MM_list[[type]],gr4=graph_s,s,proxyList = proxy)
-    }
-    if(clique_type == "DCD"){
-      g_= internal_render_plotDCD(MM_list[[type]],gr4=graph_s,s,proxyList = proxy)
-    }
-    if(clique_type == "ALL"){
-      if(("" %in% MList[[type]][1,]) == FALSE){
-        g_= internal_render_plot(MM_list[[type]],gr4=graph_s,s,proxyList = proxy)
-      }else{
-        col_idx = which(MList[[type]][1,] %in% "")
-        if(col_idx == 4){
-          g_= internal_render_plotNDD(MM_list[[type]],gr4=graph_s,s,proxyList = proxy)
-        }
-        if(col_idx == 1){
-          g_= internal_render_plotNDC(MM_list[[type]],gr4=graph_s,s,proxyList = proxy)
-        }
-        if(col_idx == 2){
-          g_= internal_render_plotDCD(MM_list[[type]],gr4=graph_s,s,proxyList = proxy)
-        }
-      }
-    }
-    if(DEBUGGING){
-      cat("g_class: ",class(g_),"\n")
-      cat("graph names ",V(g_)$name,"\n")
+#     if(clique_type == "NDCD"){
+#       g_= internal_render_plot(MM_list[[type]],gr4=graph_s,s,proxyList = proxy)
+#     }
+#     if(clique_type == "NDD"){
+#       g_= internal_render_plotNDD(MM_list[[type]],gr4=graph_s,s,proxyList = proxy)
+#     }
+#     if(clique_type == "NDC"){
+#       g_= internal_render_plotNDC(MM_list[[type]],gr4=graph_s,s,proxyList = proxy)
+#     }
+#     if(clique_type == "DCD"){
+#       g_= internal_render_plotDCD(MM_list[[type]],gr4=graph_s,s,proxyList = proxy)
+#     }
+#     if(clique_type == "ALL"){
+#       if(("" %in% MList[[type]][1,]) == FALSE){
+#         g_= internal_render_plot(MM_list[[type]],gr4=graph_s,s,proxyList = proxy)
+#       }else{
+#         col_idx = which(MList[[type]][1,] %in% "")
+#         if(col_idx == 4){
+#           g_= internal_render_plotNDD(MM_list[[type]],gr4=graph_s,s,proxyList = proxy)
+#         }
+#         if(col_idx == 1){
+#           g_= internal_render_plotNDC(MM_list[[type]],gr4=graph_s,s,proxyList = proxy)
+#         }
+#         if(col_idx == 2){
+#           g_= internal_render_plotDCD(MM_list[[type]],gr4=graph_s,s,proxyList = proxy)
+#         }
+#       }
+#     }
+#     if(DEBUGGING){
+#       cat("g_class: ",class(g_),"\n")
+#       cat("graph names ",V(g_)$name,"\n")
+#       
+#     }
+#     
+    
+    g_ = generate_g_cliques(input,output,graph_s,proxy,MM_list,MList)
       
-    }
-    
     
     validate(
       need(length(s)!=0 , "Please select a clique")
@@ -178,13 +224,13 @@ genes_data_table_output = function(input,output,MList,MM_list,proxy,graph_s,g,g_
     genes_elem = sort(genes_elem,decreasing = T)
     
     if(length(vids)==4){
-      toRem = which(genes_elem<3)
+      toRem = which(genes_elem<4)
       if(length(toRem)>0){
         genes_elem = genes_elem[-toRem]
       }
     }
     if(length(vids)==3){
-      toRem = which(genes_elem<2)
+      toRem = which(genes_elem<3)
       if(length(toRem)>0){
         genes_elem = genes_elem[-toRem]
       }
