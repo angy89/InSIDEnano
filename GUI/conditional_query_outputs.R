@@ -27,6 +27,54 @@ plot_list_pattern = function(input,output,cliques_groups){
   })
 }
 
+enrich_clique = function(input,output,MList,MM_list,proxy,graph_s){
+  output$enriched_clique<- renderNanoCluster({
+    
+#     type = input$NetworkPattern
+#     clique_type = input$clique_type
+#     
+#     validate(
+#       need(input$NetworkPattern != "", "Please select a pattern type")
+#     )
+#     
+#     type = as.integer(gsub(pattern = "M",x =type,replacement = ""))
+    s = input$clique_data_table_rows_selected
+    
+    validate(
+      need(s!="", "Please select a clique")
+    )
+    
+    g_ = generate_g_cliques(input,output,graph_s,proxy,MM_list,MList)
+    
+    clique_list = list(V(g_)$name)
+    message("In enrich_clique: clique_list: ",clique_list,"\n")
+    th_l = rep(0.9,length(vds))
+    message("In enrich_clique: th_l: ",th_l,"\n")
+    
+    gene_sets_list = list(c1_file,KEGG_file,biocarta_file,reactome_file,
+                          c3Mir_file,c3Tft_file,c4_file,c5_file,c6_file,c7_file)
+    gene_sets_name = c("c1","c2_KEGG","c2_biocarta","c2_reactome","c3_miRNA","c3_TFT","c4","c5","c6","c7")
+    
+    message("In enrich_clique: gene_sets_name: ",gene_sets_name)
+    
+    DF = cliques_enrichment(clique_list,g,g_,gene_sets_list,gene_sets_name,th_l)
+
+    edges = DF$edges
+    vertices = DF$vertices
+    colnames(vertices)[3]="size"
+    
+    nanocluster(Links = edges, Nodes = vertices,
+                Source = "source", Target = "target",cluster_group = "cliques",
+                last_level = 3, groups = names(table(vertices$group)),
+                Value = "value", NodeID = "name",Nodesize = "size",
+                Group = "group",zoom = TRUE,opacity = 0.95,fontSize = 20,
+                legend = TRUE,
+                charge = -500,
+                linkDistance = JS(paste0("function(d){return d.value*",2,
+                                         "}")))
+  })
+}
+
 clique_graph_cq_plot = function(input,output,MList,MM_list,proxy,graph_s){
   output$xx = renderPlot({
     type = input$NetworkPattern
@@ -147,13 +195,14 @@ generate_g_cliques = function(input,output,graph_s,proxy,MM_list,MList){
 genes_data_table_output = function(input,output,MList,MM_list,proxy,graph_s,g,g_geni2){
   output$genes_data_table = DT::renderDataTable({
     type = input$NetworkPattern
+    type = as.integer(gsub(pattern = "M",x =type,replacement = ""))
+    
     clique_type = input$clique_type
     
     validate(
       need(input$NetworkPattern != "", "Please select a pattern type")
     )
     
-    type = as.integer(gsub(pattern = "M",x =type,replacement = ""))
     s = input$clique_data_table_rows_selected
     
 #     if(clique_type == "NDCD"){
@@ -189,39 +238,51 @@ genes_data_table_output = function(input,output,MList,MM_list,proxy,graph_s,g,g_
 #       cat("graph names ",V(g_)$name,"\n")
 #       
 #     }
-#     
-    
+
     g_ = generate_g_cliques(input,output,graph_s,proxy,MM_list,MList)
-      
-    
-    validate(
-      need(length(s)!=0 , "Please select a clique")
-    )          
+    validate(need(length(s)!=0 , "Please select a clique"))          
     
     idx_g = which(V(g)$node_type == "gene")
     vids = V(g_)$name
     #vids = c("Asthma","MWCNT","zomepirac","1-aminopyrene")
 
-    gene_attached = c()
-    for(i in vids){
-      gene_attached = c(gene_attached,names(igraph::neighbors(graph = g,v = i)))
+#     gene_attached = c()
+#     for(i in vids){
+#       gene_attached = c(gene_attached,names(igraph::neighbors(graph = g,v = i)))
+#     }
+#     gene_attached = unique(gene_attached)
+# 
+#     subgraph = igraph::induced_subgraph(graph = g,vids = c(vids,gene_attached))
+    
+    il = items_list[vids]
+    union_genes = il[[1]]$genes.name
+    
+    for(i in 2:length(il)){
+      union_genes = c(union_genes,union(union_genes,il[[i]]$genes.name))
     }
     
-    gene_attached = unique(gene_attached)
-
-    subgraph = igraph::induced_subgraph(graph = g,vids = c(vids,gene_attached))
+    ADJ = matrix(0,length(union_genes),length(vids))
+    rownames(ADJ) = union_genes
+    colnames(ADJ) = names(il)
     
-    SUB_ADJ = get.adjacency(subgraph,sparse = FALSE,attr = "weight")
-    SUB_ADJ[SUB_ADJ == ""] = 0
-   
-    nSUB_ADJ = apply(SUB_ADJ, 1, as.numeric)
-    rownames(nSUB_ADJ) = rownames(SUB_ADJ)
+    for(i in vids){
+      gi = il[[i]]$genes.name
+      gw = il[[i]]$edge.weigth
+      ADJ[gi,i]=as.numeric(gw)
+    }
     
-    elems = rownames(nSUB_ADJ)[!rownames(nSUB_ADJ) %in% vids]
+#     SUB_ADJ = get.adjacency(subgraph,sparse = FALSE,attr = "weight")
+#     SUB_ADJ[SUB_ADJ == ""] = 0
+#    
+#     nSUB_ADJ = apply(SUB_ADJ, 1, as.numeric)
+#     rownames(nSUB_ADJ) = rownames(SUB_ADJ)
+#     
+#     elems = rownames(nSUB_ADJ)[!rownames(nSUB_ADJ) %in% vids]
+#     
+#     nSUB_ADJ = nSUB_ADJ[elems,vids]
     
-    nSUB_ADJ = nSUB_ADJ[elems,vids]
-    genes_elem  = rowSums(abs(nSUB_ADJ))
-    genes_elem = sort(genes_elem,decreasing = T)
+    genes_elem  = rowSums(abs(ADJ))
+    
     
     if(length(vids)==4){
       toRem = which(genes_elem<4)
@@ -235,8 +296,8 @@ genes_data_table_output = function(input,output,MList,MM_list,proxy,graph_s,g,g_
         genes_elem = genes_elem[-toRem]
       }
     }
-    
-    nSUB_ADJ = nSUB_ADJ[names(genes_elem),]
+    #genes_elem = sort(genes_elem,decreasing = T)
+    ADJ = ADJ[names(genes_elem),]
 #     GMAT = as_adjacency_matrix(graph = g,attr = "weight",type="both",sparse = FALSE)
 #     genes_items_interaction = rowSums(as.matrix(GMAT[idx_g,V(g_)$name]))
 #     GG_genes = rownames(GMAT)[which(genes_items_interaction>0)]
@@ -248,11 +309,11 @@ genes_data_table_output = function(input,output,MList,MM_list,proxy,graph_s,g,g_
     mapped_genes <- mappedkeys(x)
     # Convert to a list
     xx <- as.list(x[mapped_genes])
-    entrez = gsub(x = rownames(nSUB_ADJ),pattern = "_at",replacement = "")
+    entrez = gsub(x = rownames(ADJ),pattern = "_at",replacement = "")
     xx[entrez] -> MYSYMBOL
     MYSYMBOL = unlist(MYSYMBOL)
     
-    GENE_INFO = cbind(MYSYMBOL,nSUB_ADJ)
+    GENE_INFO = cbind(MYSYMBOL,ADJ)
     colnames(GENE_INFO)[1] = "Gene Name"
     
   for(row_i in 1:dim(GENE_INFO)[1]){
