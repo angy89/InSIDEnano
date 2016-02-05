@@ -44,6 +44,8 @@ shinyServer(function(input, output,session){
         incProgress(1, detail = "Data Loaded 3/4")
        
         load(paste(APP_PATH,"big_net_with_chemical_up_down80_2_th_30.RData",sep=""))
+        load(paste(APP_PATH,"items_gene_association_complete_no_genes.RData",sep="")) #items_list
+        
         incProgress(1, detail = "Data Loaded 3/4")
 
         incProgress(1, detail = "Data Loaded 4/4")
@@ -91,7 +93,7 @@ shinyServer(function(input, output,session){
       
       observeEvent(input$Go, {
         free_query(input,output,disease_list,selected_nodes,W_ADJ,
-                   th_p = input$th_slider/100,node_type,chemMat,join10,g,g_geni2) #in free_query.R
+                   th_p = input$th_slider/100,node_type,chemMat,join10,g,g_geni2,items_list) #in free_query.R,
       }) #End Listener 1
       
       #ANGELA
@@ -113,12 +115,12 @@ shinyServer(function(input, output,session){
           if(DEBUGGING){
             cat("New conditional query \n")  
         }
-        conditional_query(input,output,disease_list,selected_nodes,W_ADJ,th_p = input$th_slider2/100,node_type,chemMat,join10,g,g_geni2,LOG_CONDITIONAL)
+        conditional_query(input,output,disease_list,selected_nodes,W_ADJ,th_p = input$th_slider2/100,node_type,chemMat,join10,g,g_geni2,LOG_CONDITIONAL,items_list)
         }else{
           if(DEBUGGING){
             cat("Load conditional query \n")  
           }
-          load_conditional_query(input,output,log_file_to_load)
+          load_conditional_query(input,output,log_file_to_load,items_list)
         }  
           
       }) #End Listener 2

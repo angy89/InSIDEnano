@@ -1,4 +1,9 @@
-load_conditional_query = function(input,output,RData_file){
+load_conditional_query = function(input,output,RData_file,items_list){
+  
+  
+  withProgress(message = 'Progress...', min = 1,max = 6, {
+  incProgress(1, detail = "Loading file...")
+    
   load(file = RData_file)
   
   output$info2_1 <- renderUI({HTML(info_text)}) 
@@ -28,17 +33,30 @@ load_conditional_query = function(input,output,RData_file){
                   options = list(order = list(list(1, 'desc')),target = 'row+column',scrollX=TRUE,scrollY = "400px", scrollCollapse = TRUE,paging=FALSE),
                   escape=FALSE,
                   selection = "single")
+    
   })
   
- 
+  incProgress(1, detail = "Preparing Output...")
+  
   proxy = dataTableProxy("clique_data_table")
-    
+  incProgress(1, detail = "Preparing Barplot output...")
+  
   barplot_pattern_conditional_query(input,output,MList,graph_gw) #in conditional_query_output.R
-  genes_data_table_output(input,output,MList,MM_list,proxy,graph_s,g,g_geni2) #in conditional_query_output.R
-  clique_graph_cq_plot(input,output,MList,MM_list,proxy,graph_s)#in conditional_query_output.R
+  #clique_graph_cq_plot(input,output,MList,MM_list,proxy,graph_s)#in conditional_query_output.R
+  incProgress(1, detail = "Preparing Genes Data table Output...")
+  
+  genes_data_table_output(input,output,MList,MM_list,proxy,graph_s,g,g_geni2,items_list) #in conditional_query_output.R
+  incProgress(1, detail = "Enrich Cliques...")
+  
+  enrich_clique(input,output,MList,MM_list,proxy,graph_s,items_list)
+  
+  incProgress(1, detail = "Plot subnetwork and statistics...")
+  
   plot_force_based_subnetwork_query_resutls(input,output,ADJ_S,chemMat,good_cliques,join10) #in qury_outputs.R
   plot_subnetwork_statistics(input,output,ADJ_S,chemMat,good_cliques,join10)#in qury_outputs.R
   plot_gene_subnetwork(input,output,ADJ_S,chemMat,good_cliques,join10,g,g_geni2)#in qury_outputs.R
   plot_gene_subnetwork_statistics(input,output,ADJ_S,chemMat,good_cliques,join10,g,g_geni2)#in qury_outputs.R
+  
+  })
   
 }

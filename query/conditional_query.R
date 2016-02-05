@@ -1,4 +1,4 @@
-conditional_query = function(input,output,disease_list,selected_nodes,W_ADJ,th_p = input$th_slider/100,node_type,chemMat,join10,g,g_geni2,LOG_CONDITIONAL){
+conditional_query = function(input,output,disease_list,selected_nodes,W_ADJ,th_p = input$th_slider/100,node_type,chemMat,join10,g,g_geni2,LOG_CONDITIONAL,items_list){
   output$info2_1 <- renderUI({HTML(info_text)}) 
   CLIQUE_TYPE = input$clique_type
   if(DEBUGGING)
@@ -25,7 +25,7 @@ conditional_query = function(input,output,disease_list,selected_nodes,W_ADJ,th_p
   if(DEBUGGING)
     cat("query_nodes:",query_nodes,"\n")
   
-  withProgress(message = 'Progress...', min = 1,max = 9, {
+  withProgress(message = 'Progress...', min = 1,max = 11, {
     incProgress(1, detail = "Evaluating input list...")
     free_query_UI_node_of_interest_output(input,output,disease_list) #in free_query_UI.R
     
@@ -137,55 +137,59 @@ conditional_query = function(input,output,disease_list,selected_nodes,W_ADJ,th_p
     
     incProgress(1, detail = "Building tables")
     building_table_and_proxy(input,output,MM_list)
-  })
   
-  dim(LOG_CONDITIONAL)[1] -> log_counter
-  log_counter + 1 -> log_counter
-  save(CLIQUE_TYPE,query_th,nElem_cliques,query_nodes,disease_list,selected_nodes,info_text,W_ADJ,MList,MM_list,graph_gw,g,g_geni2,graph_s,ADJ_S,chemMat,good_cliques,join10,estimated_tyme,cliques_groups,
-       file=paste(LOCAL_PATH,"Log_folder/",log_counter,".RData",sep=""))
-  
-  if(DEBUGGING){
-    nano_query = input$nano_input
-    drug_query = input$drug_input
-    chemical_query = input$chemical_input
-    disease_query = input$disease_input
-    th_p = input$th_slider2
-    query_th = input$percentuale_somma
-    nElem_cliques = input$nroCliques
-    CLIQUE_TYPE = input$clique_type
+    incProgress(1, detail = "Saving Results")
+    dim(LOG_CONDITIONAL)[1] -> log_counter
+    log_counter + 1 -> log_counter
     
-    cat("Inputs--> ", nano_query,drug_query,chemical_query,disease_query,th_p,query_th,nElem_cliques,CLIQUE_TYPE,"\n")
-  }
-  
-  LOG_CONDITIONAL = as.matrix(LOG_CONDITIONAL)
-  LOG_CONDITIONAL = rbind(LOG_CONDITIONAL,c(paste(c(input$nano_input,""),collapse="_"),
-                                          "",
-                                          paste(c(input$disease_input,""),collapse="_"),
-                                          "",
-                                          input$th_slider2,input$percentuale_somma,input$nroCliques,input$clique_type,paste(log_counter,".RData",sep="")))
-  cat("New row to add to the log\n")
-  cat("Row--> ",c(paste(c(input$nano_input,""),collapse="_"),
-                  "",
-                  paste(c(input$disease_input,""),collapse="_"),
-                  "",
-                  input$th_slider2,input$percentuale_somma,input$nroCliques,input$clique_type,paste(log_counter,".RData",sep="")),"\n")
-  
-  LOG_CONDITIONAL = as.data.frame(LOG_CONDITIONAL)
-  
-  save(LOG_CONDITIONAL,file=paste(LOCAL_PATH,"LOG.RData",sep=""))
-  
-  clique_graph_cq_plot(input,output,MList,MM_list,proxy,graph_s)#in conditional_query_output.R
-  #create_histrogram_condition(input,output,MList)#in pattern_UI.R; genera le combinazioni di items per l'istogramma
+    save(CLIQUE_TYPE,query_th,nElem_cliques,query_nodes,disease_list,selected_nodes,
+         info_text,W_ADJ,MList,MM_list,graph_gw,g,g_geni2,graph_s,ADJ_S,chemMat,
+         good_cliques,join10,estimated_tyme,cliques_groups,
+         file=paste(LOCAL_PATH,"Log_folder/",log_counter,".RData",sep=""))
     
-  barplot_pattern_conditional_query(input,output,MList,graph_gw) #in conditional_query_output.R
-  genes_data_table_output(input,output,MList,MM_list,proxy,graph_s,g,g_geni2) #in conditional_query_output.R
-  
-  #save(ADJ_S,chemMat,good_cliques,join10,file = "/home/aserra/InsideNano/www/immagine_per_debugging.RData")
-  
-  
-  plot_force_based_subnetwork_query_resutls(input,output,ADJ_S,chemMat,good_cliques,join10) #in qury_outputs.R
-  plot_subnetwork_statistics(input,output,ADJ_S,chemMat,good_cliques,join10)#in qury_outputs.R
-  plot_gene_subnetwork(input,output,ADJ_S,chemMat,good_cliques,join10,g,g_geni2)#in qury_outputs.R
-  plot_gene_subnetwork_statistics(input,output,ADJ_S,chemMat,good_cliques,join10,g,g_geni2)#in qury_outputs.R
+    if(DEBUGGING){
+      nano_query = input$nano_input
+      drug_query = input$drug_input
+      chemical_query = input$chemical_input
+      disease_query = input$disease_input
+      th_p = input$th_slider2
+      query_th = input$percentuale_somma
+      nElem_cliques = input$nroCliques
+      CLIQUE_TYPE = input$clique_type
+      
+      cat("Inputs--> ", nano_query,drug_query,chemical_query,disease_query,th_p,query_th,nElem_cliques,CLIQUE_TYPE,"\n")
+    }
+    
+    LOG_CONDITIONAL = as.matrix(LOG_CONDITIONAL)
+    LOG_CONDITIONAL = rbind(LOG_CONDITIONAL,c(paste(c(input$nano_input,""),collapse="_"),
+                                              "",
+                                              paste(c(input$disease_input,""),collapse="_"),
+                                              "",
+                                              input$th_slider2,input$percentuale_somma,input$nroCliques,input$clique_type,paste(log_counter,".RData",sep="")))
+    cat("New row to add to the log\n")
+    cat("Row--> ",c(paste(c(input$nano_input,""),collapse="_"),
+                    "",
+                    paste(c(input$disease_input,""),collapse="_"),
+                    "",
+                    input$th_slider2,input$percentuale_somma,input$nroCliques,input$clique_type,paste(log_counter,".RData",sep="")),"\n")
+    
+    LOG_CONDITIONAL = as.data.frame(LOG_CONDITIONAL)
+    
+    save(LOG_CONDITIONAL,file=paste(LOCAL_PATH,"LOG.RData",sep=""))
+    
+    incProgress(1, detail = "Preparing Output")
+    
+    #clique_graph_cq_plot(input,output,MList,MM_list,proxy,graph_s)#in conditional_query_output.R
+    #create_histrogram_condition(input,output,MList)#in pattern_UI.R; genera le combinazioni di items per l'istogramma
+    enrich_clique(input,output,MList,MM_list,proxy,graph_s,items_list)
+    genes_data_table_output(input,output,MList,MM_list,proxy,graph_s,g,g_geni2,items_list) #in conditional_query_output.R
+    barplot_pattern_conditional_query(input,output,MList,graph_gw) #in conditional_query_output.R
+    #save(ADJ_S,chemMat,good_cliques,join10,file = "/home/aserra/InsideNano/www/immagine_per_debugging.RData")
+    plot_force_based_subnetwork_query_resutls(input,output,ADJ_S,chemMat,good_cliques,join10) #in qury_outputs.R
+    plot_subnetwork_statistics(input,output,ADJ_S,chemMat,good_cliques,join10)#in qury_outputs.R
+    plot_gene_subnetwork(input,output,ADJ_S,chemMat,good_cliques,join10,g,g_geni2)#in qury_outputs.R
+    plot_gene_subnetwork_statistics(input,output,ADJ_S,chemMat,good_cliques,join10,g,g_geni2)#in qury_outputs.R
+    
+    })
   
 }

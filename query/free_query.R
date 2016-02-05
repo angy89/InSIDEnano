@@ -1,4 +1,4 @@
-free_query = function(input,output,disease_list,selected_nodes,W_ADJ,th_p = input$th_slider/100,node_type,chemMat,join10,g,g_geni2){
+free_query = function(input,output,disease_list,selected_nodes,W_ADJ,th_p = input$th_slider/100,node_type,chemMat,join10,g,g_geni2,items_list){
   withProgress(message = 'Progress...', min = 1,max = 9, {
     validate(need(input$disease != "", "Please select a Disease"))
     
@@ -47,11 +47,11 @@ free_query = function(input,output,disease_list,selected_nodes,W_ADJ,th_p = inpu
   
   save_free_query_results(input,output,selected_nodes,disease_list,THS,W_ADJ,graph_gw,SSNFQ,graph_s,ADJ_S,mcl,good_cliques,cliques_groups,MList,MM_list,"free_query_results")
   free_query_UI_ggplot_totale(input,output,MList,graph_gw) # in free_query_UI.R
-  plot_clique_graph(input,output,MM_list,graph_s,proxy) #in query_outputs.R
-  
+  #plot_clique_graph(input,output,MM_list,graph_s,proxy) #in query_outputs.R
+  enrich_clique(input,output,MList,MM_list,proxy,graph_s,items_list)
   #create_histrogram_condition(input,output,MList)#in pattern_UI.R; genera le combinazioni di items per l'istogramma
   barplot_patter_output(input,output,MList,graph_gw) #in query_outputs.R
-  genes_data_table_output(input,output,MList,MM_list,proxy,graph_s,g,g_geni2) #in conditional_query_output.R
+  genes_data_table_output(input,output,MList,MM_list,proxy,graph_s,g,g_geni2,items_list) #in conditional_query_output.R
   plot_force_based_subnetwork_query_resutls(input,output,ADJ_S,chemMat,good_cliques,join10) #in qury_outputs.R
   plot_subnetwork_statistics(input,output,ADJ_S,chemMat,good_cliques,join10)
   plot_gene_subnetwork(input,output,ADJ_S,chemMat,good_cliques,join10,g,g_geni2)

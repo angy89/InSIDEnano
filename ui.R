@@ -294,34 +294,33 @@ shinyUI(navbarPage("",
                              fluidRow(column(4,uiOutput("NetworkPattern"))),
                              
                                      # column(4,downloadButton('downloadData', 'Download'))),
-                             fluidRow(column(4,wellPanel(plotOutput('xx', height = 500))),
-                                      column(8,wellPanel(DT::dataTableOutput('clique_data_table')))
+                             fluidRow(#column(2,wellPanel(plotOutput('xx', height = 500))),
+                                      column(6,wellPanel(DT::dataTableOutput('clique_data_table'))),
+                                      column(6,
+                                             wellPanel(
+                                               fluidRow(column(4,
+                                                               selectInput("plotTripel",label = "Plot of Association Frequencies",
+                                                                           choices = list("Disease-Nano-Drug" = 1,
+                                                                                          "Disease-Nano-Chemical"= 2,
+                                                                                          "Disease-Nano"=3,
+                                                                                          "Disease-Drug"=4,
+                                                                                          "Disease-Chemical"=5,
+                                                                                          "Chemical-Nano" = 6,
+                                                                                          "Chemical-Drug" = 7,
+                                                                                          "Nano-Drug" = 8),selected = 1)
+                                               ),
+                                               column(4,numericInput(inputId = "percentuale",label = "% of elements to show",
+                                                                     value = 10,min = 1,max = 100,step=5)),
+                                               column(4,uiOutput("NodesOfInterest_items"))
+                                               ),
+                                               fluidRow(column(8,plotOutput('ggplot')))#plotlyOutput
+                                             )
+                                      )
                              ),
                              fluidRow(
                                #fluidRow(wellPanel(DT::dataTableOutput('drugs_chemical_DT'))),
-                               
-                               column(4,wellPanel(DT::dataTableOutput('genes_data_table'))),
-                               column(8,
-                                        wellPanel(
-                                          fluidRow(column(2,
-                                                          selectInput("plotTripel",label = "Plot of Association Frequencies",
-                                                                      choices = list("Disease-Nano-Drug" = 1,
-                                                                                     "Disease-Nano-Chemical"= 2,
-                                                                                     "Disease-Nano"=3,
-                                                                                     "Disease-Drug"=4,
-                                                                                     "Disease-Chemical"=5,
-                                                                                     "Chemical-Nano" = 6,
-                                                                                     "Chemical-Drug" = 7,
-                                                                                     "Nano-Drug" = 8),selected = 1)
-                                                          ),
-                                                   column(2,numericInput(inputId = "percentuale",label = "% of elements to show",
-                                                                         value = 10,min = 1,max = 100,step=5)),
-                                                   column(2,uiOutput("NodesOfInterest_items"))
-                                          ),
-                                          fluidRow(column(8,plotOutput('ggplot')))#plotlyOutput
-                                        )
-                                     )
-                               
+                               column(6,wellPanel(nanoClusterOutput('enriched_clique', height = 500))),
+                               column(6,wellPanel(DT::dataTableOutput('genes_data_table')))
                              )
                             )#End tabpanel Pattern
          ),

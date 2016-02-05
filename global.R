@@ -9,27 +9,37 @@ source("GUI/gene_network_UI.R")
 source("GUI/patterns_UI.R")
 source("GUI/gene_query_UI.R")
 source("GUI/render_clustering_radial_network.R")
-
 source("GUI/query_outputs.R")
 source("GUI/conditional_query_outputs.R")
 source("GUI/browse_dataset.R")
-
 source("query/save_free_query.R")
 source("query/my_cliques_function.R")
 source("query/gene_network_NANO_DISEASE_query.R")
 source("query/query_utilities.R")
 source("query/conditional_query_clique_search.R")
-
 source("query/gene_query_like_conditional.R")
 source("query/gene_query.R")
 source("query/free_query.R")
 source("query/conditional_query.R")
-
 source("query/check_already_existing_conditional_query.R")
 source("query/loa_conditional_query.R")
 source("login.R")
+source("cliques_enrichment.R")
 
 library(network)
+library(GSA)
+
+c1_file = GSA.read.gmt(filename = paste(APP_PATH,"MSigDB/c1.all.v4.0.entrez.gmt",sep=""))
+KEGG_file = GSA.read.gmt(filename = paste(APP_PATH,"MSigDB/c2.cp.kegg.v4.0.entrez.gmt",sep=""))
+biocarta_file = GSA.read.gmt(filename = paste(APP_PATH,"MSigDB/c2.cp.biocarta.v4.0.entrez.gmt",sep=""))
+reactome_file = GSA.read.gmt(filename = paste(APP_PATH,"MSigDB/c2.cp.reactome.v4.0.entrez.gmt",sep=""))
+c3Mir_file = GSA.read.gmt(filename = paste(APP_PATH,"MSigDB/c3.mir.v4.0.entrez.gmt",sep=""))
+c3Tft_file = GSA.read.gmt(filename = paste(APP_PATH,"MSigDB/c3.tft.v4.0.entrez.gmt",sep=""))
+c4_file = GSA.read.gmt(filename = paste(APP_PATH,"MSigDB/c4.all.v4.0.entrez.gmt",sep=""))
+c5_file = GSA.read.gmt(filename = paste(APP_PATH,"MSigDB/c5.all.v4.0.entrez.gmt",sep=""))
+c6_file = GSA.read.gmt(filename = paste(APP_PATH,"MSigDB/c6.all.v4.0.entrez.gmt",sep=""))
+c7_file = GSA.read.gmt(filename = paste(APP_PATH,"MSigDB/c7.all.v4.0.entrez.gmt",sep=""))
+
 
 # #for gene_query
 # load(paste(APP_PATH,"matrix_gene_disease_01_80.RData",sep=""))
@@ -61,6 +71,7 @@ load(paste(APP_PATH,"join10.RData",sep=""))
 join10 = unique(join10)
 join10$ATC_lev1 = substr(x = join10$code,start = 1,stop = 1)
 load(paste(APP_PATH,"chemicals_classes.RData",sep=""))
+#load(paste(APP_PATH,"items_gene_association_complete.RData",sep=""))# load items_list object
 
 selected_nodes = c()
 disease_list = list()
@@ -523,12 +534,12 @@ internal_render_plotNDC = function(Mi,gr4,s,proxyList){
     which(nchem %in% ndrug) -> index_ii
     nchem = nchem[-index_ii]
   }
-  
-  #V(g)$name=c("Disease","Nano","Drug","Chemical")
-  V(g)$name[np] = "Nano" 
-  V(g)$name[ndrug] = "Drug" 
-  V(g)$name[nchem] = "Chemical" 
-  #V(g)$name[ndisease] = "Disease" 
+#   
+#   #V(g)$name=c("Disease","Nano","Drug","Chemical")
+#   V(g)$name[np] = "Nano" 
+#   V(g)$name[ndrug] = "Drug" 
+#   V(g)$name[nchem] = "Chemical" 
+#   #V(g)$name[ndisease] = "Disease" 
   
   V(g)$color[np] = "pink" 
   V(g)$color[ndrug] = "skyblue" 

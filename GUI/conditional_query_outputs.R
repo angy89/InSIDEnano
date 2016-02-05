@@ -27,7 +27,9 @@ plot_list_pattern = function(input,output,cliques_groups){
   })
 }
 
-enrich_clique = function(input,output,MList,MM_list,proxy,graph_s){
+enrich_clique = function(input,output,MList,MM_list,proxy,graph_s,items_list){
+# save(MList,MM_list,proxy,graph_s,file="/home/neuronelab/InsideNano/backup_enrich_clique.RData")
+  
   output$enriched_clique<- renderNanoCluster({
     
 #     type = input$NetworkPattern
@@ -47,8 +49,9 @@ enrich_clique = function(input,output,MList,MM_list,proxy,graph_s){
     g_ = generate_g_cliques(input,output,graph_s,proxy,MM_list,MList)
     
     clique_list = list(V(g_)$name)
+    #clique_list = list(c("AgNP","salbutamol","11-deoxyprostaglandin E1"))
     message("In enrich_clique: clique_list: ",clique_list,"\n")
-    th_l = rep(0.9,length(vds))
+    th_l = rep(0.9,length(clique_list))
     message("In enrich_clique: th_l: ",th_l,"\n")
     
     gene_sets_list = list(c1_file,KEGG_file,biocarta_file,reactome_file,
@@ -57,7 +60,7 @@ enrich_clique = function(input,output,MList,MM_list,proxy,graph_s){
     
     message("In enrich_clique: gene_sets_name: ",gene_sets_name)
     
-    DF = cliques_enrichment(clique_list,g,g_,gene_sets_list,gene_sets_name,th_l)
+    DF = cliques_enrichment(clique_list,g,g_,gene_sets_list,gene_sets_name,th_l,items_list)
 
     edges = DF$edges
     vertices = DF$vertices
@@ -69,8 +72,8 @@ enrich_clique = function(input,output,MList,MM_list,proxy,graph_s){
                 Value = "value", NodeID = "name",Nodesize = "size",
                 Group = "group",zoom = TRUE,opacity = 0.95,fontSize = 20,
                 legend = TRUE,
-                charge = -500,
-                linkDistance = JS(paste0("function(d){return d.value*",2,
+                charge = -1000,
+                linkDistance = JS(paste0("function(d){return d.value*",10,
                                          "}")))
   })
 }
@@ -192,7 +195,8 @@ generate_g_cliques = function(input,output,graph_s,proxy,MM_list,MList){
   return(g_)
 }
 
-genes_data_table_output = function(input,output,MList,MM_list,proxy,graph_s,g,g_geni2){
+genes_data_table_output = function(input,output,MList,MM_list,proxy,graph_s,g,g_geni2,items_list){
+  #save(MList,MM_list,proxy,graph_s,g,g_geni2,file="/home/neuronelab/InsideNano/backup_gene_data_table.RData")
   output$genes_data_table = DT::renderDataTable({
     type = input$NetworkPattern
     type = as.integer(gsub(pattern = "M",x =type,replacement = ""))
@@ -242,9 +246,11 @@ genes_data_table_output = function(input,output,MList,MM_list,proxy,graph_s,g,g_
     g_ = generate_g_cliques(input,output,graph_s,proxy,MM_list,MList)
     validate(need(length(s)!=0 , "Please select a clique"))          
     
-    idx_g = which(V(g)$node_type == "gene")
-    vids = V(g_)$name
+    #idx_g = which(V(g)$node_type == "gene")
     #vids = c("Asthma","MWCNT","zomepirac","1-aminopyrene")
+    #vids = c("Asthma","ZnO5","cefadroxil","Flavoring Agents")
+    #vids = c("AgNP","salbutamol","11-deoxyprostaglandin E1")
+    vids = V(g_)$name
 
 #     gene_attached = c()
 #     for(i in vids){
@@ -255,10 +261,10 @@ genes_data_table_output = function(input,output,MList,MM_list,proxy,graph_s,g,g_
 #     subgraph = igraph::induced_subgraph(graph = g,vids = c(vids,gene_attached))
     
     il = items_list[vids]
-    union_genes = il[[1]]$genes.name
+    union_genes = il[[1]]$entrez.genes
     
     for(i in 2:length(il)){
-      union_genes = c(union_genes,union(union_genes,il[[i]]$genes.name))
+      union_genes = c(union_genes,union(union_genes,il[[i]]$entrez.genes))
     }
     
     ADJ = matrix(0,length(union_genes),length(vids))
@@ -266,7 +272,7 @@ genes_data_table_output = function(input,output,MList,MM_list,proxy,graph_s,g,g_
     colnames(ADJ) = names(il)
     
     for(i in vids){
-      gi = il[[i]]$genes.name
+      gi = il[[i]]$entrez.genes
       gw = il[[i]]$edge.weigth
       ADJ[gi,i]=as.numeric(gw)
     }
@@ -296,8 +302,20 @@ genes_data_table_output = function(input,output,MList,MM_list,proxy,graph_s,g,g_
         genes_elem = genes_elem[-toRem]
       }
     }
+    
+    validate(
+      need(input$NetworkPattern != "", "The intersection of the genes activated by all elements in the clique is empty")
+    )
+
     #genes_elem = sort(genes_elem,decreasing = T)
     ADJ = ADJ[names(genes_elem),]
+    
+    if(class(ADJ)=="numeric"){
+      ADJ = matrix(data = ADJ,nrow = 1,ncol = length(ADJ))
+      rownames(ADJ) = names(genes_elem)
+      colnames(ADJ) = names(il)
+      
+    }
 #     GMAT = as_adjacency_matrix(graph = g,attr = "weight",type="both",sparse = FALSE)
 #     genes_items_interaction = rowSums(as.matrix(GMAT[idx_g,V(g_)$name]))
 #     GG_genes = rownames(GMAT)[which(genes_items_interaction>0)]
