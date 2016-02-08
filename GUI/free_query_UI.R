@@ -8,7 +8,7 @@ free_query_UI = function(input,output){
   
   output$th_slider = renderUI({
     sliderInput("th_slider", label = "Strenght of Similarity",
-                min = 80, max = 99, value = 99,step=1)
+                min = 0, max = 99, value = 99,step=1)
   })
   
   output$plotTripel_total = renderUI({
@@ -48,7 +48,7 @@ free_query_UI_refresh = function(input,output){
   
   output$th_slider = renderUI({
     sliderInput("th_slider", label = "Strenght of Similarity",
-                min = 80, max = 99, value = 99,step=1)
+                min = 0, max = 99, value = 99,step=1)
   })
   
   output$NodesOfInterest_totale <- renderUI({

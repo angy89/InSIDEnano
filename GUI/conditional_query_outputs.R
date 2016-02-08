@@ -99,38 +99,7 @@ clique_graph_cq_plot = function(input,output,MList,MM_list,proxy,graph_s){
     
     g_ = generate_g_cliques(input,output,graph_s,proxy,MM_list,MList)
     
-    
-#     if(clique_type == "NDCD"){
-#       g_= internal_render_plot(MM_list[[type]],gr4=graph_s,s,proxyList = proxy)
-#     }
-#     if(clique_type == "NDD"){
-#       g_= internal_render_plotNDD(MM_list[[type]],gr4=graph_s,s,proxyList = proxy)
-#     }
-#     if(clique_type == "NDC"){
-#       g_= internal_render_plotNDC(MM_list[[type]],gr4=graph_s,s,proxyList = proxy)
-#     }
-#     if(clique_type == "DCD"){
-#       g_= internal_render_plotDCD(MM_list[[type]],gr4=graph_s,s,proxyList = proxy)
-#     }
-#     if(clique_type == "ALL"){
-#       if(("" %in% MList[[type]][1,]) == FALSE){
-#         g_= internal_render_plot(MM_list[[type]],gr4=graph_s,s,proxyList = proxy)
-#       }else{
-#         col_idx = which(MList[[type]][1,] %in% "")
-#         if(col_idx == 4){
-#           g_= internal_render_plotNDD(MM_list[[type]],gr4=graph_s,s,proxyList = proxy)
-#         }
-#         if(col_idx == 1){
-#           g_= internal_render_plotNDC(MM_list[[type]],gr4=graph_s,s,proxyList = proxy)
-#         }
-#         if(col_idx == 2){
-#           g_= internal_render_plotDCD(MM_list[[type]],gr4=graph_s,s,proxyList = proxy)
-#         }
-#       }
-#     }
-#     if(DEBUGGING)
-#       cat("g_class: ",class(g_),"\n")
-#     
+
     if(vcount(g_) == 4){
       #plot(c(-1,0,1,0),c(0,1,0,-1))
       my_layout = matrix(c(-1,0,0,1,1,0,0,-1),4,2,byrow = TRUE)
@@ -140,17 +109,28 @@ clique_graph_cq_plot = function(input,output,MList,MM_list,proxy,graph_s){
       my_layout = matrix(c(-1,0,0,0.5,1,0),3,2,byrow = TRUE)
     }
     
-    plot(g_,vertex.color = V(g_)$color,
-         vertex.size = 50,edge.width = abs(E(g_)$weight)+2,
-         vertex.label.color = "black",layout = my_layout)
-    legend(x = "bottom",legend = c("Positive Correlation","Negative Correlation"),fill = c("red","darkgreen"))
+#     plot(g_,vertex.color = V(g_)$color,
+#          vertex.size = 50,edge.width = abs(E(g_)$weight)+2,
+#          vertex.label.color = "black",layout = my_layout)
+#     legend(x = "bottom",legend = c("Positive Correlation","Negative Correlation"),fill = c("red","darkgreen"))
     
+par(fig = c(0, 1, 0, 1), oma = c(0, 0, 0, 0), mar = c(0, 0, 0, 0))
+plot(g_,vertex.color = V(g_)$color,
+     vertex.size = 50,edge.width = abs(E(g_)$weight)+2,
+     vertex.label.color = "black",layout = my_layout)
+legend("bottom", c("Positive Correlation","Negative Correlation"),horiz = TRUE, xpd = TRUE,inset=c(0,0),bty="n",
+       fill = c("red","darkgreen"),cex=1)
+
   })
 }
 
 generate_g_cliques = function(input,output,graph_s,proxy,MM_list,MList){
   type = input$NetworkPattern
   clique_type = input$clique_type
+  
+  if(DEBUGGING){
+    message("In generate_g_cliques:: clique_type:",clique_type,"\n")
+  }
   
   validate(
     need(input$NetworkPattern != "", "Please select a pattern type")
@@ -208,42 +188,10 @@ genes_data_table_output = function(input,output,MList,MM_list,proxy,graph_s,g,g_
     )
     
     s = input$clique_data_table_rows_selected
-    
-#     if(clique_type == "NDCD"){
-#       g_= internal_render_plot(MM_list[[type]],gr4=graph_s,s,proxyList = proxy)
-#     }
-#     if(clique_type == "NDD"){
-#       g_= internal_render_plotNDD(MM_list[[type]],gr4=graph_s,s,proxyList = proxy)
-#     }
-#     if(clique_type == "NDC"){
-#       g_= internal_render_plotNDC(MM_list[[type]],gr4=graph_s,s,proxyList = proxy)
-#     }
-#     if(clique_type == "DCD"){
-#       g_= internal_render_plotDCD(MM_list[[type]],gr4=graph_s,s,proxyList = proxy)
-#     }
-#     if(clique_type == "ALL"){
-#       if(("" %in% MList[[type]][1,]) == FALSE){
-#         g_= internal_render_plot(MM_list[[type]],gr4=graph_s,s,proxyList = proxy)
-#       }else{
-#         col_idx = which(MList[[type]][1,] %in% "")
-#         if(col_idx == 4){
-#           g_= internal_render_plotNDD(MM_list[[type]],gr4=graph_s,s,proxyList = proxy)
-#         }
-#         if(col_idx == 1){
-#           g_= internal_render_plotNDC(MM_list[[type]],gr4=graph_s,s,proxyList = proxy)
-#         }
-#         if(col_idx == 2){
-#           g_= internal_render_plotDCD(MM_list[[type]],gr4=graph_s,s,proxyList = proxy)
-#         }
-#       }
-#     }
-#     if(DEBUGGING){
-#       cat("g_class: ",class(g_),"\n")
-#       cat("graph names ",V(g_)$name,"\n")
-#       
-#     }
 
     g_ = generate_g_cliques(input,output,graph_s,proxy,MM_list,MList)
+    cat("g_ created. Nodes: ",V(g_)$name,"\n")
+    
     validate(need(length(s)!=0 , "Please select a clique"))          
     
     #idx_g = which(V(g)$node_type == "gene")
@@ -302,14 +250,21 @@ genes_data_table_output = function(input,output,MList,MM_list,proxy,graph_s,g,g_
         genes_elem = genes_elem[-toRem]
       }
     }
-    
-    validate(
-      need(input$NetworkPattern != "", "The intersection of the genes activated by all elements in the clique is empty")
-    )
+
+    cat("Length Genes Elem :",length(genes_elem),"\n")
 
     #genes_elem = sort(genes_elem,decreasing = T)
     ADJ = ADJ[names(genes_elem),]
     
+    cat("Evaluating dim(ADJ) :",dim(ADJ),"\n")
+
+    validate(
+      need(nrow(ADJ)>0, "The intersection of the genes activated by all elements in the clique is empty")
+    )
+
+
+    cat("Evaluating dim(ADJ) :",dim(ADJ),"\n")
+
     if(class(ADJ)=="numeric"){
       ADJ = matrix(data = ADJ,nrow = 1,ncol = length(ADJ))
       rownames(ADJ) = names(genes_elem)
@@ -334,6 +289,8 @@ genes_data_table_output = function(input,output,MList,MM_list,proxy,graph_s,g,g_
     GENE_INFO = cbind(MYSYMBOL,ADJ)
     colnames(GENE_INFO)[1] = "Gene Name"
     
+  cat("Evaluating dim(GENE_INFO) :",dim(GENE_INFO),"\n")
+
   for(row_i in 1:dim(GENE_INFO)[1]){
     #for(col_j in 1:dim(GENE_INFO)[2]){
       GENE_INFO[row_i,1] = paste('<a target="_blank" href=\"https://www.google.com/?q=',GENE_INFO[row_i,1],'">',GENE_INFO[row_i,1],'</a>',sep="")

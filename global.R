@@ -79,6 +79,7 @@ disease_list = list()
 MM_list = list()
 th_p = 0.99
 info_text = " "
+info_free_query_text = " "
 username = "user2015"
 password = "helsinki2015"
 LOGGED_IN = FALSE

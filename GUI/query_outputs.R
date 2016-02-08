@@ -82,6 +82,178 @@ barplot_patter_output = function(input,output,MList,graph_gw){
   })
 }
 
+free_genes_data_table_output = function(input,output,MList,MM_list,proxy,graph_s,g,g_geni2,items_list){
+  #save(MList,MM_list,proxy,graph_s,g,g_geni2,file="/home/neuronelab/InsideNano/backup_gene_data_table.RData")
+  output$genes_data_table = DT::renderDataTable({
+    type = input$NetworkPattern
+    type = as.integer(gsub(pattern = "M",x =type,replacement = ""))
+    
+    clique_type = input$clique_type
+    
+    validate(
+      need(input$NetworkPattern != "", "Please select a pattern type")
+    )
+    
+    s = input$clique_data_table_rows_selected
+    
+    g_= internal_render_plot(MM_list[[type]],gr4=graph_s,s,proxyList = proxy)
+    
+    validate(need(length(s)!=0 , "Please select a clique"))          
+    
+    vids = V(g_)$name
+  
+    il = items_list[vids]
+    union_genes = il[[1]]$entrez.genes
+    
+    for(i in 2:length(il)){
+      union_genes = c(union_genes,union(union_genes,il[[i]]$entrez.genes))
+    }
+    
+    ADJ = matrix(0,length(union_genes),length(vids))
+    rownames(ADJ) = union_genes
+    colnames(ADJ) = names(il)
+    
+    for(i in vids){
+      gi = il[[i]]$entrez.genes
+      gw = il[[i]]$edge.weigth
+      ADJ[gi,i]=as.numeric(gw)
+    }
+  
+    genes_elem  = rowSums(abs(ADJ))
+  
+    if(length(vids)==4){
+      toRem = which(genes_elem<4)
+      if(length(toRem)>0){
+        genes_elem = genes_elem[-toRem]
+      }
+    }
+    if(length(vids)==3){
+      toRem = which(genes_elem<3)
+      if(length(toRem)>0){
+        genes_elem = genes_elem[-toRem]
+      }
+    }
+    
+    
+    ADJ = ADJ[names(genes_elem),]
+    
+    cat("Evaluating dim(ADJ) :",dim(ADJ),"\n")
+    
+    validate(
+      need(nrow(ADJ)>0, "The intersection of the genes activated by all elements in the clique is empty")
+    )
+    
+    cat("Evaluating dim(ADJ) :",dim(ADJ),"\n")
+    
+    if(class(ADJ)=="numeric"){
+      ADJ = matrix(data = ADJ,nrow = 1,ncol = length(ADJ))
+      rownames(ADJ) = names(genes_elem)
+      colnames(ADJ) = names(il)
+      
+    }
+    
+    x <- org.Hs.egSYMBOL
+    # Get the gene symbol that are mapped to an entrez gene identifiers
+    mapped_genes <- mappedkeys(x)
+    # Convert to a list
+    xx <- as.list(x[mapped_genes])
+    entrez = gsub(x = rownames(ADJ),pattern = "_at",replacement = "")
+    xx[entrez] -> MYSYMBOL
+    MYSYMBOL = unlist(MYSYMBOL)
+    
+    GENE_INFO = cbind(MYSYMBOL,ADJ)
+    colnames(GENE_INFO)[1] = "Gene Name"
+    
+    cat("Evaluating dim(GENE_INFO) :",dim(GENE_INFO),"\n")
+    
+    for(row_i in 1:dim(GENE_INFO)[1]){
+      #for(col_j in 1:dim(GENE_INFO)[2]){
+      GENE_INFO[row_i,1] = paste('<a target="_blank" href=\"https://www.google.com/?q=',GENE_INFO[row_i,1],'">',GENE_INFO[row_i,1],'</a>',sep="")
+      #}
+      for(i in vids){
+        if(i %in% disease){
+          if(GENE_INFO[row_i,i]=="1"){
+            GENE_INFO[row_i,i] =  '<font color="black"><b>&#9666;&#9656;</b></font>' 
+          }
+          if(GENE_INFO[row_i,i]=="0"){
+            GENE_INFO[row_i,i] =  '<font color="black">-</font>'  
+          }
+        }else{
+          if(GENE_INFO[row_i,i]=="1"){
+            GENE_INFO[row_i,i] =  '<font color="red"><b>&#9650;</b></font>' 
+          }
+          if(GENE_INFO[row_i,i]=="-1"){
+            GENE_INFO[row_i,i] =  '<font color="green"><b>&#9660;</b></font>' 
+          }
+          if(GENE_INFO[row_i,i]=="0"){
+            GENE_INFO[row_i,i] =  '<font color="black">-</font>' 
+          }
+        }
+        
+      }
+    }
+    
+    DT::datatable(data =  GENE_INFO,
+                  options = list(target = 'row+column',scrollX=TRUE,scrollY = "400px", scrollCollapse = TRUE,paging=FALSE),
+                  escape=FALSE,rownames = FALSE,
+                  selection = "single")
+    
+  })
+}
+
+
+
+free_enrich_clique = function(input,output,MList,MM_list,proxy,graph_s,items_list){
+  # save(MList,MM_list,proxy,graph_s,file="/home/neuronelab/InsideNano/backup_enrich_clique.RData")
+  
+  output$enriched_clique<- renderNanoCluster({
+    
+    type = input$NetworkPattern
+    #     clique_type = input$clique_type
+    #     
+    #     validate(
+    #       need(input$NetworkPattern != "", "Please select a pattern type")
+    #     )
+    #     
+    type = as.integer(gsub(pattern = "M",x =type,replacement = ""))
+    s = input$clique_data_table_rows_selected
+    
+    validate(
+      need(s!="", "Please select a clique")
+    )
+    
+    g_= internal_render_plot(MM_list[[type]],gr4=graph_s,s,proxyList = proxy)
+    
+    clique_list = list(V(g_)$name)
+    #clique_list = list(c("AgNP","salbutamol","11-deoxyprostaglandin E1"))
+    message("In enrich_clique: clique_list: ",clique_list,"\n")
+    th_l = rep(0.9,length(clique_list))
+    message("In enrich_clique: th_l: ",th_l,"\n")
+    
+    gene_sets_list = list(c1_file,KEGG_file,biocarta_file,reactome_file,
+                          c3Mir_file,c3Tft_file,c4_file,c5_file,c6_file,c7_file)
+    gene_sets_name = c("c1","c2_KEGG","c2_biocarta","c2_reactome","c3_miRNA","c3_TFT","c4","c5","c6","c7")
+    
+    message("In enrich_clique: gene_sets_name: ",gene_sets_name)
+    
+    DF = cliques_enrichment(clique_list,g,g_,gene_sets_list,gene_sets_name,th_l,items_list)
+    
+    edges = DF$edges
+    vertices = DF$vertices
+    colnames(vertices)[3]="size"
+    
+    nanocluster(Links = edges, Nodes = vertices,
+                Source = "source", Target = "target",cluster_group = "cliques",
+                last_level = 3, groups = names(table(vertices$group)),
+                Value = "value", NodeID = "name",Nodesize = "size",
+                Group = "group",zoom = TRUE,opacity = 0.95,fontSize = 20,
+                legend = TRUE,
+                charge = -1000,
+                linkDistance = JS(paste0("function(d){return d.value*",10,
+                                         "}")))
+  })
+}
+
 plot_clique_graph = function(input,output,MM_list,graph_s,proxy){
   output$xx = renderPlot({
     s = input$clique_data_table_rows_selected
@@ -120,11 +292,13 @@ plot_clique_graph = function(input,output,MM_list,graph_s,proxy){
       my_layout = matrix(c(-1,0,0,1,1,0),3,2,byrow = TRUE)
     }
     
-    plot(g_,vertex.color = V(g_)$color,
-         vertex.size = 50,edge.width = abs(E(g_)$weight)+2,
-         vertex.label.color = "black",layout = my_layout)
-    legend(x = "bottom",legend = c("Positive Correlation","Negative Correlation"),fill = c("red","darkgreen"))
-    
+      par(fig = c(0, 1, 0, 1), oma = c(0, 0, 0, 0))#, mar = c(0, 0, 0, 0))
+      plot(g_,vertex.color = V(g_)$color,
+              vertex.size = 25,edge.width = abs(E(g_)$weight)+2,
+              vertex.label.color = "black",layout = my_layout)
+      legend("bottom", c("Positive Correlation","Negative Correlation"),horiz = TRUE, xpd = TRUE,inset=c(0,0),bty="n",
+              fill = c("red","darkgreen"),cex=1)
+
   })
 }
 

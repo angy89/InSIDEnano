@@ -89,6 +89,15 @@ shinyUI(navbarPage("",
                    ),
 
                               tabPanel("Free Query",
+                                     fluidRow(
+                                        wellPanel(
+                                          HTML("</br>The Free Analysis allows to extrapolate subnetworks of nodes connected to one or more query items.</br>"),
+                                          HTML("The results of the query depends on the strenght of similarity. </br>
+                                                 In case of multiple query items, the final subnetwork will be the union of all the subtenetwork related to each item.
+                                                 </br></br></br>"),
+                                          htmlOutput("checkLOGIN_free")
+                                        )  
+                                      ),
                                       fluidRow(
                                         column(8,
                                                wellPanel(
@@ -104,23 +113,13 @@ shinyUI(navbarPage("",
                                                  )
                                                )
                                         ),
-                                        column(4,
-                                          wellPanel(
-                                            HTML("</br>The Free Analysis allows to extrapolate subnetworks of nodes connected to one or more query items.</br>"),
-                                            HTML("The results of the query depends on the strenght of similarity. </br>
-                                                 In case of multiple query items, the final subnetwork will be the union of all the subtenetwork related to each item.
-                                                 </br></br></br>"),
-                                            htmlOutput("checkLOGIN_free")
-                                          ))
-                                      ),
-                                      
+                                        column(4,wellPanel(htmlOutput("infoFree")))
+                                       ),
                                        wellPanel(
                                          fluidRow(column(8,uiOutput("plotTripel_total"))),
                                          fluidRow(uiOutput("NodesOfInterest_totale")),
                                          fluidRow( plotOutput('ggplot_totale',height=900))
-                                       )     
-                                       
-                                       
+                                       )        
                               ),
 #                               tabPanel("Gene Query",
 #                                        fluidRow(
@@ -291,39 +290,45 @@ shinyUI(navbarPage("",
                              )#End mainPanel
                     ),#end tabPanel subnetwork
                     tabPanel("Patterns",
-                             fluidRow(column(4,uiOutput("NetworkPattern"))),
-                             
-                                     # column(4,downloadButton('downloadData', 'Download'))),
-                             fluidRow(#column(2,wellPanel(plotOutput('xx', height = 500))),
-                                      column(6,wellPanel(DT::dataTableOutput('clique_data_table'))),
-                                      column(6,
-                                             wellPanel(
-                                               fluidRow(column(4,
-                                                               selectInput("plotTripel",label = "Plot of Association Frequencies",
-                                                                           choices = list("Disease-Nano-Drug" = 1,
-                                                                                          "Disease-Nano-Chemical"= 2,
-                                                                                          "Disease-Nano"=3,
-                                                                                          "Disease-Drug"=4,
-                                                                                          "Disease-Chemical"=5,
-                                                                                          "Chemical-Nano" = 6,
-                                                                                          "Chemical-Drug" = 7,
-                                                                                          "Nano-Drug" = 8),selected = 1)
-                                               ),
-                                               column(4,numericInput(inputId = "percentuale",label = "% of elements to show",
-                                                                     value = 10,min = 1,max = 100,step=5)),
-                                               column(4,uiOutput("NodesOfInterest_items"))
-                                               ),
-                                               fluidRow(column(8,plotOutput('ggplot')))#plotlyOutput
-                                             )
-                                      )
-                             ),
+                             fluidRow(uiOutput("NetworkPattern")),
                              fluidRow(
-                               #fluidRow(wellPanel(DT::dataTableOutput('drugs_chemical_DT'))),
-                               column(6,wellPanel(nanoClusterOutput('enriched_clique', height = 500))),
-                               column(6,wellPanel(DT::dataTableOutput('genes_data_table')))
+                               column(4,wellPanel(plotOutput('xx'))),
+                               column(8,wellPanel(DT::dataTableOutput('clique_data_table')))
+                             ),
+                             
+                             tabsetPanel(
+                                tabPanel("Statistic",
+                                         wellPanel(
+                                           fluidRow(column(4,
+                                                           selectInput("plotTripel",label = "Plot of Association Frequencies",
+                                                                       choices = list("Disease-Nano-Drug" = 1,
+                                                                                      "Disease-Nano-Chemical"= 2,
+                                                                                      "Disease-Nano"=3,
+                                                                                      "Disease-Drug"=4,
+                                                                                      "Disease-Chemical"=5,
+                                                                                      "Chemical-Nano" = 6,
+                                                                                      "Chemical-Drug" = 7,
+                                                                                      "Nano-Drug" = 8),selected = 1)
+                                           ),
+                                           column(4,numericInput(inputId = "percentuale",label = "% of elements to show",
+                                                                 value = 10,min = 1,max = 100,step=5)),
+                                           column(4,uiOutput("NodesOfInterest_items"))
+                                           ),
+                                           fluidRow(column(8,plotOutput('ggplot')))#plotlyOutput
+                                         )
+                                ),
+                                tabPanel("Enrichment",
+                                    wellPanel(
+                                         fluidRow(
+                                           #fluidRow(wellPanel(DT::dataTableOutput('drugs_chemical_DT'))),
+                                           column(6,wellPanel(nanoClusterOutput('enriched_clique', height = 500))),
+                                           column(6,wellPanel(DT::dataTableOutput('genes_data_table')))
+                                         )
+                                    )
+                                )
                              )
                             )#End tabpanel Pattern
-         ),
+         ),#end query menu
           tabPanel("Phenotypic Network",
                    wellPanel(
                      p("The network of interaction between phenotypic entities is shown in this page"),

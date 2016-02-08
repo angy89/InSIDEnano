@@ -410,21 +410,33 @@ clickable_cliques_list = function(MList,cliques_groups){
 }
 
 conditional_query_nodes = function(input,output){
+  
+  ni = paste(input$nano_input,collapse="")
+  dri = paste(input$drug_input,collapse="")
+  ci = paste(input$chemical_input,collapse="")
+  di = paste(input$disease_input,collapse="")
+  
+  control_i = c(ni!="",dri!="",ci!="",di!="")  
+  
+  if(DEBUGGING){
+    message("query_utilities::conditional_query_nodes. control_i:",control_i)
+  }
+  
   xx = paste(input$nano_input,input$drug_input, input$chemical_input, input$disease_input,sep="")
   if(DEBUGGING){
     message("query_utilities::conditional_query_nodes. Concatenazione: ",xx,"\n")
     message("query_utilities::conditional_query_nodes. length(xx): ",length(xx),"\n")
   }
-  if(length(xx)==0){
+  if(sum(control_i)<=1){
     output$info2_1 <- renderUI({
-      HTML("Please insert at least one object for the query!")
+      HTML("Please, fill in at least two fields of the form!")
     }) 
-    validate(need(length(xx)>0, "Please insert at least one object for the query!"))
+    validate(need(sum(control_i)>1, "Please, fill in at least two fields of the form!!"))
   }
   
   nano_query = input$nano_input
   if(length(nano_query) !=0 ){
-    if(nano_query=="ALL"){
+    if("ALL" %in% nano_query){
       nano_query = nano
     }
   }
@@ -439,7 +451,7 @@ conditional_query_nodes = function(input,output){
   }
   
   if(length(drug_query) !=0 ){
-    if(drug_query=="ALL"){
+    if( drug_query){
       drug_query = drugs
     }
     if(drug_query=="A" || drug_query=="C" || drug_query=="D" || 
@@ -457,7 +469,7 @@ conditional_query_nodes = function(input,output){
   
   chemical_query = input$chemical_input
   if(length(chemical_query) != 0){
-    if(chemical_query=="ALL"){
+    if("ALL" %in% chemical_query){
       chemical_query = chemical
     }
     if(chemical_query %in% names(table(chemMat[,2]))){
@@ -472,7 +484,7 @@ conditional_query_nodes = function(input,output){
   
   disease_query = input$disease_input
   if(length(disease_query)!=0){
-    if(disease_query=="ALL"){
+    if("ALL" %in% disease_query){
       disease_query = disease
     }
   }
