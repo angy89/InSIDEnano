@@ -45,10 +45,10 @@ load_conditional_query = function(input,output,RData_file,items_list){
   clique_graph_cq_plot(input,output,MList,MM_list,proxy,graph_s)#in conditional_query_output.R
   incProgress(1, detail = "Preparing Genes Data table Output...")
   
-  genes_data_table_output(input,output,MList,MM_list,proxy,graph_s,g,g_geni2,items_list) #in conditional_query_output.R
+  genes_data_table_output(input,output,MList,MM_list,proxy,graph_s,g,g_geni2,items_list,"CONDITIONAL") #in conditional_query_output.R
   incProgress(1, detail = "Enrich Cliques...")
   
-  enrich_clique(input,output,MList,MM_list,proxy,graph_s,items_list)
+  enrich_clique(input,output,MList,MM_list,proxy,graph_s,items_list,"CONDITIONAL")
   
   incProgress(1, detail = "Plot subnetwork and statistics...")
   

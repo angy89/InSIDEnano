@@ -316,17 +316,40 @@ shinyUI(navbarPage("",
                                            ),
                                            fluidRow(column(8,plotOutput('ggplot')))#plotlyOutput
                                          )
-                                ),
+                                ),#End tabpanel statistic
                                 tabPanel("Enrichment",
                                     wellPanel(
                                          fluidRow(
                                            #fluidRow(wellPanel(DT::dataTableOutput('drugs_chemical_DT'))),
-                                           column(6,wellPanel(nanoClusterOutput('enriched_clique', height = 500))),
+                                           column(6,
+                                                  fluidRow(
+                                                      wellPanel(
+                                                        sliderInput("EnrichTh", label = "Connection Strenght",
+                                                                    min = 1, max = 99, value = 99,step=1)
+#                                                       column(6,
+#                                                       selectInput('EnrichType',label="Sets of genes",
+#                                                                                  choices = list("ALL"="ALL","Positional Gene Sets"=1,
+#                                                                                                 "KEGG"=2,
+#                                                                                                 "Biocarta"=3,
+#                                                                                                 "Reactome"=4,
+#                                                                                                 "microRNA targets"=5,
+#                                                                                                 "Trascription factor targets"=6,
+#                                                                                                 "Computational Gene Sets"=7,
+#                                                                                                 "GO gene sets"=8,
+#                                                                                                 "Oncogenic Signatures"=9,
+#                                                                                                 "Immunologic Signatures"=10),selected = 2,multiple = TRUE)
+#                                                                     
+#                                                           ),
+#                                                           column(6,sliderInput("EnrichTh", label = "Connection Strenght",
+#                                                                              min = 1, max = 99, value = 99,step=1))
+                                                  )),
+                                                  fluidRow(wellPanel(nanoClusterOutput('enriched_clique', height = 500)))
+                                                  ),
                                            column(6,wellPanel(DT::dataTableOutput('genes_data_table')))
                                          )
                                     )
-                                )
-                             )
+                                )#end tabpanel Enrichment
+                             )#end tabset
                             )#End tabpanel Pattern
          ),#end query menu
           tabPanel("Phenotypic Network",
@@ -358,14 +381,15 @@ shinyUI(navbarPage("",
                               htmlOutput("checkLOGIN_NBC"))
                             ),
                             sidebarPanel(
-                              fluidRow(
-                                column(6, uiOutput("nano_cluster_input")),
-                                column(6, uiOutput("drug_cluster_input"))
-                              ),
-                              fluidRow(
-                                column(6, uiOutput("disease_cluster_input")),
-                                column(6, uiOutput("chemical_cluster_input"))  
-                              ),
+                                fluidRow(uiOutput("nano_cluster_input")),
+#                               fluidRow(
+#                                 column(6, uiOutput("nano_cluster_input")),
+#                                 column(6, uiOutput("drug_cluster_input"))
+#                               ),
+#                               fluidRow(
+#                                 column(6, uiOutput("disease_cluster_input")),
+#                                 column(6, uiOutput("chemical_cluster_input"))  
+#                               ),
                               fluidRow(
                                 column(9, sliderInput("repulseration_cluster", label = "Repulseration Strenght",
                                                       min = 100, max = 10000, value = 4000,step=1))

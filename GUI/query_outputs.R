@@ -82,8 +82,7 @@ barplot_patter_output = function(input,output,MList,graph_gw){
   })
 }
 
-free_genes_data_table_output = function(input,output,MList,MM_list,proxy,graph_s,g,g_geni2,items_list){
-  #save(MList,MM_list,proxy,graph_s,g,g_geni2,file="/home/neuronelab/InsideNano/backup_gene_data_table.RData")
+genes_data_table_output = function(input,output,MList,MM_list,proxy,graph_s,g,g_geni2,items_list,query_type){
   output$genes_data_table = DT::renderDataTable({
     type = input$NetworkPattern
     type = as.integer(gsub(pattern = "M",x =type,replacement = ""))
@@ -96,7 +95,12 @@ free_genes_data_table_output = function(input,output,MList,MM_list,proxy,graph_s
     
     s = input$clique_data_table_rows_selected
     
-    g_= internal_render_plot(MM_list[[type]],gr4=graph_s,s,proxyList = proxy)
+    if(query_type == "FREE"){
+      g_= internal_render_plot(MM_list[[type]],gr4=graph_s,s,proxyList = proxy)
+    }
+    if(query_type == "CONDITIONAL"){
+      g_ = generate_g_cliques(input,output,graph_s,proxy,MM_list,MList)
+    }
     
     validate(need(length(s)!=0 , "Please select a clique"))          
     
@@ -203,9 +207,7 @@ free_genes_data_table_output = function(input,output,MList,MM_list,proxy,graph_s
 
 
 
-free_enrich_clique = function(input,output,MList,MM_list,proxy,graph_s,items_list){
-  # save(MList,MM_list,proxy,graph_s,file="/home/neuronelab/InsideNano/backup_enrich_clique.RData")
-  
+enrich_clique = function(input,output,MList,MM_list,proxy,graph_s,items_list,query_type){  
   output$enriched_clique<- renderNanoCluster({
     
     type = input$NetworkPattern
@@ -222,25 +224,42 @@ free_enrich_clique = function(input,output,MList,MM_list,proxy,graph_s,items_lis
       need(s!="", "Please select a clique")
     )
     
-    g_= internal_render_plot(MM_list[[type]],gr4=graph_s,s,proxyList = proxy)
+    if(query_type == "FREE"){
+      g_= internal_render_plot(MM_list[[type]],gr4=graph_s,s,proxyList = proxy)
+    }
+    if(query_type == "CONDITIONAL"){
+      g_ = generate_g_cliques(input,output,graph_s,proxy,MM_list,MList)
+    }
     
     clique_list = list(V(g_)$name)
     #clique_list = list(c("AgNP","salbutamol","11-deoxyprostaglandin E1"))
     message("In enrich_clique: clique_list: ",clique_list,"\n")
-    th_l = rep(0.9,length(clique_list))
+
+    th = input$EnrichTh
+   # sets = input$EnrichType
+    
+    th_l = rep(th/100,length(V(g_)$name))
     message("In enrich_clique: th_l: ",th_l,"\n")
     
     gene_sets_list = list(c1_file,KEGG_file,biocarta_file,reactome_file,
                           c3Mir_file,c3Tft_file,c4_file,c5_file,c6_file,c7_file)
-    gene_sets_name = c("c1","c2_KEGG","c2_biocarta","c2_reactome","c3_miRNA","c3_TFT","c4","c5","c6","c7")
+    gene_sets_name = c("Positional Gene Sets","KEGG","Biocarta","Reactome","microRNA targets","Trascription factor targets",
+                       "Computational Gene Sets","GO gene sets","Oncogenic Signatures","Immunologic Signatures")
     
     message("In enrich_clique: gene_sets_name: ",gene_sets_name)
-    
     DF = cliques_enrichment(clique_list,g,g_,gene_sets_list,gene_sets_name,th_l,items_list)
+   
+#     if("ALL" %in% sets){
+#       DF = cliques_enrichment(clique_list,g,g_,gene_sets_list,gene_sets_name,th_l,items_list)
+#     }else{
+#       DF = cliques_enrichment(clique_list,g,g_,gene_sets_list[sets],gene_sets_name[sets],th_l,items_list)
+#     }    
     
     edges = DF$edges
     vertices = DF$vertices
     colnames(vertices)[3]="size"
+    
+    validate(need(nrow(vertices)!=length(V(g_)$name),"No enrichmet for these sets and threshold"))
     
     nanocluster(Links = edges, Nodes = vertices,
                 Source = "source", Target = "target",cluster_group = "cliques",
@@ -292,11 +311,12 @@ plot_clique_graph = function(input,output,MM_list,graph_s,proxy){
       my_layout = matrix(c(-1,0,0,1,1,0),3,2,byrow = TRUE)
     }
     
-      par(fig = c(0, 1, 0, 1), oma = c(0, 0, 0, 0))#, mar = c(0, 0, 0, 0))
-      plot(g_,vertex.color = V(g_)$color,
-              vertex.size = 25,edge.width = abs(E(g_)$weight)+2,
+      #par(fig = c(0, 1, 0, 1), oma = c(0, 0, 0, 0),xpd=TRUE)#, mar = c(0, 0, 0, 0))
+    par(mar=c(5.1, 4.1, 4.1, 8.1), xpd=TRUE)  
+    plot(g_,vertex.color = V(g_)$color,
+              vertex.size = 50,edge.width = abs(E(g_)$weight)+2,
               vertex.label.color = "black",layout = my_layout)
-      legend("bottom", c("Positive Correlation","Negative Correlation"),horiz = TRUE, xpd = TRUE,inset=c(0,0),bty="n",
+    legend("topright", legend = c("Positive Correlation","Negative Correlation"), xpd = TRUE,inset=c(-0.2,0),bty="n",
               fill = c("red","darkgreen"),cex=1)
 
   })

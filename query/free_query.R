@@ -71,7 +71,7 @@ free_query = function(input,output,disease_list,selected_nodes,W_ADJ,th_p = inpu
     }
     plot_clique_graph(input,output,MM_list,graph_s,proxy)
       
-    free_enrich_clique(input,output,MList,MM_list,proxy,graph_s,items_list)
+    enrich_clique(input,output,MList,MM_list,proxy,graph_s,items_list,"FREE")
     
     #create_histrogram_condition(input,output,MList)#in pattern_UI.R; genera le combinazioni di items per l'istogramma
     if(DEBUGGING){
@@ -81,7 +81,7 @@ free_query = function(input,output,disease_list,selected_nodes,W_ADJ,th_p = inpu
     if(DEBUGGING){
       cat("Preparing genes data table\n")
     }
-    free_genes_data_table_output(input,output,MList,MM_list,proxy,graph_s,g,g_geni2,items_list) #in conditional_query_output.R
+    genes_data_table_output(input,output,MList,MM_list,proxy,graph_s,g,g_geni2,items_list,"FREE") #in conditional_query_output.R
     if(DEBUGGING){
       cat("Preparing force based subnetwork\n")
     }
