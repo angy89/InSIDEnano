@@ -84,6 +84,7 @@ username = "user2015"
 password = "helsinki2015"
 LOGGED_IN = FALSE
 proxy = NULL
+proxy_query = NULL
 DEBUGGING = TRUE
 genes_input = c()
 

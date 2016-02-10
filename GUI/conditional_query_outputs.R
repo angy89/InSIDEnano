@@ -107,9 +107,9 @@ clique_graph_cq_plot = function(input,output,MList,MM_list,proxy,graph_s){
       cat("Il numero selezionato ??: ",type,"\n")
     if(DEBUGGING)
       cat("class input$clique_data_table: ",class(input$clique_data_table))
-    s = input$clique_data_table_rows_selected
+    selected_row = input$clique_data_table_rows_selected
     if(DEBUGGING)
-      cat("s vale: ",s,"\n")
+      cat("selected_row vale: ",selected_row,"\n")
     
     g_ = generate_g_cliques(input,output,graph_s,proxy,MM_list,MList)
     
@@ -151,33 +151,33 @@ generate_g_cliques = function(input,output,graph_s,proxy,MM_list,MList){
   )
   
   type = as.integer(gsub(pattern = "M",x =type,replacement = ""))
-  s = input$clique_data_table_rows_selected
+  selected_row = input$clique_data_table_rows_selected
   
   if(clique_type == "NDCD"){
-    g_= internal_render_plot(MM_list[[type]],gr4=graph_s,s,proxyList = proxy)
+    g_= internal_render_plot(MM_list[[type]],gr4=graph_s,selected_row,proxyList = proxy)
   }
   if(clique_type == "NDD"){
-    g_= internal_render_plotNDD(MM_list[[type]],gr4=graph_s,s,proxyList = proxy)
+    g_= internal_render_plotNDD(MM_list[[type]],gr4=graph_s,selected_row,proxyList = proxy)
   }
   if(clique_type == "NDC"){
-    g_= internal_render_plotNDC(MM_list[[type]],gr4=graph_s,s,proxyList = proxy)
+    g_= internal_render_plotNDC(MM_list[[type]],gr4=graph_s,selected_row,proxyList = proxy)
   }
   if(clique_type == "DCD"){
-    g_= internal_render_plotDCD(MM_list[[type]],gr4=graph_s,s,proxyList = proxy)
+    g_= internal_render_plotDCD(MM_list[[type]],gr4=graph_s,selected_row,proxyList = proxy)
   }
   if(clique_type == "ALL"){
     if(("" %in% MList[[type]][1,]) == FALSE){
-      g_= internal_render_plot(MM_list[[type]],gr4=graph_s,s,proxyList = proxy)
+      g_= internal_render_plot(MM_list[[type]],gr4=graph_s,selected_row,proxyList = proxy)
     }else{
       col_idx = which(MList[[type]][1,] %in% "")
       if(col_idx == 4){
-        g_= internal_render_plotNDD(MM_list[[type]],gr4=graph_s,s,proxyList = proxy)
+        g_= internal_render_plotNDD(MM_list[[type]],gr4=graph_s,selected_row,proxyList = proxy)
       }
       if(col_idx == 1){
-        g_= internal_render_plotNDC(MM_list[[type]],gr4=graph_s,s,proxyList = proxy)
+        g_= internal_render_plotNDC(MM_list[[type]],gr4=graph_s,selected_row,proxyList = proxy)
       }
       if(col_idx == 2){
-        g_= internal_render_plotDCD(MM_list[[type]],gr4=graph_s,s,proxyList = proxy)
+        g_= internal_render_plotDCD(MM_list[[type]],gr4=graph_s,selected_row,proxyList = proxy)
       }
     }
   }

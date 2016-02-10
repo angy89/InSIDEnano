@@ -71,7 +71,7 @@ free_query = function(input,output,disease_list,selected_nodes,W_ADJ,th_p = inpu
     }
     plot_clique_graph(input,output,MM_list,graph_s,proxy)
       
-    enrich_clique(input,output,MList,MM_list,proxy,graph_s,items_list,"FREE")
+    enrich_clique(input,output,MList,MM_list,proxy,graph_s,g,items_list,"FREE")
     
     #create_histrogram_condition(input,output,MList)#in pattern_UI.R; genera le combinazioni di items per l'istogramma
     if(DEBUGGING){

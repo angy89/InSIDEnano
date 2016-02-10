@@ -1,4 +1,14 @@
 cliques_enrichment = function(clique_list,g,g_,gene_sets_list,gene_sets_name,th_l,items_list){
+  if(DEBUGGING){
+    message("In clique_enrichment: clique_list.length: ",length(clique_list),"\n")
+    message("In clique_enrichment: vcount(g): ",vcount(g),"\n")
+    message("In clique_enrichment: vcount(g_): ",vcount(g_),"\n")
+    message("In clique_enrichment: gene_sets_list.length: ",length(gene_sets_list),"\n")
+    message("In clique_enrichment: gene_sets_name.length: ",length(gene_sets_name),"\n")
+    message("In clique_enrichment: th_l.length: ",length(th_l),"\n")
+    message("In clique_enrichment: items_list.length: ",length(items_list),"\n")    
+  }    
+
   ncliques = length(clique_list)
   nElem_clique = length(clique_list[[1]])
   n_genes_sets = length(gene_sets_list)

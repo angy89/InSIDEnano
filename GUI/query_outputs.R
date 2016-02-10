@@ -207,7 +207,7 @@ genes_data_table_output = function(input,output,MList,MM_list,proxy,graph_s,g,g_
 
 
 
-enrich_clique = function(input,output,MList,MM_list,proxy,graph_s,items_list,query_type){  
+enrich_clique = function(input,output,MList,MM_list,proxy,graph_s,g,items_list,query_type){  
   output$enriched_clique<- renderNanoCluster({
     
     type = input$NetworkPattern
@@ -247,13 +247,7 @@ enrich_clique = function(input,output,MList,MM_list,proxy,graph_s,items_list,que
                        "Computational Gene Sets","GO gene sets","Oncogenic Signatures","Immunologic Signatures")
     
     message("In enrich_clique: gene_sets_name: ",gene_sets_name)
-    DF = cliques_enrichment(clique_list,g,g_,gene_sets_list,gene_sets_name,th_l,items_list)
-   
-#     if("ALL" %in% sets){
-#       DF = cliques_enrichment(clique_list,g,g_,gene_sets_list,gene_sets_name,th_l,items_list)
-#     }else{
-#       DF = cliques_enrichment(clique_list,g,g_,gene_sets_list[sets],gene_sets_name[sets],th_l,items_list)
-#     }    
+    DF = cliques_enrichment(clique_list = clique_list,g = g,g_ = g_,gene_sets_list = gene_sets_list,gene_sets_name = gene_sets_name,th_l = th_l,items_list = items_list)   
     
     edges = DF$edges
     vertices = DF$vertices
