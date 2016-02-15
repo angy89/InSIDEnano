@@ -41,7 +41,10 @@ load_conditional_query = function(input,output,RData_file,items_list,g){
     proxy = dataTableProxy("clique_data_table")
     incProgress(1, detail = "Preparing Barplot output...")
     
-    barplot_pattern_conditional_query(input,output,MList,graph_gw) #in conditional_query_output.R
+    #barplot_pattern_conditional_query(input,output,MList,graph_gw) #in conditional_query_output.R
+    barplot_patter_conditional_query_input(input,output,MList)
+    barplot_pattern_conditional_query(input,output,MList)
+    
     clique_graph_cq_plot(input,output,MList,MM_list,proxy,graph_s)#in conditional_query_output.R
     incProgress(1, detail = "Preparing Genes Data table Output...")
     

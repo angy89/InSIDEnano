@@ -88,25 +88,25 @@ shinyUI(navbarPage("",
                             )
                             
                    ),
-                   tabPanel("Load Query",
-                            fluidRow(
-                              wellPanel(
-                                HTML("</br>This area allow the user to load results of the past query</br>"),
-                                htmlOutput("checkLOGIN_load")
-                              )  
-                            ),
-                            fluidRow(
-                              wellPanel(
-                                fluidRow(actionButton(inputId = "Refresh_query_table",label  = "Refresh Table",icon("circle-arrow-right", lib = "glyphicon"))),
-                                fluidRow(
-                                  column(10,DT::dataTableOutput('previous_query')),
-                                  column(2,uiOutput("LoadQuery"))
-                                  
-                                )
-                              )          
-                            )
-                            
-                   ),
+#                    tabPanel("Load Query",
+#                             fluidRow(
+#                               wellPanel(
+#                                 HTML("</br>This area allow the user to load results of the past query</br>"),
+#                                 htmlOutput("checkLOGIN_load")
+#                               )  
+#                             ),
+#                             fluidRow(
+#                               wellPanel(
+#                                 fluidRow(actionButton(inputId = "Refresh_query_table",label  = "Refresh Table",icon("circle-arrow-right", lib = "glyphicon"))),
+#                                 fluidRow(
+#                                   column(10,DT::dataTableOutput('previous_query')),
+#                                   column(2,uiOutput("LoadQuery"))
+#                                   
+#                                 )
+#                               )          
+#                             )
+#                             
+#                    ),
                    
                    tabPanel("Free Query",
                             fluidRow(
@@ -199,6 +199,24 @@ shinyUI(navbarPage("",
                    #                              ),
                    tabPanel("Conditional Query",
                             fluidRow(
+                              wellPanel(
+                                fluidRow(
+                                  
+                                  HTML("</br>The Conditional Analysis allows to extrapolate subnetworks of nodes connected to multiple query items and to analyze the pattern of items (cliques) in the subnetwork.</br>"),
+                                  HTML("The results of the query depends on three paramenters: </br>
+                                                  <ul>
+                                                  <li>The Strength of similarity between query items and their neighbors</li>
+                                                  <li>How many query items are connected at the same time with other selected nodes</li>
+                                                  <li>How many query items are expected to be in the same cliques</li>
+                                                  </ul>
+                                                   
+                                                  </br>"),
+                                  htmlOutput("checkLOGIN")
+                                  
+                                )
+                              )
+                            ),
+                            fluidRow(
                               column(8,
                                      wellPanel(
                                        fluidRow(
@@ -235,23 +253,23 @@ shinyUI(navbarPage("",
                                      )
                               )
                             ),
+#                             fluidRow(
+#                               wellPanel(
+#                                 HTML("</br>This area allow the user to load results of the past query</br>"),
+#                                 htmlOutput("checkLOGIN_load")
+#                               )  
+#                             ),
                             fluidRow(
                               wellPanel(
                                 fluidRow(
-                                  
-                                  HTML("</br>The Conditional Analysis allows to extrapolate subnetworks of nodes connected to multiple query items and to analyze the pattern of items (cliques) in the subnetwork.</br>"),
-                                  HTML("The results of the query depends on three paramenters: </br>
-                                                  <ul>
-                                                  <li>The Strength of similarity between query items and their neighbors</li>
-                                                  <li>How many query items are connected at the same time with other selected nodes</li>
-                                                  <li>How many query items are expected to be in the same cliques</li>
-                                                  </ul>
-                                                   
-                                                  </br>"),
-                                  htmlOutput("checkLOGIN")
+                                  column(10,DT::dataTableOutput('previous_query')),
+                                  column(2,
+                                         fluidRow(uiOutput("LoadQuery")),
+                                         fluidRow(actionButton(inputId = "Refresh_query_table",label  = "Refresh Table",icon("circle-arrow-right", lib = "glyphicon")))
+                                  )
                                   
                                 )
-                              )
+                              )          
                             )
                    ),
                    
@@ -319,22 +337,25 @@ shinyUI(navbarPage("",
                                        tabsetPanel(
                                          tabPanel("Statistic",
                                                   wellPanel(
-                                                    fluidRow(column(4,
-                                                                    selectInput("plotTripel",label = "Plot of Association Frequencies",
-                                                                                choices = list("Disease-Nano-Drug" = 1,
-                                                                                               "Disease-Nano-Chemical"= 2,
-                                                                                               "Disease-Nano"=3,
-                                                                                               "Disease-Drug"=4,
-                                                                                               "Disease-Chemical"=5,
-                                                                                               "Chemical-Nano" = 6,
-                                                                                               "Chemical-Drug" = 7,
-                                                                                               "Nano-Drug" = 8),selected = 1)
-                                                    ),
-                                                    column(4,numericInput(inputId = "percentuale",label = "% of elements to show",
-                                                                          value = 10,min = 1,max = 100,step=5)),
-                                                    column(4,uiOutput("NodesOfInterest_items"))
-                                                    ),
-                                                    fluidRow(column(8,plotOutput('ggplot')))#plotlyOutput
+#                                                     fluidRow(column(4,
+#                                                                     selectInput("plotTripel",label = "Plot of Association Frequencies",
+#                                                                                 choices = list("Disease-Nano-Drug" = 1,
+#                                                                                                "Disease-Nano-Chemical"= 2,
+#                                                                                                "Disease-Nano"=3,
+#                                                                                                "Disease-Drug"=4,
+#                                                                                                "Disease-Chemical"=5,
+#                                                                                                "Chemical-Nano" = 6,
+#                                                                                                "Chemical-Drug" = 7,
+#                                                                                                "Nano-Drug" = 8),selected = 1)
+#                                                     ),
+#                                                     column(4,numericInput(inputId = "percentuale",label = "% of elements to show",
+#                                                                           value = 10,min = 1,max = 100,step=5)),
+#                                                     column(4,uiOutput("NodesOfInterest_items"))
+                                                      fluidRow(
+                                                        column(4,uiOutput("bubbleCoupleChoice")),
+                                                        column(4,numericInput(inputId = "percentuale",label = "% of elements to show",value = 10,min = 1,max = 100,step=5))
+                                                      ),
+                                                      fluidRow(column(8,plotOutput('trendPlot',width ="1200px",height="700px")))#plotlyOutput   
                                                   )
                                          ),#End tabpanel statistic
                                          tabPanel("Enrichment",

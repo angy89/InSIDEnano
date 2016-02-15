@@ -471,6 +471,8 @@ internal_render_plotNDC = function(Mi,gr4,s,proxyList){
     chem = unlist(strsplit(chem, split=" "))
     chem = paste(chem[-which(duplicated(chem))], collapse = ' ') 
     
+    g = induced_subgraph(gr4,c(nano_,drug_,chem))
+    
     
     np = which(V(g)$name %in% nano)
     ndrug = which(V(g)$name %in% drugs)

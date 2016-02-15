@@ -74,7 +74,7 @@ cliques_enrichment = function(clique_list,g,g_,gene_sets_list,gene_sets_name,th_
     node_type = node_type[-toRem]
   }
   
-  enriched_ADJ = enriched_ADJ * 10
+  enriched_ADJ = enriched_ADJ * 4
   enriched_ADJ[vds,vds] = g_ADJ[vds,vds] * 4
   
   enriched_clique_graph = graph.adjacency(enriched_ADJ,mode="undirected",weighted = TRUE)

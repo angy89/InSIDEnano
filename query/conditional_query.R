@@ -183,7 +183,10 @@ conditional_query = function(input,output,disease_list,selected_nodes,W_ADJ,th_p
     #create_histrogram_condition(input,output,MList)#in pattern_UI.R; genera le combinazioni di items per l'istogramma      
     enrich_clique(input,output,MList,MM_list,proxy,graph_s,g,items_list,"CONDITIONAL")
     genes_data_table_output(input,output,MList,MM_list,proxy,graph_s,g,g_geni2,items_list,"CONDITIONAL") #in conditional_query_output.R
-    barplot_pattern_conditional_query(input,output,MList,graph_gw) #in conditional_query_output.R
+    #barplot_pattern_conditional_query(input,output,MList,graph_gw) #in conditional_query_output.R
+    barplot_patter_conditional_query_input(input,output,MList)
+    barplot_pattern_conditional_query(input,output,MList)
+      
     #save(ADJ_S,chemMat,good_cliques,join10,file = "/home/aserra/InsideNano/www/immagine_per_debugging.RData")
     plot_force_based_subnetwork_query_resutls(input,output,ADJ_S,chemMat,good_cliques,join10) #in qury_outputs.R
     plot_subnetwork_statistics(input,output,ADJ_S,chemMat,good_cliques,join10)#in qury_outputs.R

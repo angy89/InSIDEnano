@@ -340,454 +340,519 @@ generate_g_cliques = function(input,output,graph_s,proxy,MM_list,MList){
 #   })
 # }
 
-
-
-
-barplot_pattern_conditional_query = function(input,output,MList,graph_gw){
-  output$ggplot = renderPlot({ #renderPlotly
-    type = input$NetworkPattern #type of clique
-    triple_type = input$plotTripel
-    validate(
-      need(input$NetworkPattern != "", "Please select a pattern type")
-    )
-    clique_type = input$clique_type
-    if(clique_type == "ALL"){
-      if(DEBUGGING)
-        cat("Il tipo selezionato: ",type,"\n")
-      i = as.integer(gsub(pattern = "M",x =type,replacement = ""))
-      if(DEBUGGING)
-        cat("Il numero selezionato: ",i,"\n")
-      Mi = MList[[i]]
-      Mi = as.data.frame(Mi)
-      colnames(Mi)=c("Disease","Nano","Drug","Chemical")
-      if(triple_type==1){
-        columns_ = c("Disease","Nano","Drug")
-        classes_elem = c("disease","nano","drugs","chemical")
-      }
-      if(triple_type==2){
-        columns_ = c("Disease","Nano","Chemical")
-        classes_elem = c("disease","nano","chemical")
-      }
-      if(triple_type==3){
-        columns_ = c("Disease","Nano")
-        classes_elem = c("disease","nano")
-      }
-      if(triple_type==4){
-        columns_ = c("Disease","Drug")
-        classes_elem = c("disease","drugs")
-      }
-      if(triple_type==5){
-        columns_ = c("Disease","Chemical")
-        classes_elem = c("disease","chemical")
-      }
-      if(triple_type==6){
-        columns_ = c("Chemical","Nano")
-        classes_elem = c("chemical","nano")
-      }
-      if(triple_type==7){
-        columns_ = c("Chemical","Drug")
-        classes_elem = c("chemical","drugs")
-      }
-      if(triple_type==8){
-        columns_ = c("Nano","Drug")
-        classes_elem = c("nano","drugs")
-      }
-      col_idx = which(as.matrix(Mi[1,]) %in% "")
-      if(length(col_idx)>0){
-        if(col_idx == 4){
-          validate(
-            need(("Chemical" %in% columns_) == FALSE, "Chemical not selected")
-          )
-        }
-        if(col_idx == 3){
-          validate(
-            need(("Drug" %in% columns_) == FALSE, "Drug not selected")
-          )
-        }
-        if(col_idx == 2){
-          validate(
-            need(("Nano" %in% columns_) == FALSE, "Nano not selected")
-          )
-        }
-        if(col_idx == 1){
-          validate(
-            need(("Disease" %in% columns_) == FALSE, "Disease not selected")
-          )
-        }
-      }
-      Mi_count = count(Mi, vars=columns_)
-      nano_id = unique(Mi_count$Nano)
-      drug_id = unique(Mi_count$Drug)
-      disease_id = unique(Mi_count$Disease)
-      Mi_count = Mi_count[order(Mi_count$freq,decreasing = FALSE),]
-      nElem_c = length(columns_)
-      d_id = input$InterestingNodes_items
-      d_node_type = igraph::get.vertex.attribute(graph = graph_gw,name = "type",index = d_id)
-      column_index = which(classes_elem %in% d_node_type)
-      validate(
-        need(input$percentuale != "", "Please select a percentage")
-      )
-      if(length(columns_)>2){
-        indexes_c = 1:(dim(Mi_count)[2]-1)
-        indexes_c = indexes_c[-column_index]
-        nElem = round((dim(Mi_count)[1]) * (input$percentuale)/100,digits = 0)
-        dim(Mi_count)[1] -> up_b
-        low_b = up_b - nElem
-        Mi_count2 = Mi_count$freq[low_b:up_b]
-        names(Mi_count2) = paste(Mi_count[low_b:up_b,indexes_c[1]],Mi_count[low_b:up_b,indexes_c[2]],sep="-")
-        # Mi_count2 = Mi_count$freq[1:nElem]
-        # names(Mi_count2) = paste(Mi_count[1:nElem,indexes_c[1]],Mi_count[1:nElem,indexes_c[2]],sep=" ")
-      }
-      if(length(columns_) == 2){
-        indexes_c = 1:(dim(Mi_count)[2]-1)
-        indexes_c = indexes_c[-column_index]
-        nElem = round((dim(Mi_count)[1]) * (input$percentuale)/100,digits = 0)
-        dim(Mi_count)[1] -> up_b
-        low_b = up_b - nElem
-        Mi_count2 = Mi_count$freq[low_b:up_b]
-        names(Mi_count2) = paste(Mi_count[low_b:up_b,indexes_c],sep=" ")#,Mi_count[1:nElem,3],sep=" ")
-        # Mi_count2 = Mi_count$freq[1:nElem]
-        # #names(Mi_count2) = paste(Mi_count[1:nElem,columns_[2:nElem_c]],sep=" ")#,Mi_count[1:nElem,3],sep=" ")
-        # names(Mi_count2) = paste(Mi_count[1:nElem,indexes_c],sep=" ")#,Mi_count[1:nElem,3],sep=" ")
-      }
-      #index = which(Mi_count[1:nElem,column_index] %in% d_id)
-      index = which(Mi_count[low_b:up_b,column_index] %in% d_id)
-      validate(
-        need(length(index)>0, paste("No clique for", d_id ,"with this threshold"))
-      )
-      mar.default = c(5,4,4,2) + 0.1
-      par(mar = mar.default+ c(0,15,0,0))
-      bp=barplot(as.vector(Mi_count2[index]),horiz = TRUE,col = rainbow(length(index)),main=d_id,
-              names.arg=names(Mi_count2)[index], cex.names=1, las=1)
-      
-#       save(MList,graph_gw,Mi_count2,index,file="barplot_debugging2.RData")
-#       
-#       toBePlot = cbind(rep(Mi_count2[index],Mi_count2[index]),rep(names(Mi_count2)[index],Mi_count2[index]))
-#       colnames(toBePlot) = c("value","labels")
-#       toBePlot = as.data.frame(toBePlot)
-#       c = qplot(factor(labels), data=toBePlot, geom="bar", fill=factor(labels)) + scale_fill_brewer()
-#       ggplotly(gg)
-    }# end if node_type == ALL
-    if(clique_type == "NDCD"){
-      if(DEBUGGING)
-        cat("Il tipo selezionato: ",type,"\n")
-      i = as.integer(gsub(pattern = "M",x =type,replacement = ""))
-      if(DEBUGGING)
-        cat("Il numero selezionato: ",i,"\n")
-      Mi = MList[[i]]
-      Mi = as.data.frame(Mi)
-      colnames(Mi)=c("Disease","Nano","Drug","Chemical")
-      if(triple_type==1){
-        columns_ = c("Disease","Nano","Drug")
-        classes_elem = c("disease","nano","drugs","chemical")
-      }
-      if(triple_type==2){
-        columns_ = c("Disease","Nano","Chemical")
-        classes_elem = c("disease","nano","chemical")
-      }
-      if(triple_type==3){
-        columns_ = c("Disease","Nano")
-        classes_elem = c("disease","nano")
-      }
-      if(triple_type==4){
-        columns_ = c("Disease","Drug")
-        classes_elem = c("disease","drugs")
-      }
-      if(triple_type==5){
-        columns_ = c("Disease","Chemical")
-        classes_elem = c("disease","chemical")
-      }
-      if(triple_type==6){
-        columns_ = c("Chemical","Nano")
-        classes_elem = c("chemical","nano")
-      }
-      if(triple_type==7){
-        columns_ = c("Chemical","Drug")
-        classes_elem = c("chemical","drugs")
-      }
-      if(triple_type==8){
-        columns_ = c("Nano","Drug")
-        classes_elem = c("nano","drugs")
-      }
-      Mi_count = count(Mi, vars=columns_)
-      nano_id = unique(Mi_count$Nano)
-      drug_id = unique(Mi_count$Drug)
-      disease_id = unique(Mi_count$Disease)
-      Mi_count = Mi_count[order(Mi_count$freq),]
-      nElem_c = length(columns_)
-      d_id = input$InterestingNodes_items
-      d_node_type = igraph::get.vertex.attribute(graph = graph_gw,name = "type",index = d_id)
-      column_index = which(classes_elem %in% d_node_type)
-      validate(
-        need(input$percentuale != "", "Please select a percentage")
-      )
-      if(length(columns_)>2){
-        indexes_c = 1:(dim(Mi_count)[2]-1)
-        indexes_c = indexes_c[-column_index]
-        nElem = round((dim(Mi_count)[1]) * (input$percentuale)/100,digits = 0)
-        Mi_count2 = Mi_count$freq[1:nElem]
-        names(Mi_count2) = paste(Mi_count[1:nElem,indexes_c[1]],Mi_count[1:nElem,indexes_c[2]],sep=" ")
-      }
-      if(length(columns_) == 2){
-        indexes_c = 1:(dim(Mi_count)[2]-1)
-        indexes_c = indexes_c[-column_index]
-        nElem = round((dim(Mi_count)[1]) * (input$percentuale)/100,digits = 0)
-        Mi_count2 = Mi_count$freq[1:nElem]
-        #names(Mi_count2) = paste(Mi_count[1:nElem,columns_[2:nElem_c]],sep=" ")#,Mi_count[1:nElem,3],sep=" ")
-        names(Mi_count2) = paste(Mi_count[1:nElem,indexes_c],sep=" ")#,Mi_count[1:nElem,3],sep=" ")
-      }
-      index = which(Mi_count[1:nElem,column_index] %in% d_id)
-      validate(
-        need(length(index)>0, paste("No clique for", d_id ,"with this threshold"))
-      )
-      mar.default = c(5,4,4,2) + 0.1
-      par(mar = mar.default+ c(0,15,0,0))
-      bp=barplot(as.vector(Mi_count2[index]),horiz = TRUE,col = rainbow(length(index)),main=d_id,
-              names.arg=names(Mi_count2)[index], cex.names=1, las=1)
-    }# end if node_type == NDCD
-    if(clique_type == "NDD"){ #Nano Drug Disease
-      if(DEBUGGING)
-        cat("Il tipo selezionato: ",type,"\n")
-      i = as.integer(gsub(pattern = "M",x =type,replacement = ""))
-      if(DEBUGGING)
-        cat("Il numero selezionato: ",i,"\n")
-      Mi = MList[[i]]
-      Mi = as.data.frame(Mi)
-      colnames(Mi)=c("Disease","Nano","Drug")
-      if(triple_type==1){
-        columns_ = c("Disease","Nano","Drug")
-        classes_elem = c("disease","nano","drugs","chemical")
-      }
-      if(triple_type==2){
-        columns_ = c("Disease","Nano","Chemical")
-        classes_elem = c("disease","nano","chemical")
-      }
-      if(triple_type==3){
-        columns_ = c("Disease","Nano")
-        classes_elem = c("disease","nano")
-      }
-      if(triple_type==4){
-        columns_ = c("Disease","Drug")
-        classes_elem = c("disease","drugs")
-      }
-      if(triple_type==5){
-        columns_ = c("Disease","Chemical")
-        classes_elem = c("disease","chemical")
-      }
-      if(triple_type==6){
-        columns_ = c("Chemical","Nano")
-        classes_elem = c("chemical","nano")
-      }
-      if(triple_type==7){
-        columns_ = c("Chemical","Drug")
-        classes_elem = c("chemical","drugs")
-      }
-      if(triple_type==8){
-        columns_ = c("Nano","Drug")
-        classes_elem = c("nano","drugs")
-      }
-      validate(
-        need(("Chemical" %in% columns_) == FALSE, "Chemical not selected")
-      )
-      Mi_count = count(Mi, vars=columns_)
-      nano_id = unique(Mi_count$Nano)
-      drug_id = unique(Mi_count$Drug)
-      disease_id = unique(Mi_count$Disease)
-      Mi_count = Mi_count[order(Mi_count$freq),]
-      nElem_c = length(columns_)
-      d_id = input$InterestingNodes_items
-      d_node_type = igraph::get.vertex.attribute(graph = graph_gw,name = "type",index = d_id)
-      column_index = which(classes_elem %in% d_node_type)
-      validate(
-        need(input$percentuale != "", "Please select a percentage")
-      )
-      if(length(columns_)>2){
-        indexes_c = 1:(dim(Mi_count)[2]-1)
-        indexes_c = indexes_c[-column_index]
-        nElem = round((dim(Mi_count)[1]) * (input$percentuale)/100,digits = 0)
-        Mi_count2 = Mi_count$freq[1:nElem]
-        names(Mi_count2) = paste(Mi_count[1:nElem,indexes_c[1]],Mi_count[1:nElem,indexes_c[2]],sep=" ")
-      }
-      if(length(columns_) == 2){
-        indexes_c = 1:(dim(Mi_count)[2]-1)
-        indexes_c = indexes_c[-column_index]
-        nElem = round((dim(Mi_count)[1]) * (input$percentuale)/100,digits = 0)
-        Mi_count2 = Mi_count$freq[1:nElem]
-        names(Mi_count2) = paste(Mi_count[1:nElem,indexes_c],sep=" ")#,Mi_count[1:nElem,3],sep=" ")
-      }
-      index = which(Mi_count[1:nElem,column_index] %in% d_id)
-      validate(
-        need(length(index)>0, paste("No clique for", d_id ,"with this threshold"))
-      )
-      mar.default = c(5,4,4,2) + 0.1
-      par(mar = mar.default+ c(0,15,0,0))
-     bp= barplot(as.vector(Mi_count2[index]),horiz = TRUE,col = rainbow(length(index)),main=d_id,
-              names.arg=names(Mi_count2)[index], cex.names=1, las=1)
-    }# end if node_type == NDD
-    if(clique_type == "NDC"){ #Nano Drug Chemical
-      if(DEBUGGING)
-        cat("Il tipo selezionato: ",type,"\n")
-      i = as.integer(gsub(pattern = "M",x =type,replacement = ""))
-      if(DEBUGGING)
-        cat("Il numero selezionato: ",i,"\n")
-      Mi = MList[[i]]
-      Mi = as.data.frame(Mi)
-      colnames(Mi)=c("Chemical","Nano","Drug")
-      if(triple_type==1){
-        columns_ = c("Disease","Nano","Drug")
-        classes_elem = c("disease","nano","drugs","chemical")
-      }
-      if(triple_type==2){
-        columns_ = c("Disease","Nano","Chemical")
-        classes_elem = c("disease","nano","chemical")
-      }
-      if(triple_type==3){
-        columns_ = c("Disease","Nano")
-        classes_elem = c("disease","nano")
-      }
-      if(triple_type==4){
-        columns_ = c("Disease","Drug")
-        classes_elem = c("disease","drugs")
-      }
-      if(triple_type==5){
-        columns_ = c("Disease","Chemical")
-        classes_elem = c("disease","chemical")
-      }
-      if(triple_type==6){
-        columns_ = c("Chemical","Nano")
-        classes_elem = c("chemical","nano")
-      }
-      if(triple_type==7){
-        columns_ = c("Chemical","Drug")
-        classes_elem = c("chemical","drugs")
-      }
-      if(triple_type==8){
-        columns_ = c("Nano","Drug")
-        classes_elem = c("nano","drugs")
-      }
-      validate(
-        need(("Drug" %in% columns_) == FALSE, "Chemical not selected")
-      )
-      Mi_count = count(Mi, vars=columns_)
-      nano_id = unique(Mi_count$Nano)
-      drug_id = unique(Mi_count$Drug)
-      disease_id = unique(Mi_count$Disease)
-      Mi_count = Mi_count[order(Mi_count$freq),]
-      nElem_c = length(columns_)
-      d_id = input$InterestingNodes_items
-      d_node_type = igraph::get.vertex.attribute(graph = graph_gw,name = "type",index = d_id)
-      column_index = which(classes_elem %in% d_node_type)
-      validate(
-        need(input$percentuale != "", "Please select a percentage")
-      )
-      if(length(columns_)>2){
-        indexes_c = 1:(dim(Mi_count)[2]-1)
-        indexes_c = indexes_c[-column_index]
-        nElem = round((dim(Mi_count)[1]) * (input$percentuale)/100,digits = 0)
-        Mi_count2 = Mi_count$freq[1:nElem]
-        names(Mi_count2) = paste(Mi_count[1:nElem,indexes_c[1]],Mi_count[1:nElem,indexes_c[2]],sep=" ")
-      }
-      if(length(columns_) == 2){
-        indexes_c = 1:(dim(Mi_count)[2]-1)
-        indexes_c = indexes_c[-column_index]
-        nElem = round((dim(Mi_count)[1]) * (input$percentuale)/100,digits = 0)
-        Mi_count2 = Mi_count$freq[1:nElem]
-        names(Mi_count2) = paste(Mi_count[1:nElem,indexes_c],sep=" ")#,Mi_count[1:nElem,3],sep=" ")
-      }
-      index = which(Mi_count[1:nElem,column_index] %in% d_id)
-      validate(
-        need(length(index)>0, paste("No clique for", d_id ,"with this threshold"))
-      )
-      mar.default = c(5,4,4,2) + 0.1
-      par(mar = mar.default+ c(0,15,0,0))
-     bp= barplot(as.vector(Mi_count2[index]),horiz = TRUE,col = rainbow(length(index)),main=d_id,
-              names.arg=names(Mi_count2)[index], cex.names=1, las=1)
-    }# end if node_type == NDC
-    if(clique_type == "DCD"){ #Drug Chemical Disease
-      if(DEBUGGING)
-        cat("Il tipo selezionato: ",type,"\n")
-      i = as.integer(gsub(pattern = "M",x =type,replacement = ""))
-      if(DEBUGGING)
-        cat("Il numero selezionato: ",i,"\n")
-      Mi = MList[[i]]
-      Mi = as.data.frame(Mi)
-      colnames(Mi)=c("Disease","Chemical","Drug")
-      if(triple_type==1){
-        columns_ = c("Disease","Nano","Drug")
-        classes_elem = c("disease","nano","drugs","chemical")
-      }
-      if(triple_type==2){
-        columns_ = c("Disease","Nano","Chemical")
-        classes_elem = c("disease","nano","chemical")
-      }
-      if(triple_type==3){
-        columns_ = c("Disease","Nano")
-        classes_elem = c("disease","nano")
-      }
-      if(triple_type==4){
-        columns_ = c("Disease","Drug")
-        classes_elem = c("disease","drugs")
-      }
-      if(triple_type==5){
-        columns_ = c("Disease","Chemical")
-        classes_elem = c("disease","chemical")
-      }
-      if(triple_type==6){
-        columns_ = c("Chemical","Nano")
-        classes_elem = c("chemical","nano")
-      }
-      if(triple_type==7){
-        columns_ = c("Chemical","Drug")
-        classes_elem = c("chemical","drugs")
-      }
-      if(triple_type==8){
-        columns_ = c("Nano","Drug")
-        classes_elem = c("nano","drugs")
-      }
-      validate(
-        need(("Nano" %in% columns_) == FALSE, "Chemical not selected")
-      )
-      Mi_count = count(Mi, vars=columns_)
-      nano_id = unique(Mi_count$Nano)
-      drug_id = unique(Mi_count$Drug)
-      disease_id = unique(Mi_count$Disease)
-      Mi_count = Mi_count[order(Mi_count$freq),]
-      nElem_c = length(columns_)
-      d_id = input$InterestingNodes_items
-      d_node_type = igraph::get.vertex.attribute(graph = graph_gw,name = "type",index = d_id)
-      column_index = which(classes_elem %in% d_node_type)
-      validate(
-        need(input$percentuale != "", "Please select a percentage")
-      )
-      if(length(columns_)>2){
-        indexes_c = 1:(dim(Mi_count)[2]-1)
-        indexes_c = indexes_c[-column_index]
-        nElem = round((dim(Mi_count)[1]) * (input$percentuale)/100,digits = 0)
-        Mi_count2 = Mi_count$freq[1:nElem]
-        names(Mi_count2) = paste(Mi_count[1:nElem,indexes_c[1]],Mi_count[1:nElem,indexes_c[2]],sep=" ")
-      }
-      if(length(columns_) == 2){
-        indexes_c = 1:(dim(Mi_count)[2]-1)
-        indexes_c = indexes_c[-column_index]
-        nElem = round((dim(Mi_count)[1]) * (input$percentuale)/100,digits = 0)
-        Mi_count2 = Mi_count$freq[1:nElem]
-        names(Mi_count2) = paste(Mi_count[1:nElem,indexes_c],sep=" ")#,Mi_count[1:nElem,3],sep=" ")
-      }
-      index = which(Mi_count[1:nElem,column_index] %in% d_id)
-      validate(
-        need(length(index)>0, paste("No clique for", d_id ,"with this threshold"))
-      )
-      mar.default = c(5,4,4,2) + 0.1
-      par(mar = mar.default+ c(0,15,0,0))
-     bp= barplot(as.vector(Mi_count2[index]),horiz = TRUE,col = rainbow(length(index)),main=d_id,
-              names.arg=names(Mi_count2)[index], cex.names=1, las=1)
-    }# end if node_type == DCD
-    
-    #ggplotly(c)
-    bp
+barplot_patter_conditional_query_input = function(input,output,MList){
+  output$bubbleCoupleChoice = renderUI({
+  type = input$NetworkPattern #type of clique
+  type = as.integer(gsub(pattern = "M",x =type,replacement = ""))
+  Mi = MList[[type]]
+  Mi = as.data.frame(Mi)
+  colnames(Mi)=c("Disease","Nano","Drug","Chemical")
+  couple_list = combn(colnames(Mi), 2, simplify = FALSE)  
+  
+  CL = c()
+  for(i in 1:length(couple_list)){
+    CL = c(CL, paste(couple_list[[i]],collapse="-"))
+  }
+  
+  selectInput("bubbleCoupleChoice",label = "Plot of Association Frequencies",
+                   choices = CL,selected = CL[1])
   })
 }
 
+barplot_pattern_conditional_query = function(input,output,MList){
+  
+  output$trendPlot <- renderPlot({#renderPlotly({
+    type = input$NetworkPattern #type of clique
+    type = as.integer(gsub(pattern = "M",x =type,replacement = ""))
+    
+    Mi = MList[[type]]
+    Mi = as.data.frame(Mi)
+    colnames(Mi)=c("Disease","Nano","Drug","Chemical")
+    
+    couple_list = combn(colnames(Mi), 2, simplify = FALSE)
+    # triple_list = combn(colnames(Mi), 3, simplify = FALSE)
+    couple_counting_res = lapply(couple_list,FUN = function(row_comb){
+      count(Mi[,row_comb])
+    })
+    
+    CL = c()
+    for(i in 1:length(couple_list)){
+      CL = c(CL, paste(couple_list[[i]],collapse="-"))
+    }
+    
+    selected_choice = input$bubbleCoupleChoice
+    cat("barplot_pattern_conditional_query: selected_choice ",selected_choice,"\n")
+    validate(need(selected_choice!="","Please select an association frequency!"))
+    
+    idx = which(CL %in% selected_choice) 
+    
+    df = couple_counting_res[[idx]]
+    df = df[order(df[,3],decreasing = TRUE),]
+    
+    th = input$percentuale/100
+    nrows = round(nrow(df) * th) 
+    if(nrows == 0){ nrows=1}
+    
+    df = df[1:nrows,]
+    
+    #plot_ly(df,x=df[,1],y=df[,2],size=df$freq/mean(freq),mode = "markers")
+    library(ggplot2)
+    
+   p =  ggplot(df, aes(x = df[,1], y = df[,2])) +
+      scale_x_discrete(name=colnames(df)[1])+
+      scale_y_discrete(name=colnames(df)[2])+
+      geom_point(aes(size = freq, colour = freq)) + 
+      theme(axis.text.x = element_text(angle = 90))
+   print(p)
+  })
+}
+
+
+# barplot_pattern_conditional_query = function(input,output,MList,graph_gw){
+#   output$ggplot = renderPlot({ #renderPlotly
+#     type = input$NetworkPattern #type of clique
+#     triple_type = input$plotTripel
+#     validate(
+#       need(input$NetworkPattern != "", "Please select a pattern type")
+#     )
+#     clique_type = input$clique_type
+#     if(clique_type == "ALL"){
+#       if(DEBUGGING)
+#         cat("Il tipo selezionato: ",type,"\n")
+#       i = as.integer(gsub(pattern = "M",x =type,replacement = ""))
+#       if(DEBUGGING)
+#         cat("Il numero selezionato: ",i,"\n")
+#       Mi = MList[[i]]
+#       Mi = as.data.frame(Mi)
+#       colnames(Mi)=c("Disease","Nano","Drug","Chemical")
+#       if(triple_type==1){
+#         columns_ = c("Disease","Nano","Drug")
+#         classes_elem = c("disease","nano","drugs","chemical")
+#       }
+#       if(triple_type==2){
+#         columns_ = c("Disease","Nano","Chemical")
+#         classes_elem = c("disease","nano","chemical")
+#       }
+#       if(triple_type==3){
+#         columns_ = c("Disease","Nano")
+#         classes_elem = c("disease","nano")
+#       }
+#       if(triple_type==4){
+#         columns_ = c("Disease","Drug")
+#         classes_elem = c("disease","drugs")
+#       }
+#       if(triple_type==5){
+#         columns_ = c("Disease","Chemical")
+#         classes_elem = c("disease","chemical")
+#       }
+#       if(triple_type==6){
+#         columns_ = c("Chemical","Nano")
+#         classes_elem = c("chemical","nano")
+#       }
+#       if(triple_type==7){
+#         columns_ = c("Chemical","Drug")
+#         classes_elem = c("chemical","drugs")
+#       }
+#       if(triple_type==8){
+#         columns_ = c("Nano","Drug")
+#         classes_elem = c("nano","drugs")
+#       }
+#       col_idx = which(as.matrix(Mi[1,]) %in% "")
+#       if(length(col_idx)>0){
+#         if(col_idx == 4){
+#           validate(
+#             need(("Chemical" %in% columns_) == FALSE, "Chemical not selected")
+#           )
+#         }
+#         if(col_idx == 3){
+#           validate(
+#             need(("Drug" %in% columns_) == FALSE, "Drug not selected")
+#           )
+#         }
+#         if(col_idx == 2){
+#           validate(
+#             need(("Nano" %in% columns_) == FALSE, "Nano not selected")
+#           )
+#         }
+#         if(col_idx == 1){
+#           validate(
+#             need(("Disease" %in% columns_) == FALSE, "Disease not selected")
+#           )
+#         }
+#       }
+#       Mi_count = count(Mi, vars=columns_)
+#       nano_id = unique(Mi_count$Nano)
+#       drug_id = unique(Mi_count$Drug)
+#       disease_id = unique(Mi_count$Disease)
+#       Mi_count = Mi_count[order(Mi_count$freq,decreasing = FALSE),]
+#       nElem_c = length(columns_)
+#       d_id = input$InterestingNodes_items
+#       d_node_type = igraph::get.vertex.attribute(graph = graph_gw,name = "type",index = d_id)
+#       column_index = which(classes_elem %in% d_node_type)
+#       validate(
+#         need(input$percentuale != "", "Please select a percentage")
+#       )
+#       if(length(columns_)>2){
+#         indexes_c = 1:(dim(Mi_count)[2]-1)
+#         indexes_c = indexes_c[-column_index]
+#         nElem = round((dim(Mi_count)[1]) * (input$percentuale)/100,digits = 0)
+#         dim(Mi_count)[1] -> up_b
+#         low_b = up_b - nElem
+#         Mi_count2 = Mi_count$freq[low_b:up_b]
+#         names(Mi_count2) = paste(Mi_count[low_b:up_b,indexes_c[1]],Mi_count[low_b:up_b,indexes_c[2]],sep="-")
+#         # Mi_count2 = Mi_count$freq[1:nElem]
+#         # names(Mi_count2) = paste(Mi_count[1:nElem,indexes_c[1]],Mi_count[1:nElem,indexes_c[2]],sep=" ")
+#       }
+#       if(length(columns_) == 2){
+#         indexes_c = 1:(dim(Mi_count)[2]-1)
+#         indexes_c = indexes_c[-column_index]
+#         nElem = round((dim(Mi_count)[1]) * (input$percentuale)/100,digits = 0)
+#         dim(Mi_count)[1] -> up_b
+#         low_b = up_b - nElem
+#         Mi_count2 = Mi_count$freq[low_b:up_b]
+#         names(Mi_count2) = paste(Mi_count[low_b:up_b,indexes_c],sep=" ")#,Mi_count[1:nElem,3],sep=" ")
+#         # Mi_count2 = Mi_count$freq[1:nElem]
+#         # #names(Mi_count2) = paste(Mi_count[1:nElem,columns_[2:nElem_c]],sep=" ")#,Mi_count[1:nElem,3],sep=" ")
+#         # names(Mi_count2) = paste(Mi_count[1:nElem,indexes_c],sep=" ")#,Mi_count[1:nElem,3],sep=" ")
+#       }
+#       #index = which(Mi_count[1:nElem,column_index] %in% d_id)
+#       index = which(Mi_count[low_b:up_b,column_index] %in% d_id)
+#       validate(
+#         need(length(index)>0, paste("No clique for", d_id ,"with this threshold"))
+#       )
+#       mar.default = c(5,4,4,2) + 0.1
+#       par(mar = mar.default+ c(0,15,0,0))
+#       bp=barplot(as.vector(Mi_count2[index]),horiz = TRUE,col = rainbow(length(index)),main=d_id,
+#               names.arg=names(Mi_count2)[index], cex.names=1, las=1)
+#       
+# #       save(MList,graph_gw,Mi_count2,index,file="barplot_debugging2.RData")
+# #       
+# #       toBePlot = cbind(rep(Mi_count2[index],Mi_count2[index]),rep(names(Mi_count2)[index],Mi_count2[index]))
+# #       colnames(toBePlot) = c("value","labels")
+# #       toBePlot = as.data.frame(toBePlot)
+# #       c = qplot(factor(labels), data=toBePlot, geom="bar", fill=factor(labels)) + scale_fill_brewer()
+# #       ggplotly(gg)
+#     }# end if node_type == ALL
+#     if(clique_type == "NDCD"){
+#       if(DEBUGGING)
+#         cat("Il tipo selezionato: ",type,"\n")
+#       i = as.integer(gsub(pattern = "M",x =type,replacement = ""))
+#       if(DEBUGGING)
+#         cat("Il numero selezionato: ",i,"\n")
+#       Mi = MList[[i]]
+#       Mi = as.data.frame(Mi)
+#       colnames(Mi)=c("Disease","Nano","Drug","Chemical")
+#       if(triple_type==1){
+#         columns_ = c("Disease","Nano","Drug")
+#         classes_elem = c("disease","nano","drugs","chemical")
+#       }
+#       if(triple_type==2){
+#         columns_ = c("Disease","Nano","Chemical")
+#         classes_elem = c("disease","nano","chemical")
+#       }
+#       if(triple_type==3){
+#         columns_ = c("Disease","Nano")
+#         classes_elem = c("disease","nano")
+#       }
+#       if(triple_type==4){
+#         columns_ = c("Disease","Drug")
+#         classes_elem = c("disease","drugs")
+#       }
+#       if(triple_type==5){
+#         columns_ = c("Disease","Chemical")
+#         classes_elem = c("disease","chemical")
+#       }
+#       if(triple_type==6){
+#         columns_ = c("Chemical","Nano")
+#         classes_elem = c("chemical","nano")
+#       }
+#       if(triple_type==7){
+#         columns_ = c("Chemical","Drug")
+#         classes_elem = c("chemical","drugs")
+#       }
+#       if(triple_type==8){
+#         columns_ = c("Nano","Drug")
+#         classes_elem = c("nano","drugs")
+#       }
+#       Mi_count = count(Mi, vars=columns_)
+#       nano_id = unique(Mi_count$Nano)
+#       drug_id = unique(Mi_count$Drug)
+#       disease_id = unique(Mi_count$Disease)
+#       Mi_count = Mi_count[order(Mi_count$freq),]
+#       nElem_c = length(columns_)
+#       d_id = input$InterestingNodes_items
+#       d_node_type = igraph::get.vertex.attribute(graph = graph_gw,name = "type",index = d_id)
+#       column_index = which(classes_elem %in% d_node_type)
+#       validate(
+#         need(input$percentuale != "", "Please select a percentage")
+#       )
+#       if(length(columns_)>2){
+#         indexes_c = 1:(dim(Mi_count)[2]-1)
+#         indexes_c = indexes_c[-column_index]
+#         nElem = round((dim(Mi_count)[1]) * (input$percentuale)/100,digits = 0)
+#         Mi_count2 = Mi_count$freq[1:nElem]
+#         names(Mi_count2) = paste(Mi_count[1:nElem,indexes_c[1]],Mi_count[1:nElem,indexes_c[2]],sep=" ")
+#       }
+#       if(length(columns_) == 2){
+#         indexes_c = 1:(dim(Mi_count)[2]-1)
+#         indexes_c = indexes_c[-column_index]
+#         nElem = round((dim(Mi_count)[1]) * (input$percentuale)/100,digits = 0)
+#         Mi_count2 = Mi_count$freq[1:nElem]
+#         #names(Mi_count2) = paste(Mi_count[1:nElem,columns_[2:nElem_c]],sep=" ")#,Mi_count[1:nElem,3],sep=" ")
+#         names(Mi_count2) = paste(Mi_count[1:nElem,indexes_c],sep=" ")#,Mi_count[1:nElem,3],sep=" ")
+#       }
+#       index = which(Mi_count[1:nElem,column_index] %in% d_id)
+#       validate(
+#         need(length(index)>0, paste("No clique for", d_id ,"with this threshold"))
+#       )
+#       mar.default = c(5,4,4,2) + 0.1
+#       par(mar = mar.default+ c(0,15,0,0))
+#       bp=barplot(as.vector(Mi_count2[index]),horiz = TRUE,col = rainbow(length(index)),main=d_id,
+#               names.arg=names(Mi_count2)[index], cex.names=1, las=1)
+#     }# end if node_type == NDCD
+#     if(clique_type == "NDD"){ #Nano Drug Disease
+#       if(DEBUGGING)
+#         cat("Il tipo selezionato: ",type,"\n")
+#       i = as.integer(gsub(pattern = "M",x =type,replacement = ""))
+#       if(DEBUGGING)
+#         cat("Il numero selezionato: ",i,"\n")
+#       Mi = MList[[i]]
+#       Mi = as.data.frame(Mi)
+#       colnames(Mi)=c("Disease","Nano","Drug")
+#       if(triple_type==1){
+#         columns_ = c("Disease","Nano","Drug")
+#         classes_elem = c("disease","nano","drugs","chemical")
+#       }
+#       if(triple_type==2){
+#         columns_ = c("Disease","Nano","Chemical")
+#         classes_elem = c("disease","nano","chemical")
+#       }
+#       if(triple_type==3){
+#         columns_ = c("Disease","Nano")
+#         classes_elem = c("disease","nano")
+#       }
+#       if(triple_type==4){
+#         columns_ = c("Disease","Drug")
+#         classes_elem = c("disease","drugs")
+#       }
+#       if(triple_type==5){
+#         columns_ = c("Disease","Chemical")
+#         classes_elem = c("disease","chemical")
+#       }
+#       if(triple_type==6){
+#         columns_ = c("Chemical","Nano")
+#         classes_elem = c("chemical","nano")
+#       }
+#       if(triple_type==7){
+#         columns_ = c("Chemical","Drug")
+#         classes_elem = c("chemical","drugs")
+#       }
+#       if(triple_type==8){
+#         columns_ = c("Nano","Drug")
+#         classes_elem = c("nano","drugs")
+#       }
+#       validate(
+#         need(("Chemical" %in% columns_) == FALSE, "Chemical not selected")
+#       )
+#       Mi_count = count(Mi, vars=columns_)
+#       nano_id = unique(Mi_count$Nano)
+#       drug_id = unique(Mi_count$Drug)
+#       disease_id = unique(Mi_count$Disease)
+#       Mi_count = Mi_count[order(Mi_count$freq),]
+#       nElem_c = length(columns_)
+#       d_id = input$InterestingNodes_items
+#       d_node_type = igraph::get.vertex.attribute(graph = graph_gw,name = "type",index = d_id)
+#       column_index = which(classes_elem %in% d_node_type)
+#       validate(
+#         need(input$percentuale != "", "Please select a percentage")
+#       )
+#       if(length(columns_)>2){
+#         indexes_c = 1:(dim(Mi_count)[2]-1)
+#         indexes_c = indexes_c[-column_index]
+#         nElem = round((dim(Mi_count)[1]) * (input$percentuale)/100,digits = 0)
+#         Mi_count2 = Mi_count$freq[1:nElem]
+#         names(Mi_count2) = paste(Mi_count[1:nElem,indexes_c[1]],Mi_count[1:nElem,indexes_c[2]],sep=" ")
+#       }
+#       if(length(columns_) == 2){
+#         indexes_c = 1:(dim(Mi_count)[2]-1)
+#         indexes_c = indexes_c[-column_index]
+#         nElem = round((dim(Mi_count)[1]) * (input$percentuale)/100,digits = 0)
+#         Mi_count2 = Mi_count$freq[1:nElem]
+#         names(Mi_count2) = paste(Mi_count[1:nElem,indexes_c],sep=" ")#,Mi_count[1:nElem,3],sep=" ")
+#       }
+#       index = which(Mi_count[1:nElem,column_index] %in% d_id)
+#       validate(
+#         need(length(index)>0, paste("No clique for", d_id ,"with this threshold"))
+#       )
+#       mar.default = c(5,4,4,2) + 0.1
+#       par(mar = mar.default+ c(0,15,0,0))
+#      bp= barplot(as.vector(Mi_count2[index]),horiz = TRUE,col = rainbow(length(index)),main=d_id,
+#               names.arg=names(Mi_count2)[index], cex.names=1, las=1)
+#     }# end if node_type == NDD
+#     if(clique_type == "NDC"){ #Nano Drug Chemical
+#       if(DEBUGGING)
+#         cat("Il tipo selezionato: ",type,"\n")
+#       i = as.integer(gsub(pattern = "M",x =type,replacement = ""))
+#       if(DEBUGGING)
+#         cat("Il numero selezionato: ",i,"\n")
+#       Mi = MList[[i]]
+#       Mi = as.data.frame(Mi)
+#       colnames(Mi)=c("Chemical","Nano","Drug")
+#       if(triple_type==1){
+#         columns_ = c("Disease","Nano","Drug")
+#         classes_elem = c("disease","nano","drugs","chemical")
+#       }
+#       if(triple_type==2){
+#         columns_ = c("Disease","Nano","Chemical")
+#         classes_elem = c("disease","nano","chemical")
+#       }
+#       if(triple_type==3){
+#         columns_ = c("Disease","Nano")
+#         classes_elem = c("disease","nano")
+#       }
+#       if(triple_type==4){
+#         columns_ = c("Disease","Drug")
+#         classes_elem = c("disease","drugs")
+#       }
+#       if(triple_type==5){
+#         columns_ = c("Disease","Chemical")
+#         classes_elem = c("disease","chemical")
+#       }
+#       if(triple_type==6){
+#         columns_ = c("Chemical","Nano")
+#         classes_elem = c("chemical","nano")
+#       }
+#       if(triple_type==7){
+#         columns_ = c("Chemical","Drug")
+#         classes_elem = c("chemical","drugs")
+#       }
+#       if(triple_type==8){
+#         columns_ = c("Nano","Drug")
+#         classes_elem = c("nano","drugs")
+#       }
+#       validate(
+#         need(("Drug" %in% columns_) == FALSE, "Chemical not selected")
+#       )
+#       Mi_count = count(Mi, vars=columns_)
+#       nano_id = unique(Mi_count$Nano)
+#       drug_id = unique(Mi_count$Drug)
+#       disease_id = unique(Mi_count$Disease)
+#       Mi_count = Mi_count[order(Mi_count$freq),]
+#       nElem_c = length(columns_)
+#       d_id = input$InterestingNodes_items
+#       d_node_type = igraph::get.vertex.attribute(graph = graph_gw,name = "type",index = d_id)
+#       column_index = which(classes_elem %in% d_node_type)
+#       validate(
+#         need(input$percentuale != "", "Please select a percentage")
+#       )
+#       if(length(columns_)>2){
+#         indexes_c = 1:(dim(Mi_count)[2]-1)
+#         indexes_c = indexes_c[-column_index]
+#         nElem = round((dim(Mi_count)[1]) * (input$percentuale)/100,digits = 0)
+#         Mi_count2 = Mi_count$freq[1:nElem]
+#         names(Mi_count2) = paste(Mi_count[1:nElem,indexes_c[1]],Mi_count[1:nElem,indexes_c[2]],sep=" ")
+#       }
+#       if(length(columns_) == 2){
+#         indexes_c = 1:(dim(Mi_count)[2]-1)
+#         indexes_c = indexes_c[-column_index]
+#         nElem = round((dim(Mi_count)[1]) * (input$percentuale)/100,digits = 0)
+#         Mi_count2 = Mi_count$freq[1:nElem]
+#         names(Mi_count2) = paste(Mi_count[1:nElem,indexes_c],sep=" ")#,Mi_count[1:nElem,3],sep=" ")
+#       }
+#       index = which(Mi_count[1:nElem,column_index] %in% d_id)
+#       validate(
+#         need(length(index)>0, paste("No clique for", d_id ,"with this threshold"))
+#       )
+#       mar.default = c(5,4,4,2) + 0.1
+#       par(mar = mar.default+ c(0,15,0,0))
+#      bp= barplot(as.vector(Mi_count2[index]),horiz = TRUE,col = rainbow(length(index)),main=d_id,
+#               names.arg=names(Mi_count2)[index], cex.names=1, las=1)
+#     }# end if node_type == NDC
+#     if(clique_type == "DCD"){ #Drug Chemical Disease
+#       if(DEBUGGING)
+#         cat("Il tipo selezionato: ",type,"\n")
+#       i = as.integer(gsub(pattern = "M",x =type,replacement = ""))
+#       if(DEBUGGING)
+#         cat("Il numero selezionato: ",i,"\n")
+#       Mi = MList[[i]]
+#       Mi = as.data.frame(Mi)
+#       colnames(Mi)=c("Disease","Chemical","Drug")
+#       if(triple_type==1){
+#         columns_ = c("Disease","Nano","Drug")
+#         classes_elem = c("disease","nano","drugs","chemical")
+#       }
+#       if(triple_type==2){
+#         columns_ = c("Disease","Nano","Chemical")
+#         classes_elem = c("disease","nano","chemical")
+#       }
+#       if(triple_type==3){
+#         columns_ = c("Disease","Nano")
+#         classes_elem = c("disease","nano")
+#       }
+#       if(triple_type==4){
+#         columns_ = c("Disease","Drug")
+#         classes_elem = c("disease","drugs")
+#       }
+#       if(triple_type==5){
+#         columns_ = c("Disease","Chemical")
+#         classes_elem = c("disease","chemical")
+#       }
+#       if(triple_type==6){
+#         columns_ = c("Chemical","Nano")
+#         classes_elem = c("chemical","nano")
+#       }
+#       if(triple_type==7){
+#         columns_ = c("Chemical","Drug")
+#         classes_elem = c("chemical","drugs")
+#       }
+#       if(triple_type==8){
+#         columns_ = c("Nano","Drug")
+#         classes_elem = c("nano","drugs")
+#       }
+#       validate(
+#         need(("Nano" %in% columns_) == FALSE, "Chemical not selected")
+#       )
+#       Mi_count = count(Mi, vars=columns_)
+#       nano_id = unique(Mi_count$Nano)
+#       drug_id = unique(Mi_count$Drug)
+#       disease_id = unique(Mi_count$Disease)
+#       Mi_count = Mi_count[order(Mi_count$freq),]
+#       nElem_c = length(columns_)
+#       d_id = input$InterestingNodes_items
+#       d_node_type = igraph::get.vertex.attribute(graph = graph_gw,name = "type",index = d_id)
+#       column_index = which(classes_elem %in% d_node_type)
+#       validate(
+#         need(input$percentuale != "", "Please select a percentage")
+#       )
+#       if(length(columns_)>2){
+#         indexes_c = 1:(dim(Mi_count)[2]-1)
+#         indexes_c = indexes_c[-column_index]
+#         nElem = round((dim(Mi_count)[1]) * (input$percentuale)/100,digits = 0)
+#         Mi_count2 = Mi_count$freq[1:nElem]
+#         names(Mi_count2) = paste(Mi_count[1:nElem,indexes_c[1]],Mi_count[1:nElem,indexes_c[2]],sep=" ")
+#       }
+#       if(length(columns_) == 2){
+#         indexes_c = 1:(dim(Mi_count)[2]-1)
+#         indexes_c = indexes_c[-column_index]
+#         nElem = round((dim(Mi_count)[1]) * (input$percentuale)/100,digits = 0)
+#         Mi_count2 = Mi_count$freq[1:nElem]
+#         names(Mi_count2) = paste(Mi_count[1:nElem,indexes_c],sep=" ")#,Mi_count[1:nElem,3],sep=" ")
+#       }
+#       index = which(Mi_count[1:nElem,column_index] %in% d_id)
+#       validate(
+#         need(length(index)>0, paste("No clique for", d_id ,"with this threshold"))
+#       )
+#       mar.default = c(5,4,4,2) + 0.1
+#       par(mar = mar.default+ c(0,15,0,0))
+#      bp= barplot(as.vector(Mi_count2[index]),horiz = TRUE,col = rainbow(length(index)),main=d_id,
+#               names.arg=names(Mi_count2)[index], cex.names=1, las=1)
+#     }# end if node_type == DCD
+#     
+#     #ggplotly(c)
+#     bp
+#   })
+# }
+# 
 
 
 # output$Subnetwork_plot = renderForceNetwork({ #in go2
