@@ -4,3 +4,5 @@ create_LOG_table = function(){
   LOG_CONDITIONAL = as.data.frame(LOG_CONDITIONAL)
   save(LOG_CONDITIONAL,file = "LOG.RData")
 } 
+
+create_LOG_table()

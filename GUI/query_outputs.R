@@ -484,428 +484,741 @@ plot_clique_graph = function(input,output,MM_list,graph_s,proxy){
 plot_force_based_subnetwork_query_resutls = function(input,output,ADJ_S,chemMat,good_cliques,join10){
   output$Subnetwork_plot = renderForceNetwork({ 
     
-    ADJ_toPlot = ADJ_S
-    nano_s = colnames(ADJ_S)[which(colnames(ADJ_S) %in% nano)]
-    chemical_s = colnames(ADJ_S)[which(colnames(ADJ_S) %in% chemical)]
-    drug_s = colnames(ADJ_S)[which(colnames(ADJ_S) %in% drugs)]
-    disease_s = colnames(ADJ_S)[which(colnames(ADJ_S) %in% disease)]
+  nodes = input$NodesOfInterest
+  ATC_g  = input$sub_ATCGroup
+  chem_g = input$sub_ChemicalGroup
+  
+  Elems = unique(unlist(good_cliques))
+  nElems = length(Elems)
+  FIT = find_items_type(Elems,nano,drugs,chemical,disease)
+  items_type=FIT$items_type
+  items_subtype=FIT$items_subtype
+  
+  idx_cliques = c()
+  for(i in 1:length(good_cliques)){
+    nodes_ = FALSE
+    drug_ = FALSE
+    chem_ = FALSE
     
-    chemMat_index = which(chemMat[,1] %in% chemical_s)
-    chemMat = chemMat[chemMat_index,]
-    
-    d = input$InterestingNodes
-    edges_type = input$sub_Edges
-    type = input$sub_checkGroup
-    ATC_code = input$sub_ATCGroup
-    if(ATC_code == "ALL"){
-      ATC_code = ATC_letter_vector
-    }
-    
-    chem_group = input$sub_ChemicalGroup
-    if(chem_group == "ALL"){
-      chem_group = chemical_group_vector
-    }
-    
-    validate(
-      need(input$InterestingNodes != "", "SELECT A NODE!")
-    )
-    
-    validate(
-      need(input$sub_checkGroup != "", "Please select an object group")
-    )
-    
-    neig = lapply(X = good_cliques,FUN = function(i_cliques){
-      v_names = names(i_cliques)
-      if(sum(v_names %in% d)>0){
-        return(v_names)
+    clique_elem = names(good_cliques[[i]])
+    if(sum(nodes %in% clique_elem)>0){
+      nodes_ = TRUE
+      
+      if("ALL" %in% ATC_g){
+        drug_ =TRUE
+      }else{
+        idx_drug = clique_elem[which(clique_elem %in% drugs)]
+        if(length(idx_drug)>0){
+          drug_sub_idx = which(names(items_subtype) %in% idx_drug)
+          ATC_gg = strsplit(x=gsub(pattern = "Drug ATC code: ",x = items_subtype[drug_sub_idx],replacement = ""),";")
+          if(sum(ATC_g %in% ATC_gg)>0){
+            drug_ = TRUE
+          }
+        }else{ # drug non presente nella clique, quindi la prendo lo stesso
+          drug_ = TRUE
+        }
       }
-    })
+      if("ALL" %in% chem_g){
+        chem_ = TRUE
+      }else{
+        idx_chem = clique_elem[which(clique_elem %in% chemical)]
+        if(length(idx_chem)>0){
+          chem_sub_idx = which(names(items_subtype) %in% idx_chem)
+          if(sum(chem_g %in% items_subtype[chem_sub_idx])>0){
+            chem_ = TRUE
+          }
+        }else{ # drug non presente nella clique, quindi la prendo lo stesso
+          chem_ = TRUE
+        }
+      }
+      if(nodes_ && drug_ && chem_){
+        idx_cliques = c(idx_cliques,i)
+      }
+    }
+#     if(nodes_){
+#       cat("i: ",i," nodes: ",nodes, " nodes_: ",nodes_," ATC_g: ",ATC_g," drug_: ",drug_," chem_g ",chem_g," chem_: ",chem_,"\n")
+#       
+#     }
     
-    vds = unique(unlist(neig))
+  }
+  validate(need(length(idx_cliques)!=0,"No one of the nodes of interest is in the cliques!"))
+  
+  good_cliques = good_cliques[idx_cliques]
+  
+  if(DEBUGGING){
+    message("In plot subnetwork and statistics:: nodes",nodes,"\n")
+  }
+  
+  validate(need(nodes!="","Please select one or more nodes of interest!"))
+  
+  Elems = unique(unlist(good_cliques))
+  nElems = length(Elems)
+  
+  adj_cliques_mat = matrix(0,nElems,nElems)
+  colnames(adj_cliques_mat) = rownames(adj_cliques_mat)=unique(unlist(good_cliques))
+  
+  for(i in good_cliques){
+    adj_cliques_mat[names(i),names(i)] = 1
+  }
+  
+  diag(adj_cliques_mat) = 0
+ 
+  FIT = find_items_type(colnames(adj_cliques_mat),nano,drugs,chemical,disease)
+  items_type=FIT$items_type
+  elems = FIT$elems
+  
+  gto_plot = graph.adjacency(adjmatrix = adj_cliques_mat,mode = "undirected",weighted = TRUE)
+  V(gto_plot)$type = FIT$items_subtype
+  gto_plot = igraph::delete.vertices(gto_plot,which(degree(gto_plot)<1))
+  gto_plot = igraph::simplify(gto_plot)
+  
+ # plot(gto_plot,vertex.size = igraph::degree(gto_plot)*5,mark.groups=good_cliques[4:7])
+  
+  
+  data_frame = from_igraph_to_data_frame(gto_plot)
+
+  n_clique = list()
+  for(i in 1:length(good_cliques)){
+    n_clique[[i]] = which(data_frame$vertices[,"name"] %in% names(good_cliques[[i]])) - 1
     
-    message("in plot subnetwork vds= ",vds,"\n")
+  }
+#     forceNetwork(Links = data_frame$edges, Nodes = data_frame$vertices,
+#                  Source = "source", Target = "target",
+#                  Value = "value", NodeID = "name",Nodesize="size",
+#                  Group = "type",zoom = TRUE,opacity = 0.95,fontSize = 10,
+#                  legend = TRUE,
+#                  charge = -1000,
+#                  linkDistance = JS(paste0("function(d){return d.value*",10,"}")))
     
-    FIT = find_items_type(vds,nano,drugs,chemical,disease)
+    
+  forceNetwork(Links = data_frame$edges, Nodes = data_frame$vertices,
+               Source = "source", Target = "target",
+               Value = "value", NodeID = "name",Nodesize="size",
+               Group = "type",zoom = TRUE,opacity = 0.95,fontSize = 10,
+               legend = TRUE,
+               clickAction = 'd3.select(this).select("circle").transition().duration(750).attr("r", 30)',
+               charge = -input$sub_repulserad,
+               linkDistance = JS(paste0("function(d){return d.value*",input$sub_length,"}")))
+  })
+  
+}
+
+plot_subnetwork_statistics = function(input,output,ADJ_S,chemMat,good_cliques,join10){
+  output$Subnetwork_plot_statistic = renderPlot({ 
+    
+    nodes = input$NodesOfInterest
+    ATC_g  = input$sub_ATCGroup
+    chem_g = input$sub_ChemicalGroup
+    
+    Elems = unique(unlist(good_cliques))
+    nElems = length(Elems)
+    FIT = find_items_type(Elems,nano,drugs,chemical,disease)
+    items_type=FIT$items_type
+    items_subtype=FIT$items_subtype
+    
+    idx_cliques = c()
+    for(i in 1:length(good_cliques)){
+      nodes_ = FALSE
+      drug_ = FALSE
+      chem_ = FALSE
+      
+      clique_elem = names(good_cliques[[i]])
+      if(sum(nodes %in% clique_elem)>0){
+        nodes_ = TRUE
+        
+        if("ALL" %in% ATC_g){
+          drug_ =TRUE
+        }else{
+          idx_drug = clique_elem[which(clique_elem %in% drugs)]
+          if(length(idx_drug)>0){
+            drug_sub_idx = which(names(items_subtype) %in% idx_drug)
+            ATC_gg = strsplit(x=gsub(pattern = "Drug ATC code: ",x = items_subtype[drug_sub_idx],replacement = ""),";")
+            if(sum(ATC_g %in% ATC_gg)>0){
+              drug_ = TRUE
+            }
+          }else{ # drug non presente nella clique, quindi la prendo lo stesso
+            drug_ = TRUE
+          }
+        }
+        if("ALL" %in% chem_g){
+          chem_ = TRUE
+        }else{
+          idx_chem = clique_elem[which(clique_elem %in% chemical)]
+          if(length(idx_chem)>0){
+            chem_sub_idx = which(names(items_subtype) %in% idx_chem)
+            if(sum(chem_g %in% items_subtype[chem_sub_idx])>0){
+              chem_ = TRUE
+            }
+          }else{ # drug non presente nella clique, quindi la prendo lo stesso
+            chem_ = TRUE
+          }
+        }
+        if(nodes_ && drug_ && chem_){
+          idx_cliques = c(idx_cliques,i)
+        }
+      }
+#       if(nodes_){
+#         cat("i: ",i," nodes: ",nodes, " nodes_: ",nodes_," ATC_g: ",ATC_g," drug_: ",drug_," chem_g ",chem_g," chem_: ",chem_,"\n")
+#         
+#       }
+      
+    }
+    validate(need(length(idx_cliques)!=0,"No one of the nodes of interest is in the cliques!"))
+    
+    good_cliques = good_cliques[idx_cliques]
+    
+    if(DEBUGGING){
+      message("In plot subnetwork and statistics:: nodes",nodes,"\n")
+    }
+    
+    validate(need(nodes!="","Please select one or more nodes of interest!"))
+    
+    Elems = unique(unlist(good_cliques))
+    nElems = length(Elems)
+    
+    adj_cliques_mat = matrix(0,nElems,nElems)
+    colnames(adj_cliques_mat) = rownames(adj_cliques_mat)=unique(unlist(good_cliques))
+    
+    for(i in good_cliques){
+      adj_cliques_mat[names(i),names(i)] = 1
+    }
+    
+    diag(adj_cliques_mat) = 0
+    
+    FIT = find_items_type(colnames(adj_cliques_mat),nano,drugs,chemical,disease)
     items_type=FIT$items_type
     elems = FIT$elems
     
-    # "nano"     "drugs"    "chemical" "disease"
-    type_bool = c("nano" %in% type,
-                  "drugs" %in% type,
-                  "chemical" %in% type,
-                  "disease" %in% type)
-    
-    names(type_bool) = c("nano","drugs","chemical","disease")
-    
-    message("in plot subnetwork type_bool= ",type_bool,"\n")
-    
-    
-    class_toMaintain = names(which(type_bool==TRUE))
-    toMaintain = unlist(elems[class_toMaintain])
-    
-    message("in plot subnetwork toMaintain (FIRST)= ",toMaintain,"\n")
-    
-    
-    #Rimuovo per categoria
-    ADJ_toPlot = ADJ_toPlot[toMaintain,toMaintain]
-    
-    
-    #Rimuovo per sottocategoria
-    good_elems = c()
-    
-    if(type_bool["drugs"]){
-      if(length(ATC_code)==1){
-        if(ATC_code!="ALL"){
-        atc_drugs = join10[which(join10$ATC_lev1==ATC_code)]$name
-        atc_drug_q = elems$drugs[elems$drugs %in% atc_drugs]
-        good_elems = c(good_elems,atc_drug_q)
-        }
-      }else{
-          good_elems =c(good_elems,elems$drugs)
-      }
-    }
-    
-    if(type_bool["chemical"]){
-      if(length(chem_group)==1){
-        if(chem_group!="ALL"){
-          chemicals_group = chemMat[chemMat[,2] %in% chem_group,1]
-          atc_drug_q = elems$drugs[elems$drugs %in% atc_drugs]
-          good_elems = c(good_elems,atc_drug_q)
-        }
-      }
-      else{
-        good_elems =c(good_elems,elems$chemical)
-      } 
-    }
-    
-    
-    FIT2 = find_items_type(colnames(ADJ_toPlot),nano,drugs,chemical,disease)
-    items_type2=FIT2$items_type
-    elems2 = FIT2$elems
-    
-    message("in plot subnetwork toMaintain (good_elems)= ",good_elems,"\n")
-    message("in plot subnetwork toMaintain (nano)= ",elems2$nano,"\n")
-    message("in plot subnetwork toMaintain (disease)= ",elems2$disease,"\n")
+        slices = as.numeric(table(FIT$items_subtype))
+      lbls = names(table(FIT$items_subtype))
+      data_ = data.frame(slices,lbls,slices/max(slices))
+      colnames(data_) = c("Occurrency","Groups","Frequencies")
+      
+      p =  ggplot(data_, aes(x =Occurrency , y = Groups)) +
+        geom_point(aes(size = Occurrency, colour = Occurrency))  
+      #theme(axis.text.x = element_text(angle = 90))
+      print(p)
+    })
   
-    toMaintain2 = c(elems2$nano,elems2$disease,unique(good_elems))
-    
-    message("in plot subnetwork toMaintain (SECOND)= ",toMaintain2,"\n")
-    
-    
-    ADJ_toPlot = ADJ_toPlot[toMaintain2,toMaintain2]
-    
-    if(edges_type == "P"){
-        ADJ_toPlot[which(ADJ_toPlot < 0)] = 0
-    }
-    if(edges_type == "N"){
-        ADJ_toPlot[which(ADJ_toPlot>0)] = 0
-    }
-   
-    FIT3 = find_items_type(colnames(ADJ_toPlot),nano,drugs,chemical,disease)
-    
-    gto_plot = graph.adjacency(adjmatrix = ADJ_toPlot,mode = "undirected",weighted = TRUE)
-    V(gto_plot)$type = FIT3$items_type
-    gto_plot = igraph::delete.vertices(gto_plot,which(degree(gto_plot)<1))
-    gto_plot = igraph::simplify(gto_plot)
-    
-    if(DEBUGGING)
-      cat("Data frame creation... \n")
-    
-    data_frame = from_igraph_to_data_frame(gto_plot)
-    
-    MyClickScript <- 
-      '      d3.select(this).select("circle").transition()
-    .duration(750)
-    .attr("r", 30)'
-    
-    if(DEBUGGING){
-      cat("Force Networks plot... \n")
-      cat("Repulserad ",input$sub_repulserad,"\n")
-      cat("Edges length: ",input$sub_length,"\n")
-    }
-    forceNetwork(Links = data_frame$edges, Nodes = data_frame$vertices,
-                 Source = "source", Target = "target",
-                 Value = "value", NodeID = "name",Nodesize="size",
-                 Group = "type",zoom = TRUE,opacity = 0.95,fontSize = 10,
-                 legend = TRUE,
-                 clickAction = MyClickScript,
-                 charge = -input$sub_repulserad,
-                 linkDistance = JS(paste0("function(d){return d.value*",input$sub_length,
-                                          "}")))
+}
+
+# plot_force_based_subnetwork_query_resutls = function(input,output,ADJ_S,chemMat,good_cliques,join10){
+#   output$Subnetwork_plot = renderForceNetwork({ 
 #     
+#     ADJ_toPlot = ADJ_S
+#     nano_s = colnames(ADJ_S)[which(colnames(ADJ_S) %in% nano)]
+#     chemical_s = colnames(ADJ_S)[which(colnames(ADJ_S) %in% chemical)]
+#     drug_s = colnames(ADJ_S)[which(colnames(ADJ_S) %in% drugs)]
+#     disease_s = colnames(ADJ_S)[which(colnames(ADJ_S) %in% disease)]
+#     
+#     chemMat_index = which(chemMat[,1] %in% chemical_s)
+#     chemMat = chemMat[chemMat_index,]
+#     
+#     d = input$InterestingNodes
+#     edges_type = input$sub_Edges
+#     type = input$sub_checkGroup
+#     ATC_code = input$sub_ATCGroup
+#     if(ATC_code == "ALL"){
+#       ATC_code = ATC_letter_vector
+#     }
+#     
+#     chem_group = input$sub_ChemicalGroup
+#     if(chem_group == "ALL"){
+#       chem_group = chemical_group_vector
+#     }
+#     
+#     validate(
+#       need(input$InterestingNodes != "", "SELECT A NODE!")
+#     )
+#     
+#     validate(
+#       need(input$sub_checkGroup != "", "Please select an object group")
+#     )
+#     
+#     neig = lapply(X = good_cliques,FUN = function(i_cliques){
+#       v_names = names(i_cliques)
+#       if(sum(v_names %in% d)>0){
+#         return(v_names)
+#       }
+#     })
+#     
+#     vds = unique(unlist(neig))
+#     
+#     message("in plot subnetwork vds= ",vds,"\n")
+#     
+#     FIT = find_items_type(vds,nano,drugs,chemical,disease)
+#     items_type=FIT$items_type
+#     elems = FIT$elems
+#     
+#     # "nano"     "drugs"    "chemical" "disease"
+#     type_bool = c("nano" %in% type,
+#                   "drugs" %in% type,
+#                   "chemical" %in% type,
+#                   "disease" %in% type)
+#     
+#     names(type_bool) = c("nano","drugs","chemical","disease")
+#     
+#     message("in plot subnetwork type_bool= ",type_bool,"\n")
+#     
+#     
+#     class_toMaintain = names(which(type_bool==TRUE))
+#     toMaintain = unlist(elems[class_toMaintain])
+#     
+#     message("in plot subnetwork toMaintain (FIRST)= ",toMaintain,"\n")
+#     
+#     
+#     #Rimuovo per categoria
+#     ADJ_toPlot = ADJ_toPlot[toMaintain,toMaintain]
+#     
+#     
+#     #Rimuovo per sottocategoria
+#     good_elems = c()
+#     
+#     if(type_bool["drugs"]){
+#       if(length(ATC_code)==1){
+#         if(ATC_code!="ALL"){
+#         atc_drugs = join10[which(join10$ATC_lev1==ATC_code)]$name
+#         atc_drug_q = elems$drugs[elems$drugs %in% atc_drugs]
+#         good_elems = c(good_elems,atc_drug_q)
+#         }
+#       }else{
+#           good_elems =c(good_elems,elems$drugs)
+#       }
+#     }
+#     
+#     if(type_bool["chemical"]){
+#       if(length(chem_group)==1){
+#         if(chem_group!="ALL"){
+#           chemicals_group = chemMat[chemMat[,2] %in% chem_group,1]
+#           atc_drug_q = elems$drugs[elems$drugs %in% atc_drugs]
+#           good_elems = c(good_elems,atc_drug_q)
+#         }
+#       }
+#       else{
+#         good_elems =c(good_elems,elems$chemical)
+#       } 
+#     }
+#     
+#     
+#     FIT2 = find_items_type(colnames(ADJ_toPlot),nano,drugs,chemical,disease)
+#     items_type2=FIT2$items_type
+#     elems2 = FIT2$elems
+#     
+#     message("in plot subnetwork toMaintain (good_elems)= ",good_elems,"\n")
+#     message("in plot subnetwork toMaintain (nano)= ",elems2$nano,"\n")
+#     message("in plot subnetwork toMaintain (disease)= ",elems2$disease,"\n")
+#   
+#     toMaintain2 = c(elems2$nano,elems2$disease,unique(good_elems))
+#     
+#     message("in plot subnetwork toMaintain (SECOND)= ",toMaintain2,"\n")
+#     
+#     
+#     ADJ_toPlot = ADJ_toPlot[toMaintain2,toMaintain2]
+#     
+#     if(edges_type == "P"){
+#         ADJ_toPlot[which(ADJ_toPlot < 0)] = 0
+#     }
+#     if(edges_type == "N"){
+#         ADJ_toPlot[which(ADJ_toPlot>0)] = 0
+#     }
+#    
+#     FIT3 = find_items_type(colnames(ADJ_toPlot),nano,drugs,chemical,disease)
+#     
+#     gto_plot = graph.adjacency(adjmatrix = ADJ_toPlot,mode = "undirected",weighted = TRUE)
+#     V(gto_plot)$type = FIT3$items_type
+#     gto_plot = igraph::delete.vertices(gto_plot,which(degree(gto_plot)<1))
+#     gto_plot = igraph::simplify(gto_plot)
+#     
+#     if(DEBUGGING)
+#       cat("Data frame creation... \n")
+#     
+#     data_frame = from_igraph_to_data_frame(gto_plot)
+#     
+#     MyClickScript <- 
+#       '      d3.select(this).select("circle").transition()
+#     .duration(750)
+#     .attr("r", 30)'
+#     
+#     if(DEBUGGING){
+#       cat("Force Networks plot... \n")
+#       cat("Repulserad ",input$sub_repulserad,"\n")
+#       cat("Edges length: ",input$sub_length,"\n")
+#     }
 #     forceNetwork(Links = data_frame$edges, Nodes = data_frame$vertices,
 #                  Source = "source", Target = "target",
 #                  Value = "value", NodeID = "name",Nodesize="size",
 #                  Group = "type",zoom = TRUE,opacity = 0.95,fontSize = 10,
 #                  legend = TRUE,
 #                  clickAction = MyClickScript,
-#                  charge = -500,
-#                  linkDistance = JS(paste0("function(d){return d.value*",2,
+#                  charge = -input$sub_repulserad,
+#                  linkDistance = JS(paste0("function(d){return d.value*",input$sub_length,
 #                                           "}")))
-  })
-}
+# #     
+# #     forceNetwork(Links = data_frame$edges, Nodes = data_frame$vertices,
+# #                  Source = "source", Target = "target",
+# #                  Value = "value", NodeID = "name",Nodesize="size",
+# #                  Group = "type",zoom = TRUE,opacity = 0.95,fontSize = 10,
+# #                  legend = TRUE,
+# #                  clickAction = MyClickScript,
+# #                  charge = -500,
+# #                  linkDistance = JS(paste0("function(d){return d.value*",2,
+# #                                           "}")))
+#   })
+# }
 
-plot_subnetwork_statistics = function(input,output,ADJ_S,chemMat,good_cliques,join10){
-  #output$Subnetwork_plot_statistic = renderPlot({
-  output$Subnetwork_plot_statistic = renderPlotly({
-   if(DEBUGGING)
-      cat("STATISTICHE SOTTONETWORK...\n")
-    ADJ_toPlot = ADJ_S
-    nano_s = colnames(ADJ_S)[which(colnames(ADJ_S) %in% nano)]
-    chemical_s = colnames(ADJ_S)[which(colnames(ADJ_S) %in% chemical)]
-    drug_s = colnames(ADJ_S)[which(colnames(ADJ_S) %in% drugs)]
-    disease_s = colnames(ADJ_S)[which(colnames(ADJ_S) %in% disease)]
-    
-    chemMat_index = which(chemMat[,1] %in% chemical_s)
-    chemMat = chemMat[chemMat_index,]
-    
-    d = input$InterestingNodes
-    if(DEBUGGING)
-      cat("INTERESTING NODES: ",d,"\n")
-    
-    validate(
-      need(input$InterestingNodes != "", "SELECT A NODE!")
-    )
-    if(DEBUGGING)
-      cat("INTERESTING NODES: ",d,"\n")
-    
-    neig = lapply(X = good_cliques,FUN = function(i_cliques){
-      v_names = names(i_cliques)
-      if(sum(v_names %in% d)>0){
-        return(v_names)
-      }
-    })
-    
-    vds = unique(unlist(neig))
-    
-    edges_type = input$sub_Edges
-    if(DEBUGGING)
-      cat("Edges_type ",edges_type,"\n")
-    type = input$sub_checkGroup
-    if(DEBUGGING)
-      cat("type: ",type,"\n")
-    
-    validate(
-      need(input$sub_checkGroup != "", "Please select an object group")
-    )
-    if(DEBUGGING)
-      cat("Tipi selezionati",length(type),"\n",type,"\n")
-    ATC_code = input$sub_ATCGroup
-    if(DEBUGGING)
-      cat("ATC_code ",ATC_code,"\n")
-    
-    if(ATC_code == "ALL"){
-      ATC_code = ATC_letter_vector
-    }
-    if(DEBUGGING)
-      cat("ATC code",length(ATC_code),"\n",ATC_code,"\n")
-    
-    chem_group = input$sub_ChemicalGroup
-    if(chem_group == "ALL"){
-      chem_group = chemical_group_vector
-    }
-    if(DEBUGGING)
-      cat("Chemical Group",length(chem_group),"\n",chem_group,"\n")
-    
-    items = c() 
-    items_type = c()
-    items_lengt = c()
-    #items_color = c()
-    for(i in 1:length(type)){
-      if(type[i]=="nano"){
-        items = c(items,nano_s)
-        items_type = c(items_type,"nano")
-        items_lengt = c(items_lengt,length(nano_s))
-        #items_color = c(items_color,"pink")
-      }
-      if(type[i]=="drugs"){
-        validate(
-          need(input$sub_ATCGroup != "", "Please select an ATC group")
-        )
-        already_selected = c()
-        for(j in 1:length(ATC_code)){
-          ATC_lev1 = substr(join10$code,1,1)
-          ATC_index = which(ATC_lev1 %in% ATC_code[j])
-          new_drugs = unique(join10$name[ATC_index])
-          new_drugs = new_drugs[which(new_drugs %in% drug_s)]
-          index_new_drugs = which((new_drugs %in% already_selected)==FALSE)
-          already_selected = new_drugs[index_new_drugs]
-          
-          toRem = which(new_drugs[index_new_drugs] %in% items)
-          if(length(toRem)>0){
-            index_new_drugs = index_new_drugs[-toRem]
-          }
-          
-          items = c(items,new_drugs[index_new_drugs])
-          items_type = c(items_type,paste("Drugs ATC: ", ATC_code[j],sep=""))
-          items_lengt = c(items_lengt,length(new_drugs[index_new_drugs]))
-        }
-      }
-      if(type[i]=="chemical"){
-        validate(
-          need(input$sub_ChemicalGroup != "", "Please select a chemical group")
-        )
-        
-        already_selected = c()
-        for(j in 1:length(chem_group)){
-          chem_index = which(chemMat[,2] %in% chem_group[j])
-          new_chem = unique(chemMat[chem_index,1])
-          index_new_chem = which((new_chem %in% already_selected)==FALSE)
-          already_selected = new_chem[index_new_chem]
-          
-          toRem = which(new_chem[index_new_chem] %in% items)
-          if(length(toRem)>0){
-            index_new_chem = index_new_chem[-toRem]
-          }
-          
-          items = c(items,new_chem[index_new_chem])
-          items_type = c(items_type,paste("Chemical class: ", chem_group[j],sep=""))
-          items_lengt = c(items_lengt,length(new_chem[index_new_chem]))
-        }
-        
-      }
-      if(type[i]=="disease"){
-        good_disease = disease[disease %in% colnames(ADJ_toPlot)]
-        items = c(items,good_disease)
-        items_type = c(items_type,"disease")
-        items_lengt = c(items_lengt,length(good_disease))
-      }
-    }
-    
-    slices = items_lengt
-    idx = which(slices!=0)
-    slices = slices[idx]
-    lbls = items_type[idx]
-    
-    x_ = 1:length(lbls)
-    data_ = data.frame(slices,lbls,slices/max(slices))
-    colnames(data_) = c("Occurrency","Groups","Frequencies")
-    
-    plot_ly(data_, x = 1:length(Groups), y = Occurrency, text = Groups,
-            mode = "markers",size = Occurrency/max(Occurrency),
-            color = Frequencies)
-  })
-}
+# plot_subnetwork_statistics = function(input,output,ADJ_S,chemMat,good_cliques,join10){
+#   #output$Subnetwork_plot_statistic = renderPlot({
+#   output$Subnetwork_plot_statistic = renderPlotly({
+#    if(DEBUGGING)
+#       cat("STATISTICHE SOTTONETWORK...\n")
+#     ADJ_toPlot = ADJ_S
+#     nano_s = colnames(ADJ_S)[which(colnames(ADJ_S) %in% nano)]
+#     chemical_s = colnames(ADJ_S)[which(colnames(ADJ_S) %in% chemical)]
+#     drug_s = colnames(ADJ_S)[which(colnames(ADJ_S) %in% drugs)]
+#     disease_s = colnames(ADJ_S)[which(colnames(ADJ_S) %in% disease)]
+#     
+#     chemMat_index = which(chemMat[,1] %in% chemical_s)
+#     chemMat = chemMat[chemMat_index,]
+#     
+#     d = input$InterestingNodes
+#     if(DEBUGGING)
+#       cat("INTERESTING NODES: ",d,"\n")
+#     
+#     validate(
+#       need(input$InterestingNodes != "", "SELECT A NODE!")
+#     )
+#     if(DEBUGGING)
+#       cat("INTERESTING NODES: ",d,"\n")
+#     
+#     neig = lapply(X = good_cliques,FUN = function(i_cliques){
+#       v_names = names(i_cliques)
+#       if(sum(v_names %in% d)>0){
+#         return(v_names)
+#       }
+#     })
+#     
+#     vds = unique(unlist(neig))
+#     
+#     edges_type = input$sub_Edges
+#     if(DEBUGGING)
+#       cat("Edges_type ",edges_type,"\n")
+#     type = input$sub_checkGroup
+#     if(DEBUGGING)
+#       cat("type: ",type,"\n")
+#     
+#     validate(
+#       need(input$sub_checkGroup != "", "Please select an object group")
+#     )
+#     if(DEBUGGING)
+#       cat("Tipi selezionati",length(type),"\n",type,"\n")
+#     ATC_code = input$sub_ATCGroup
+#     if(DEBUGGING)
+#       cat("ATC_code ",ATC_code,"\n")
+#     
+#     if(ATC_code == "ALL"){
+#       ATC_code = ATC_letter_vector
+#     }
+#     if(DEBUGGING)
+#       cat("ATC code",length(ATC_code),"\n",ATC_code,"\n")
+#     
+#     chem_group = input$sub_ChemicalGroup
+#     if(chem_group == "ALL"){
+#       chem_group = chemical_group_vector
+#     }
+#     if(DEBUGGING)
+#       cat("Chemical Group",length(chem_group),"\n",chem_group,"\n")
+#     
+#     items = c() 
+#     items_type = c()
+#     items_lengt = c()
+#     #items_color = c()
+#     for(i in 1:length(type)){
+#       if(type[i]=="nano"){
+#         items = c(items,nano_s)
+#         items_type = c(items_type,"nano")
+#         items_lengt = c(items_lengt,length(nano_s))
+#         #items_color = c(items_color,"pink")
+#       }
+#       if(type[i]=="drugs"){
+#         validate(
+#           need(input$sub_ATCGroup != "", "Please select an ATC group")
+#         )
+#         already_selected = c()
+#         for(j in 1:length(ATC_code)){
+#           ATC_lev1 = substr(join10$code,1,1)
+#           ATC_index = which(ATC_lev1 %in% ATC_code[j])
+#           new_drugs = unique(join10$name[ATC_index])
+#           new_drugs = new_drugs[which(new_drugs %in% drug_s)]
+#           index_new_drugs = which((new_drugs %in% already_selected)==FALSE)
+#           already_selected = new_drugs[index_new_drugs]
+#           
+#           toRem = which(new_drugs[index_new_drugs] %in% items)
+#           if(length(toRem)>0){
+#             index_new_drugs = index_new_drugs[-toRem]
+#           }
+#           
+#           items = c(items,new_drugs[index_new_drugs])
+#           items_type = c(items_type,paste("Drugs ATC: ", ATC_code[j],sep=""))
+#           items_lengt = c(items_lengt,length(new_drugs[index_new_drugs]))
+#         }
+#       }
+#       if(type[i]=="chemical"){
+#         validate(
+#           need(input$sub_ChemicalGroup != "", "Please select a chemical group")
+#         )
+#         
+#         already_selected = c()
+#         for(j in 1:length(chem_group)){
+#           chem_index = which(chemMat[,2] %in% chem_group[j])
+#           new_chem = unique(chemMat[chem_index,1])
+#           index_new_chem = which((new_chem %in% already_selected)==FALSE)
+#           already_selected = new_chem[index_new_chem]
+#           
+#           toRem = which(new_chem[index_new_chem] %in% items)
+#           if(length(toRem)>0){
+#             index_new_chem = index_new_chem[-toRem]
+#           }
+#           
+#           items = c(items,new_chem[index_new_chem])
+#           items_type = c(items_type,paste("Chemical class: ", chem_group[j],sep=""))
+#           items_lengt = c(items_lengt,length(new_chem[index_new_chem]))
+#         }
+#         
+#       }
+#       if(type[i]=="disease"){
+#         good_disease = disease[disease %in% colnames(ADJ_toPlot)]
+#         items = c(items,good_disease)
+#         items_type = c(items_type,"disease")
+#         items_lengt = c(items_lengt,length(good_disease))
+#       }
+#     }
+#     
+#     slices = items_lengt
+#     idx = which(slices!=0)
+#     slices = slices[idx]
+#     lbls = items_type[idx]
+#     
+#     x_ = 1:length(lbls)
+#     data_ = data.frame(slices,lbls,slices/max(slices))
+#     colnames(data_) = c("Occurrency","Groups","Frequencies")
+#     
+#     plot_ly(data_, x = 1:length(Groups), y = Occurrency, text = Groups,
+#             mode = "markers",size = Occurrency/max(Occurrency),
+#             color = Frequencies)
+#   })
+# }
 
 plot_gene_subnetwork = function(input,output,ADJ_S,chemMat,good_cliques,join10,g,g_geni2){
   output$gene_Subnetwork_plot = renderForceNetwork({
-    if(DEBUGGING)
-      cat("Subnetwork plot\n")
-    ADJ_toPlot = ADJ_S
-    nano_s = colnames(ADJ_S)[which(colnames(ADJ_S) %in% nano)]
-    chemical_s = colnames(ADJ_S)[which(colnames(ADJ_S) %in% chemical)]
-    drug_s = colnames(ADJ_S)[which(colnames(ADJ_S) %in% drugs)]
-    disease_s = colnames(ADJ_S)[which(colnames(ADJ_S) %in% disease)]
+#     if(DEBUGGING)
+#       cat("Subnetwork plot\n")
+#     ADJ_toPlot = ADJ_S
+#     nano_s = colnames(ADJ_S)[which(colnames(ADJ_S) %in% nano)]
+#     chemical_s = colnames(ADJ_S)[which(colnames(ADJ_S) %in% chemical)]
+#     drug_s = colnames(ADJ_S)[which(colnames(ADJ_S) %in% drugs)]
+#     disease_s = colnames(ADJ_S)[which(colnames(ADJ_S) %in% disease)]
+#     
+#     chemMat_index = which(chemMat[,1] %in% chemical_s)
+#     chemMat = chemMat[chemMat_index,]
+#     
+#     d = input$InterestingNodes
+#     if(DEBUGGING)
+#       cat("INTERESTING NODES: ",d,"\n")
+#     
+#     validate(
+#       need(input$InterestingNodes != "", "SELECT A NODE!")
+#     )
+#     if(DEBUGGING)
+#       cat("INTERESTING NODES: ",d,"\n")
+#     
+#     neig = lapply(X = good_cliques,FUN = function(i_cliques){
+#       v_names = names(i_cliques)
+#       if(sum(v_names %in% d)>0){
+#         return(v_names)
+#       }
+#     })
+#     
+#     vds = unique(unlist(neig))
+#     
+#     edges_type = input$sub_Edges
+#     if(DEBUGGING)
+#       cat("Edges_type ",edges_type,"\n")
+#     type = input$sub_checkGroup
+#     
+#     validate(
+#       need(input$sub_checkGroup != "", "Please select an object group")
+#     )
+#     
+#     ATC_code = input$sub_ATCGroup
+#     if(ATC_code == "ALL"){
+#       ATC_code = ATC_letter_vector
+#     }
+#     chem_group = input$sub_ChemicalGroup
+#     if(chem_group == "ALL"){
+#       chem_group = chemical_group_vector
+#     }
+#     
+#     items = c() 
+#     items_type = c()
+#     items_lengt = c()
+#     #items_color = c()
+#     for(i in 1:length(type)){
+#       if(type[i]=="nano"){
+#         items = c(items,nano_s)
+#         items_type = c(items_type,"nano")
+#         items_lengt = c(items_lengt,length(nano_s))
+#         #items_color = c(items_color,"pink")
+#       }
+#       if(type[i]=="drugs"){
+#         validate(
+#           need(input$sub_ATCGroup != "", "Please select an ATC group")
+#         )
+#         already_selected = c()
+#         for(j in 1:length(ATC_code)){
+#           ATC_lev1 = substr(join10$code,1,1)
+#           ATC_index = which(ATC_lev1 %in% ATC_code[j])
+#           new_drugs = unique(join10$name[ATC_index])
+#           new_drugs = new_drugs[which(new_drugs %in% drug_s)]
+#           index_new_drugs = which((new_drugs %in% already_selected)==FALSE)
+#           already_selected = new_drugs[index_new_drugs]
+#           
+#           toRem = which(new_drugs[index_new_drugs] %in% items)
+#           if(length(toRem)>0){
+#             index_new_drugs = index_new_drugs[-toRem]
+#           }
+#           
+#           items = c(items,new_drugs[index_new_drugs])
+#           items_type = c(items_type,paste("Drugs ATC: ", ATC_code[j],sep=""))
+#           items_lengt = c(items_lengt,length(new_drugs[index_new_drugs]))
+#         }
+#       }
+#       if(type[i]=="chemical"){
+#         validate(
+#           need(input$sub_ChemicalGroup != "", "Please select a chemical group")
+#         )
+#         
+#         already_selected = c()
+#         for(j in 1:length(chem_group)){
+#           chem_index = which(chemMat[,2] %in% chem_group[j])
+#           new_chem = unique(chemMat[chem_index,1])
+#           index_new_chem = which((new_chem %in% already_selected)==FALSE)
+#           already_selected = new_chem[index_new_chem]
+#           
+#           toRem = which(new_chem[index_new_chem] %in% items)
+#           if(length(toRem)>0){
+#             index_new_chem = index_new_chem[-toRem]
+#           }
+#           items = c(items,new_chem[index_new_chem])
+#           items_type = c(items_type,paste("Chemical class: ", chem_group[j],sep=""))
+#           items_lengt = c(items_lengt,length(new_chem[index_new_chem]))
+#         }
+#       }
+#       if(type[i]=="disease"){
+#         good_disease = disease[disease %in% colnames(ADJ_toPlot)]
+#         items = c(items,good_disease)
+#         items_type = c(items_type,"disease")
+#         items_lengt = c(items_lengt,length(good_disease))
+#       }
+#     }
     
-    chemMat_index = which(chemMat[,1] %in% chemical_s)
-    chemMat = chemMat[chemMat_index,]
+    nodes = input$NodesOfInterest
+    ATC_g  = input$sub_ATCGroup
+    chem_g = input$sub_ChemicalGroup
     
-    d = input$InterestingNodes
-    if(DEBUGGING)
-      cat("INTERESTING NODES: ",d,"\n")
+    Elems = unique(unlist(good_cliques))
+    nElems = length(Elems)
+    FIT = find_items_type(Elems,nano,drugs,chemical,disease)
+    items_type=FIT$items_type
+    items_subtype=FIT$items_subtype
     
-    validate(
-      need(input$InterestingNodes != "", "SELECT A NODE!")
-    )
-    if(DEBUGGING)
-      cat("INTERESTING NODES: ",d,"\n")
-    
-    neig = lapply(X = good_cliques,FUN = function(i_cliques){
-      v_names = names(i_cliques)
-      if(sum(v_names %in% d)>0){
-        return(v_names)
-      }
-    })
-    
-    vds = unique(unlist(neig))
-    
-    edges_type = input$sub_Edges
-    if(DEBUGGING)
-      cat("Edges_type ",edges_type,"\n")
-    type = input$sub_checkGroup
-    
-    validate(
-      need(input$sub_checkGroup != "", "Please select an object group")
-    )
-    
-    ATC_code = input$sub_ATCGroup
-    if(ATC_code == "ALL"){
-      ATC_code = ATC_letter_vector
-    }
-    chem_group = input$sub_ChemicalGroup
-    if(chem_group == "ALL"){
-      chem_group = chemical_group_vector
-    }
-    
-    items = c() 
-    items_type = c()
-    items_lengt = c()
-    #items_color = c()
-    for(i in 1:length(type)){
-      if(type[i]=="nano"){
-        items = c(items,nano_s)
-        items_type = c(items_type,"nano")
-        items_lengt = c(items_lengt,length(nano_s))
-        #items_color = c(items_color,"pink")
-      }
-      if(type[i]=="drugs"){
-        validate(
-          need(input$sub_ATCGroup != "", "Please select an ATC group")
-        )
-        already_selected = c()
-        for(j in 1:length(ATC_code)){
-          ATC_lev1 = substr(join10$code,1,1)
-          ATC_index = which(ATC_lev1 %in% ATC_code[j])
-          new_drugs = unique(join10$name[ATC_index])
-          new_drugs = new_drugs[which(new_drugs %in% drug_s)]
-          index_new_drugs = which((new_drugs %in% already_selected)==FALSE)
-          already_selected = new_drugs[index_new_drugs]
-          
-          toRem = which(new_drugs[index_new_drugs] %in% items)
-          if(length(toRem)>0){
-            index_new_drugs = index_new_drugs[-toRem]
-          }
-          
-          items = c(items,new_drugs[index_new_drugs])
-          items_type = c(items_type,paste("Drugs ATC: ", ATC_code[j],sep=""))
-          items_lengt = c(items_lengt,length(new_drugs[index_new_drugs]))
-        }
-      }
-      if(type[i]=="chemical"){
-        validate(
-          need(input$sub_ChemicalGroup != "", "Please select a chemical group")
-        )
+    idx_cliques = c()
+    for(i in 1:length(good_cliques)){
+      nodes_ = FALSE
+      drug_ = FALSE
+      chem_ = FALSE
+      
+      clique_elem = names(good_cliques[[i]])
+      if(sum(nodes %in% clique_elem)>0){
+        nodes_ = TRUE
         
-        already_selected = c()
-        for(j in 1:length(chem_group)){
-          chem_index = which(chemMat[,2] %in% chem_group[j])
-          new_chem = unique(chemMat[chem_index,1])
-          index_new_chem = which((new_chem %in% already_selected)==FALSE)
-          already_selected = new_chem[index_new_chem]
-          
-          toRem = which(new_chem[index_new_chem] %in% items)
-          if(length(toRem)>0){
-            index_new_chem = index_new_chem[-toRem]
+        if("ALL" %in% ATC_g){
+          drug_ =TRUE
+        }else{
+          idx_drug = clique_elem[which(clique_elem %in% drugs)]
+          if(length(idx_drug)>0){
+            drug_sub_idx = which(names(items_subtype) %in% idx_drug)
+            ATC_gg = strsplit(x=gsub(pattern = "Drug ATC code: ",x = items_subtype[drug_sub_idx],replacement = ""),";")
+            if(sum(ATC_g %in% ATC_gg)>0){
+              drug_ = TRUE
+            }
+          }else{ # drug non presente nella clique, quindi la prendo lo stesso
+            drug_ = TRUE
           }
-          items = c(items,new_chem[index_new_chem])
-          items_type = c(items_type,paste("Chemical class: ", chem_group[j],sep=""))
-          items_lengt = c(items_lengt,length(new_chem[index_new_chem]))
+        }
+        if("ALL" %in% chem_g){
+          chem_ = TRUE
+        }else{
+          idx_chem = clique_elem[which(clique_elem %in% chemical)]
+          if(length(idx_chem)>0){
+            chem_sub_idx = which(names(items_subtype) %in% idx_chem)
+            if(sum(chem_g %in% items_subtype[chem_sub_idx])>0){
+              chem_ = TRUE
+            }
+          }else{ # drug non presente nella clique, quindi la prendo lo stesso
+            chem_ = TRUE
+          }
+        }
+        if(nodes_ && drug_ && chem_){
+          idx_cliques = c(idx_cliques,i)
         }
       }
-      if(type[i]=="disease"){
-        good_disease = disease[disease %in% colnames(ADJ_toPlot)]
-        items = c(items,good_disease)
-        items_type = c(items_type,"disease")
-        items_lengt = c(items_lengt,length(good_disease))
-      }
+      #     if(nodes_){
+      #       cat("i: ",i," nodes: ",nodes, " nodes_: ",nodes_," ATC_g: ",ATC_g," drug_: ",drug_," chem_g ",chem_g," chem_: ",chem_,"\n")
+      #       
+      #     }
+      
     }
+    validate(need(length(idx_cliques)!=0,"No one of the nodes of interest is in the cliques!"))
+    
+    good_cliques = good_cliques[idx_cliques]
+    
+    if(DEBUGGING){
+      message("In plot subnetwork and statistics:: nodes",nodes,"\n")
+    }
+    
+    validate(need(nodes!="","Please select one or more nodes of interest!"))
+    
+    Elems = unique(unlist(good_cliques))
+    nElems = length(Elems)
+    
+#     adj_cliques_mat = matrix(0,nElems,nElems)
+#     colnames(adj_cliques_mat) = rownames(adj_cliques_mat)=unique(unlist(good_cliques))
+#     
+#     for(i in good_cliques){
+#       adj_cliques_mat[names(i),names(i)] = 1
+#     }
+#     
+#     diag(adj_cliques_mat) = 0
+#     
+#     FIT = find_items_type(colnames(adj_cliques_mat),nano,drugs,chemical,disease)
+#     items_type=FIT$items_type
+#     elems = FIT$elems
     
     idx_g = which(V(g)$node_type == "gene")
     GMAT = igraph::get.adjacency(g)
-    genes_items_interaction = rowSums(as.matrix(GMAT[idx_g,items]))
+    genes_items_interaction = rowSums(as.matrix(GMAT[idx_g,Elems]))
     GG_genes = rownames(GMAT)[which(genes_items_interaction>0)]
-    idx_gg = which(GG_genes %in% V(g_geni2)$name)
-    geni_toPlot = igraph::induced.subgraph(g_geni2,GG_genes[idx_gg])
+
+    x <- org.Hs.egSYMBOL
+    # Get the gene symbol that are mapped to an entrez gene identifiers
+    mapped_genes <- mappedkeys(x)
+    # Convert to a list
+    xx <- as.list(x[mapped_genes])
+    entrez = gsub(x = GG_genes,pattern = "_at",replacement = "")
+    xx[entrez] -> MYSYMBOL
+
+    idx_gg = which(MYSYMBOL %in% V(g_geni2)$name)
+    geni_toPlot = igraph::induced.subgraph(g_geni2,unlist(MYSYMBOL[idx_gg]))
     geni_toPlot = igraph::delete.vertices(geni_toPlot,which(igraph::degree(geni_toPlot)<1))
     
     validate(
@@ -943,8 +1256,7 @@ plot_gene_subnetwork = function(input,output,ADJ_S,chemMat,good_cliques,join10,g
     edges$value = as.integer(edges$value)
     
     MyClickScript <- 
-      '      d3.select(this).select("circle").transition()
-    .duration(750)
+      '      d3.select(this).select("circle").transition().duration(750)
     .attr("r", 30)'
     
     forceNetwork(Links = edges, Nodes = vertices,
@@ -960,132 +1272,210 @@ plot_gene_subnetwork = function(input,output,ADJ_S,chemMat,good_cliques,join10,g
 }
 
 plot_gene_subnetwork_statistics = function(input,output,ADJ_S,chemMat,good_cliques,join10,g,g_geni2){
-  #output$gene_Subnetwork_plot_statistics = renderPlot({
-  output$gene_Subnetwork_plot_statistics = renderPlotly({
+  output$gene_Subnetwork_plot_statistics = renderPlot({
+  #output$gene_Subnetwork_plot_statistics = renderPlotly({
     
-    if(DEBUGGING)
-      cat("Subnetwork plot\n")
-    ADJ_toPlot = ADJ_S
-    nano_s = colnames(ADJ_S)[which(colnames(ADJ_S) %in% nano)]
-    chemical_s = colnames(ADJ_S)[which(colnames(ADJ_S) %in% chemical)]
-    drug_s = colnames(ADJ_S)[which(colnames(ADJ_S) %in% drugs)]
-    disease_s = colnames(ADJ_S)[which(colnames(ADJ_S) %in% disease)]
+#     if(DEBUGGING)
+#       cat("Subnetwork plot\n")
+#     ADJ_toPlot = ADJ_S
+#     nano_s = colnames(ADJ_S)[which(colnames(ADJ_S) %in% nano)]
+#     chemical_s = colnames(ADJ_S)[which(colnames(ADJ_S) %in% chemical)]
+#     drug_s = colnames(ADJ_S)[which(colnames(ADJ_S) %in% drugs)]
+#     disease_s = colnames(ADJ_S)[which(colnames(ADJ_S) %in% disease)]
+#     
+#     chemMat_index = which(chemMat[,1] %in% chemical_s)
+#     chemMat = chemMat[chemMat_index,]
+#     
+#     d = input$InterestingNodes
+#     if(DEBUGGING)
+#       cat("INTERESTING NODES: ",d,"\n")
+#     
+#     validate(
+#       need(input$InterestingNodes != "", "SELECT A NODE!")
+#     )
+#     if(DEBUGGING)
+#       cat("INTERESTING NODES: ",d,"\n")
+#     
+#     neig = lapply(X = good_cliques,FUN = function(i_cliques){
+#       v_names = names(i_cliques)
+#       if(sum(v_names %in% d)>0){
+#         return(v_names)
+#       }
+#     })
+#     
+#     vds = unique(unlist(neig))
+#     
+#     edges_type = input$sub_Edges
+#     if(DEBUGGING)
+#       cat("Edges_type ",edges_type,"\n")
+#     type = input$sub_checkGroup
+#     
+#     validate(
+#       need(input$sub_checkGroup != "", "Please select an object group")
+#     )
+#     
+#     ATC_code = input$sub_ATCGroup
+#     if(ATC_code == "ALL"){
+#       ATC_code = ATC_letter_vector
+#     }
+#     chem_group = input$sub_ChemicalGroup
+#     if(chem_group == "ALL"){
+#       chem_group = chemical_group_vector
+#     }
+#     
+#     items = c() 
+#     items_type = c()
+#     items_lengt = c()
+#     #items_color = c()
+#     for(i in 1:length(type)){
+#       if(type[i]=="nano"){
+#         items = c(items,nano_s)
+#         items_type = c(items_type,"nano")
+#         items_lengt = c(items_lengt,length(nano_s))
+#         #items_color = c(items_color,"pink")
+#       }
+#       if(type[i]=="drugs"){
+#         validate(
+#           need(input$sub_ATCGroup != "", "Please select an ATC group")
+#         )
+#         already_selected = c()
+#         for(j in 1:length(ATC_code)){
+#           ATC_lev1 = substr(join10$code,1,1)
+#           ATC_index = which(ATC_lev1 %in% ATC_code[j])
+#           new_drugs = unique(join10$name[ATC_index])
+#           new_drugs = new_drugs[which(new_drugs %in% drug_s)]
+#           index_new_drugs = which((new_drugs %in% already_selected)==FALSE)
+#           already_selected = new_drugs[index_new_drugs]
+#           
+#           toRem = which(new_drugs[index_new_drugs] %in% items)
+#           if(length(toRem)>0){
+#             index_new_drugs = index_new_drugs[-toRem]
+#           }
+#           
+#           items = c(items,new_drugs[index_new_drugs])
+#           items_type = c(items_type,paste("Drugs ATC: ", ATC_code[j],sep=""))
+#           items_lengt = c(items_lengt,length(new_drugs[index_new_drugs]))
+#         }
+#       }
+#       if(type[i]=="chemical"){
+#         validate(
+#           need(input$sub_ChemicalGroup != "", "Please select a chemical group")
+#         )
+#         
+#         already_selected = c()
+#         for(j in 1:length(chem_group)){
+#           chem_index = which(chemMat[,2] %in% chem_group[j])
+#           new_chem = unique(chemMat[chem_index,1])
+#           index_new_chem = which((new_chem %in% already_selected)==FALSE)
+#           already_selected = new_chem[index_new_chem]
+#           
+#           toRem = which(new_chem[index_new_chem] %in% items)
+#           if(length(toRem)>0){
+#             index_new_chem = index_new_chem[-toRem]
+#           }
+#           items = c(items,new_chem[index_new_chem])
+#           items_type = c(items_type,paste("Chemical class: ", chem_group[j],sep=""))
+#           items_lengt = c(items_lengt,length(new_chem[index_new_chem]))
+#         }
+#       }
+#       if(type[i]=="disease"){
+#         good_disease = disease[disease %in% colnames(ADJ_toPlot)]
+#         items = c(items,good_disease)
+#         items_type = c(items_type,"disease")
+#         items_lengt = c(items_lengt,length(good_disease))
+#       }
+#     }
     
-    chemMat_index = which(chemMat[,1] %in% chemical_s)
-    chemMat = chemMat[chemMat_index,]
+    nodes = input$NodesOfInterest
+    ATC_g  = input$sub_ATCGroup
+    chem_g = input$sub_ChemicalGroup
     
-    d = input$InterestingNodes
-    if(DEBUGGING)
-      cat("INTERESTING NODES: ",d,"\n")
+    Elems = unique(unlist(good_cliques))
+    nElems = length(Elems)
+    FIT = find_items_type(Elems,nano,drugs,chemical,disease)
+    items_type=FIT$items_type
+    items_subtype=FIT$items_subtype
     
-    validate(
-      need(input$InterestingNodes != "", "SELECT A NODE!")
-    )
-    if(DEBUGGING)
-      cat("INTERESTING NODES: ",d,"\n")
-    
-    neig = lapply(X = good_cliques,FUN = function(i_cliques){
-      v_names = names(i_cliques)
-      if(sum(v_names %in% d)>0){
-        return(v_names)
-      }
-    })
-    
-    vds = unique(unlist(neig))
-    
-    edges_type = input$sub_Edges
-    if(DEBUGGING)
-      cat("Edges_type ",edges_type,"\n")
-    type = input$sub_checkGroup
-    
-    validate(
-      need(input$sub_checkGroup != "", "Please select an object group")
-    )
-    
-    ATC_code = input$sub_ATCGroup
-    if(ATC_code == "ALL"){
-      ATC_code = ATC_letter_vector
-    }
-    chem_group = input$sub_ChemicalGroup
-    if(chem_group == "ALL"){
-      chem_group = chemical_group_vector
-    }
-    
-    items = c() 
-    items_type = c()
-    items_lengt = c()
-    #items_color = c()
-    for(i in 1:length(type)){
-      if(type[i]=="nano"){
-        items = c(items,nano_s)
-        items_type = c(items_type,"nano")
-        items_lengt = c(items_lengt,length(nano_s))
-        #items_color = c(items_color,"pink")
-      }
-      if(type[i]=="drugs"){
-        validate(
-          need(input$sub_ATCGroup != "", "Please select an ATC group")
-        )
-        already_selected = c()
-        for(j in 1:length(ATC_code)){
-          ATC_lev1 = substr(join10$code,1,1)
-          ATC_index = which(ATC_lev1 %in% ATC_code[j])
-          new_drugs = unique(join10$name[ATC_index])
-          new_drugs = new_drugs[which(new_drugs %in% drug_s)]
-          index_new_drugs = which((new_drugs %in% already_selected)==FALSE)
-          already_selected = new_drugs[index_new_drugs]
-          
-          toRem = which(new_drugs[index_new_drugs] %in% items)
-          if(length(toRem)>0){
-            index_new_drugs = index_new_drugs[-toRem]
-          }
-          
-          items = c(items,new_drugs[index_new_drugs])
-          items_type = c(items_type,paste("Drugs ATC: ", ATC_code[j],sep=""))
-          items_lengt = c(items_lengt,length(new_drugs[index_new_drugs]))
-        }
-      }
-      if(type[i]=="chemical"){
-        validate(
-          need(input$sub_ChemicalGroup != "", "Please select a chemical group")
-        )
+    idx_cliques = c()
+    for(i in 1:length(good_cliques)){
+      nodes_ = FALSE
+      drug_ = FALSE
+      chem_ = FALSE
+      
+      clique_elem = names(good_cliques[[i]])
+      if(sum(nodes %in% clique_elem)>0){
+        nodes_ = TRUE
         
-        already_selected = c()
-        for(j in 1:length(chem_group)){
-          chem_index = which(chemMat[,2] %in% chem_group[j])
-          new_chem = unique(chemMat[chem_index,1])
-          index_new_chem = which((new_chem %in% already_selected)==FALSE)
-          already_selected = new_chem[index_new_chem]
-          
-          toRem = which(new_chem[index_new_chem] %in% items)
-          if(length(toRem)>0){
-            index_new_chem = index_new_chem[-toRem]
+        if("ALL" %in% ATC_g){
+          drug_ =TRUE
+        }else{
+          idx_drug = clique_elem[which(clique_elem %in% drugs)]
+          if(length(idx_drug)>0){
+            drug_sub_idx = which(names(items_subtype) %in% idx_drug)
+            ATC_gg = strsplit(x=gsub(pattern = "Drug ATC code: ",x = items_subtype[drug_sub_idx],replacement = ""),";")
+            if(sum(ATC_g %in% ATC_gg)>0){
+              drug_ = TRUE
+            }
+          }else{ # drug non presente nella clique, quindi la prendo lo stesso
+            drug_ = TRUE
           }
-          items = c(items,new_chem[index_new_chem])
-          items_type = c(items_type,paste("Chemical class: ", chem_group[j],sep=""))
-          items_lengt = c(items_lengt,length(new_chem[index_new_chem]))
+        }
+        if("ALL" %in% chem_g){
+          chem_ = TRUE
+        }else{
+          idx_chem = clique_elem[which(clique_elem %in% chemical)]
+          if(length(idx_chem)>0){
+            chem_sub_idx = which(names(items_subtype) %in% idx_chem)
+            if(sum(chem_g %in% items_subtype[chem_sub_idx])>0){
+              chem_ = TRUE
+            }
+          }else{ # drug non presente nella clique, quindi la prendo lo stesso
+            chem_ = TRUE
+          }
+        }
+        if(nodes_ && drug_ && chem_){
+          idx_cliques = c(idx_cliques,i)
         }
       }
-      if(type[i]=="disease"){
-        good_disease = disease[disease %in% colnames(ADJ_toPlot)]
-        items = c(items,good_disease)
-        items_type = c(items_type,"disease")
-        items_lengt = c(items_lengt,length(good_disease))
-      }
+      #     if(nodes_){
+      #       cat("i: ",i," nodes: ",nodes, " nodes_: ",nodes_," ATC_g: ",ATC_g," drug_: ",drug_," chem_g ",chem_g," chem_: ",chem_,"\n")
+      #       
+      #     }
+      
     }
+    validate(need(length(idx_cliques)!=0,"No one of the nodes of interest is in the cliques!"))
+    
+    good_cliques = good_cliques[idx_cliques]
+    
+    if(DEBUGGING){
+      message("In plot subnetwork and statistics:: nodes",nodes,"\n")
+    }
+    
+    validate(need(nodes!="","Please select one or more nodes of interest!"))
+    
+    Elems = unique(unlist(good_cliques))
+    nElems = length(Elems)
     
     idx_g = which(V(g)$node_type == "gene")
     GMAT = igraph::get.adjacency(g)
-    genes_items_interaction = rowSums(as.matrix(GMAT[idx_g,items]))
+    genes_items_interaction = rowSums(as.matrix(GMAT[idx_g,Elems]))
     GG_genes = rownames(GMAT)[which(genes_items_interaction>0)]
-    idx_gg = which(GG_genes %in% V(g_geni2)$name)
-    geni_toPlot = igraph::induced.subgraph(g_geni2,GG_genes[idx_gg])
+    
+    x <- org.Hs.egSYMBOL
+    # Get the gene symbol that are mapped to an entrez gene identifiers
+    mapped_genes <- mappedkeys(x)
+    # Convert to a list
+    xx <- as.list(x[mapped_genes])
+    entrez = gsub(x = GG_genes,pattern = "_at",replacement = "")
+    xx[entrez] -> MYSYMBOL
+    
+    idx_gg = which(MYSYMBOL %in% V(g_geni2)$name)
+    geni_toPlot = igraph::induced.subgraph(g_geni2,unlist(MYSYMBOL[idx_gg]))
     geni_toPlot = igraph::delete.vertices(geni_toPlot,which(igraph::degree(geni_toPlot)<1))
     
     validate(
       need(vcount(geni_toPlot)>0, "Empty Network")
     )
-    
     
     data_frame = get.data.frame(x = geni_toPlot,what = "both")
     edges = data_frame$edges
@@ -1113,32 +1503,25 @@ plot_gene_subnetwork_statistics = function(input,output,ADJ_S,chemMat,good_cliqu
     slices = as.numeric(table(vertices$group))
     lbls = names(table(vertices$group))  
     
-    message("in plotting gene subnetwork statistics --> lbls", lbls,"\n")
-    
-#     pie(slices, labels = lbls, main="Network statistics",col = rainbow(length(slices)),
-#         radius = 1,cex = 0.7,las=1)
-    
-#     idx = which(slices!=0)
-#     slices = slices[idx]
-#     lbls = items_type[idx]
-    
-    #data_ = data.frame(rep(slices,slices),rep(lbls,slices))
+#     message("in plotting gene subnetwork statistics --> lbls", lbls,"\n")
+# 
+#     data_ = data.frame(slices,lbls,slices/max(slices))
+#     colnames(data_) = c("Occurrency","Groups","Frequencies")
+#     
+#     plot_ly(data_, x = 1:length(Groups), y = Occurrency, text = Groups,
+#             mode = "markers",size = Occurrency/max(Occurrency),
+#             color = Frequencies)
+#     
+#     slices = as.numeric(table(FIT$items_subtype))
+#     lbls = names(table(FIT$items_subtype))
     data_ = data.frame(slices,lbls,slices/max(slices))
     colnames(data_) = c("Occurrency","Groups","Frequencies")
     
-    #barplot con plotry
-#     gg = ggplot(data_, aes(slices,fill = lbls)) + geom_bar()
-#     # Convert the ggplot to a plotly
-#     p <- ggplotly(gg)
-#     p
+    p =  ggplot(data_, aes(x =Occurrency , y = Groups)) +
+      geom_point(aes(size = Occurrency, colour = Occurrency))  
+    #theme(axis.text.x = element_text(angle = 90))
+    print(p)
     
-    plot_ly(data_, x = 1:length(Groups), y = Occurrency, text = Groups,
-            mode = "markers",size = Occurrency/max(Occurrency),
-            color = Frequencies)
-    
-#     d <- diamonds[sample(nrow(diamonds), 500), ]
-#     plot_ly(d, x = carat, y = price, text = paste("Clarity: ", clarity),
-#             mode = "markers", color = carat, size = carat)
     
   })
 }

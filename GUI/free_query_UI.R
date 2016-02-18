@@ -72,7 +72,7 @@ free_query_UI_refresh = function(input,output){
 free_query_UI_node_of_interest_output = function(input,output,disease_list){
 
   output$NodesOfInterest <- renderUI({
-    selectInput("InterestingNodes",label = "Node of Interest",multiple = TRUE,choices = disease_list,selected = disease_list[[1]])
+    selectInput("NodesOfInterest",label = "Node of Interest",multiple = TRUE,choices = disease_list,selected = disease_list[[1]])
   })
   
   output$NodesOfInterest_totale <- renderUI({

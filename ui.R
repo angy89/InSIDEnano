@@ -277,19 +277,19 @@ shinyUI(navbarPage("",
                               tabPanel("Items Subnetwork", 
                                        sidebarPanel(
                                          fluidRow(column(12,uiOutput("NodesOfInterest"))),
-                                         fluidRow(
-                                           column(12, checkboxGroupInput("sub_checkGroup", 
-                                                                         label = "Object Network", 
-                                                                         choices = list("Nanomaterials" = "nano", 
-                                                                                        "Drugs" = "drugs", "Chemical" = "chemical",
-                                                                                        "Disease" = "disease"),selected = c("nano","drugs","disease")))
-                                         ),
-                                         fluidRow(column(12,selectInput("sub_Edges",
-                                                                        label="Select the type of edges",
-                                                                        choices = list("Positive" = "P",
-                                                                                       "Negative" = "N",
-                                                                                       "Both" = "B"),selected="B"))
-                                         ),
+#                                          fluidRow(
+#                                            column(12, checkboxGroupInput("sub_checkGroup", 
+#                                                                          label = "Object Network", 
+#                                                                          choices = list("Nanomaterials" = "nano", 
+#                                                                                         "Drugs" = "drugs", "Chemical" = "chemical",
+#                                                                                         "Disease" = "disease"),selected = c("nano","drugs","disease")))
+#                                          ),
+#                                          fluidRow(column(12,selectInput("sub_Edges",
+#                                                                         label="Select the type of edges",
+#                                                                         choices = list("Positive" = "P",
+#                                                                                        "Negative" = "N",
+#                                                                                        "Both" = "B"),selected="B"))
+#                                          ),
                                          fluidRow(
                                            column(12, selectInput("sub_ATCGroup", 
                                                                   label ="Drugs ATC code", multiple = TRUE,
@@ -316,12 +316,12 @@ shinyUI(navbarPage("",
                                                    tabPanel("Items Subnetwork", 
                                                             wellPanel(forceNetworkOutput("Subnetwork_plot")),
                                                             #wellPanel(plotOutput("dig_dist")),       
-                                                            wellPanel(plotlyOutput("Subnetwork_plot_statistic",width = "100%",height = 500))
+                                                            wellPanel(plotOutput("Subnetwork_plot_statistic",width = "100%",height = 500))
                                                             
                                                    ), 
                                                    tabPanel("Genes", 
                                                             wellPanel(forceNetworkOutput("gene_Subnetwork_plot")),
-                                                            wellPanel(plotlyOutput("gene_Subnetwork_plot_statistics",width = "100%"))
+                                                            wellPanel(plotOutput("gene_Subnetwork_plot_statistics",width = "100%",height = 800))
                                                             
                                                    )
                                                  )

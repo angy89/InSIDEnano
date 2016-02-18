@@ -77,7 +77,9 @@ free_query = function(input,output,disease_list,selected_nodes,W_ADJ,th_p = inpu
     if(DEBUGGING){
       cat("Plotting barplot for cliques\n")
     }
-    barplot_patter_output(input,output,MList,graph_gw) #in query_outputs.R
+    #barplot_patter_output(input,output,MList,graph_gw) #in query_outputs.R
+    barplot_patter_conditional_query_input(input,output,MList)
+    barplot_pattern_conditional_query(input,output,MList)
     if(DEBUGGING){
       cat("Preparing genes data table\n")
     }

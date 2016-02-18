@@ -342,8 +342,12 @@ generate_g_cliques = function(input,output,graph_s,proxy,MM_list,MList){
 
 barplot_patter_conditional_query_input = function(input,output,MList){
   output$bubbleCoupleChoice = renderUI({
+  
   type = input$NetworkPattern #type of clique
   type = as.integer(gsub(pattern = "M",x =type,replacement = ""))
+  
+  validate(need(type!="","Please select a pattern type!"))
+  
   Mi = MList[[type]]
   Mi = as.data.frame(Mi)
   colnames(Mi)=c("Disease","Nano","Drug","Chemical")
@@ -364,6 +368,7 @@ barplot_pattern_conditional_query = function(input,output,MList){
   output$trendPlot <- renderPlot({#renderPlotly({
     type = input$NetworkPattern #type of clique
     type = as.integer(gsub(pattern = "M",x =type,replacement = ""))
+    validate(need(type!="","Please select a pattern type!"))
     
     Mi = MList[[type]]
     Mi = as.data.frame(Mi)

@@ -162,9 +162,9 @@ conditional_query = function(input,output,disease_list,selected_nodes,W_ADJ,th_p
     
     LOG_CONDITIONAL = as.matrix(LOG_CONDITIONAL)
     LOG_CONDITIONAL = rbind(LOG_CONDITIONAL,c(paste(c(input$nano_input,""),collapse="_"),
-                                              "",
+                                              paste(c(input$drug_input,""),collapse="_"),
                                               paste(c(input$disease_input,""),collapse="_"),
-                                              "",
+                                              paste(c(input$chemical_input,""),collapse="_"),
                                               input$th_slider2,input$percentuale_somma,input$nroCliques,input$clique_type,paste(log_counter,".RData",sep="")))
     cat("New row to add to the log\n")
     cat("Row--> ",c(paste(c(input$nano_input,""),collapse="_"),

@@ -64,22 +64,27 @@ find_items_type = function(items,nano,drugs,chemical,disease){
   items_subtype = c()
   for(i in items){
     if(i %in% nano){
-      items_subtype = c(items_subtype,"NC")
+      items_subtype = c(items_subtype,"Nano")
       next
     }
     if(i %in% disease){
-      items_subtype = c(items_subtype,"NC")
+      items_subtype = c(items_subtype,"Disease")
       next
     }
     if(i %in% drugs){
       idx = which(join10$name %in% i)
-      code = paste(join10[idx,]$ATC1,collapse = ";")
+      code = paste(unique(join10[idx,]$ATC_lev1),collapse = ";")
+      code = paste("Drug ATC code: ",code,sep="")
       items_subtype = c(items_subtype,code)
       next
     }
     if(i %in% chemical){
       idx = which(chemMat[,1] %in% i)
-      code = paste(chemMat[idx,2],collapse = ";")
+      if(length(idx)==0){
+        code = "Chemical - Unknown subcategory"
+      }else{
+        code = paste(unique(chemMat[idx,2]),collapse = ";")
+      }
       items_subtype = c(items_subtype,code)
       next
     }
@@ -913,7 +918,10 @@ load_query_from_table = function(input,output,LOG_CONDITIONAL,items_list){
     load(file = RData_file)
     
     output$info2_1 <- renderUI({HTML(info_text)}) 
-    free_query_UI_node_of_interest_output(input,output,disease_list) #in free_query_UI.R
+    
+    output$NodesOfInterest <- renderUI({
+      selectInput("NodesOfInterest",label = "Node of Interest",multiple = TRUE,choices = disease_list,selected = disease_list[[1]])
+    })
     
     output$extimatedTime = renderUI({
       HTML(paste("How to estimate iteration:  O(n^k * k^2) where n is the number of nodes and k is the clique size<br/> <strong>Estimated Iteration: ",estimated_tyme,"<strong/><br/>"))
@@ -965,6 +973,14 @@ load_query_from_table = function(input,output,LOG_CONDITIONAL,items_list){
     
     plot_force_based_subnetwork_query_resutls(input,output,ADJ_S,chemMat,good_cliques,join10) #in qury_outputs.R
     plot_subnetwork_statistics(input,output,ADJ_S,chemMat,good_cliques,join10)#in qury_outputs.R
+#     if(DEBUGGING){
+#       message("Sto per chiamare plot_subnetwork_and_statistics\n")
+#     }
+#     plot_subnetwork_and_statistics(input,output,good_cliques)
+#      
+#      if(DEBUGGING){
+#        message("Ho chiamato plot_subnetwork_and_statistics\n")
+#      }
     plot_gene_subnetwork(input,output,ADJ_S,chemMat,good_cliques,join10,g,g_geni2)#in qury_outputs.R
     plot_gene_subnetwork_statistics(input,output,ADJ_S,chemMat,good_cliques,join10,g,g_geni2)#in qury_outputs.R
     
