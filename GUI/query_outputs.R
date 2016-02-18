@@ -172,7 +172,11 @@ genes_data_table_output = function(input,output,MList,MM_list,proxy,graph_s,g,g_
     
     for(row_i in 1:dim(GENE_INFO)[1]){
       #for(col_j in 1:dim(GENE_INFO)[2]){
-      GENE_INFO[row_i,1] = paste('<a target="_blank" href=\"https://www.google.com/?q=',GENE_INFO[row_i,1],'">',GENE_INFO[row_i,1],'</a>',sep="")
+      
+      #http://www.genecards.org/cgi-bin/carddisp.pl?gene=TFPI2
+      GENE_INFO[row_i,1] = paste('<a target="_blank" href=\"http://www.genecards.org/cgi-bin/carddisp.pl?gene=',GENE_INFO[row_i,1],'">',GENE_INFO[row_i,1],'</a>',sep="")
+      
+      #GENE_INFO[row_i,1] = paste('<a target="_blank" href=\"https://www.google.com/?q=',GENE_INFO[row_i,1],'">',GENE_INFO[row_i,1],'</a>',sep="")
       #}
       for(i in vids){
         if(i %in% disease){
