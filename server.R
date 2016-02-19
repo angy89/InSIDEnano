@@ -171,6 +171,12 @@ shinyServer(function(input, output,session){
         
       })
       
+      word2<-eventReactive(input$wordButton, {input$text})
+      
+      pubmed_search(input,output,word2)
+        
+      
+      
       #       observeEvent(input$Go3, {
       #         if(DEBUGGING) cat("GENE QUERY\n")
       #         gene_query(input,output,disease_list,selected_nodes,W_ADJ,th_p = input$th_slider3/100,node_type,chemMat,join10,g,g_geni2,gene_input)

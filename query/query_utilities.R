@@ -1,3 +1,133 @@
+pubmed_search = function(input,output,word2){
+  output$articleTable<-DT::renderDataTable({
+    d1<-input$date1
+    d2<-input$date2
+    
+    cat("Query input: ",word2(),"date1: ",d1,"date2: ",d2,"\n")
+    
+    word2 = strsplit(x = word2(),split = " ")
+    
+    validate(need(word2()!="","Please insert query object"))
+    validate(need(d1!="","Please insert starting date"))
+    validate(need(d2!="","Please insert ending date"))
+    
+    query_ = ""
+    for(i in 1:length(word2[[1]])){
+      if(i<length(word2[[1]])){
+        query_ = paste(query_,word2[[1]][i]," AND ",sep="")
+      }else{
+        query_ = paste(query_,word2[[1]][i],"",sep="")
+      }
+    }
+    
+    withProgress(message = 'Progress...', min = 1,max = 3, {
+      cat("Query input: ",query_,"date1: ",d1,"date2: ",d2,"\n")
+      url <- EUtilsQuery(query_, type = "esearch", db = "pubmed")
+      lines <- readLines(url, warn = FALSE, encoding = "unknown")
+      res <- RISmed:::ParseTags(lines)
+      EMPTYCHECK <- length(grep("<eSearchResult><Count>0<\\/Count>", 
+                                lines)) != 0
+      incProgress(1, detail = "")
+      
+      #    validate(need(EMPTYCHECK!=TRUE,"No results for the query"))
+      
+      if (EMPTYCHECK) {
+        res$Id <- character(0)
+        res$Count <- 0
+      }
+      res = new("EUtilsSummary", db = "pubmed", count = res$Count, retstart = res$RetStart, 
+                retmax = res$RetMax, PMID = res$Id, querytranslation = res$QueryTranslation)
+      
+      cat("Fetching query...\n")
+      fetch <- EUtilsGet(res, type="efetch", db="pubmed")
+      incProgress(1, detail = "")
+      cat("Articles query...\n")
+      
+      articles<-data.frame('Abstract'=AbstractText(fetch))
+      incProgress(1, detail = "")
+      
+      validate(need(nrow(articles)!=0,"No results for the query"))
+      
+      authors = Author(fetch)
+      article_title = ArticleTitle(fetch)
+      title = (Title(fetch))
+      year = YearAccepted(fetch) 
+      volume = Volume(fetch)
+      
+      
+      authors_list = list()
+      for(i in 1:length(authors)){
+        authors_list[[i]] = paste(paste(authors[[i]][,1],authors[[i]][,2]),collapse=",")
+      }
+      paper_info = data.frame(article_title,title,year,volume,unlist(authors_list))
+      
+      DT::datatable(paper_info)
+            
+    })
+    
+  })
+  
+  output$wordPlot<-renderPlot({
+    d1<-input$date1
+    d2<-input$date2
+    
+    cat("Query input: ",word2(),"date1: ",d1,"date2: ",d2,"\n")
+    
+    word2 = strsplit(x = word2(),split = " ")
+    
+    validate(need(word2()!="","Please insert query object"))
+    validate(need(d1!="","Please insert starting date"))
+    validate(need(d2!="","Please insert ending date"))
+    
+    query_ = ""
+    for(i in 1:length(word2[[1]])){
+      if(i<length(word2[[1]])){
+        query_ = paste(query_,word2[[1]][i]," AND ",sep="")
+      }else{
+        query_ = paste(query_,word2[[1]][i],"",sep="")
+      }
+    }
+    
+    withProgress(message = 'Progress...', min = 1,max = 3, {
+      cat("Query input: ",query_,"date1: ",d1,"date2: ",d2,"\n")
+      url <- EUtilsQuery(query_, type = "esearch", db = "pubmed")
+      lines <- readLines(url, warn = FALSE, encoding = "unknown")
+      res <- RISmed:::ParseTags(lines)
+      EMPTYCHECK <- length(grep("<eSearchResult><Count>0<\\/Count>", 
+                                lines)) != 0
+      incProgress(1, detail = "")
+      
+      #    validate(need(EMPTYCHECK!=TRUE,"No results for the query"))
+      
+      if (EMPTYCHECK) {
+        res$Id <- character(0)
+        res$Count <- 0
+      }
+      res = new("EUtilsSummary", db = "pubmed", count = res$Count, retstart = res$RetStart, 
+                retmax = res$RetMax, PMID = res$Id, querytranslation = res$QueryTranslation)
+      
+      cat("Fetching query...\n")
+      fetch <- EUtilsGet(res, type="efetch", db="pubmed")
+      incProgress(1, detail = "")
+      cat("Articles query...\n")
+      
+      articles<-data.frame('Abstract'=AbstractText(fetch))
+      abstracts<-as.character(articles$Abstract)
+      abstracts<-paste(abstracts, sep="", collapse="") 
+      cat("Preparing plot query...\n")
+      incProgress(1, detail = "")
+      
+      validate(need(nrow(articles)!=0,"No results for the query"))
+      cat("abstracts : ",abstracts,"\n")
+      cat("length(abstracts): ",length(abstracts),"\n")
+      wordcloud(abstracts, min.freq=5, max.words=150, colors=brewer.pal(7,"Dark2"))
+      
+    })
+    
+  })
+}
+
+
 parse_nano_query_input = function(inserted_nano,nano){
   if(length(inserted_nano)==0){
     return("") 

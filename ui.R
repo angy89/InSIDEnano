@@ -337,20 +337,6 @@ shinyUI(navbarPage("",
                                        tabsetPanel(
                                          tabPanel("Statistic",
                                                   wellPanel(
-#                                                     fluidRow(column(4,
-#                                                                     selectInput("plotTripel",label = "Plot of Association Frequencies",
-#                                                                                 choices = list("Disease-Nano-Drug" = 1,
-#                                                                                                "Disease-Nano-Chemical"= 2,
-#                                                                                                "Disease-Nano"=3,
-#                                                                                                "Disease-Drug"=4,
-#                                                                                                "Disease-Chemical"=5,
-#                                                                                                "Chemical-Nano" = 6,
-#                                                                                                "Chemical-Drug" = 7,
-#                                                                                                "Nano-Drug" = 8),selected = 1)
-#                                                     ),
-#                                                     column(4,numericInput(inputId = "percentuale",label = "% of elements to show",
-#                                                                           value = 10,min = 1,max = 100,step=5)),
-#                                                     column(4,uiOutput("NodesOfInterest_items"))
                                                       fluidRow(
                                                         column(4,uiOutput("bubbleCoupleChoice")),
                                                         column(4,numericInput(inputId = "percentuale",label = "% of elements to show",value = 10,min = 1,max = 100,step=5))
@@ -367,29 +353,30 @@ shinyUI(navbarPage("",
                                                                wellPanel(
                                                                  sliderInput("EnrichTh", label = "Connection Strenght",
                                                                              min = 1, max = 99, value = 99,step=1)
-                                                                 #                                                       column(6,
-                                                                 #                                                       selectInput('EnrichType',label="Sets of genes",
-                                                                 #                                                                                  choices = list("ALL"="ALL","Positional Gene Sets"=1,
-                                                                 #                                                                                                 "KEGG"=2,
-                                                                 #                                                                                                 "Biocarta"=3,
-                                                                 #                                                                                                 "Reactome"=4,
-                                                                 #                                                                                                 "microRNA targets"=5,
-                                                                 #                                                                                                 "Trascription factor targets"=6,
-                                                                 #                                                                                                 "Computational Gene Sets"=7,
-                                                                 #                                                                                                 "GO gene sets"=8,
-                                                                 #                                                                                                 "Oncogenic Signatures"=9,
-                                                                 #                                                                                                 "Immunologic Signatures"=10),selected = 2,multiple = TRUE)
-                                                                 #                                                                     
-                                                                 #                                                           ),
-                                                                 #                                                           column(6,sliderInput("EnrichTh", label = "Connection Strenght",
-                                                                 #                                                                              min = 1, max = 99, value = 99,step=1))
-                                                               )),
+                                                                 )),
                                                              fluidRow(wellPanel(nanoClusterOutput('enriched_clique', height = 500)))
                                                       ),
                                                       column(6,wellPanel(DT::dataTableOutput('genes_data_table')))
                                                     )
                                                   )
-                                         )#end tabpanel Enrichment
+                                         ),#end tabpanel Enrichment
+                                         tabPanel("Pubmed Search",
+                                                  fluidRow(
+                                                    column(4,
+                                                           wellPanel(
+                                                             helpText("Type a word below and search PubMed to find documents that contain that word in the text.
+                                                             You can even type multiple words. You can search authors, topics, any acronym, etc."),
+                                                             textInput("text", label = h3("Keyord(s)"), value = "MWCNT Asthma"),
+                                                             helpText("You can specify the start and end dates of your search, use the format YYYY/MM/DD"),
+                                                             textInput("date1", label = h3("From"),value="2010/01/01"),
+                                                             textInput("date2", label = h3("To"),  value = "2015/11/07"),
+                                                             actionButton("wordButton","ARTICLES"),
+                                                             plotOutput('wordPlot')
+                                                           )  
+                                                    ),
+                                                    column(8,wellPanel(DT::dataTableOutput('articleTable')))
+                                                  )
+                                          )
                                        )#end tabset
                               )#End tabpanel Pattern
                    ),#end query menu
