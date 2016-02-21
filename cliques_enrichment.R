@@ -88,6 +88,24 @@ cliques_enrichment = function(clique_list,g,g_,gene_sets_list,gene_sets_name,th_
   if(DEBUGGING){
     message("In cliques_enrichment: build dataframe of enriched graph\n")
   }
+  
+  vds_m = enriched_ADJ[vds,]
+  vds_m[which(vds_m>0)]=1
+  View(as.matrix(vds_m))
+  
+  vds_mm = matrix(0,ncol=1,nrow=length(vds))
+  
+  for(i in names(table(node_type))){
+    idx_i = which(node_type==i)
+    vds_mm = cbind(vds_mm,rowSums(as.matrix(vds_m[,idx_i])))
+  }
+  
+  vds_mm = vds_mm[,-1]
+  colnames(vds_mm) = names(table(node_type))
+  
+  vds_m_sum = colSums(vds_m)
+  vds_m_sum[vds_m_sum==length(vds)]
+  
   return(data_frame)
 }
 

@@ -822,7 +822,10 @@ conditional_check_cliques = function(obj,ADJ_S){
                ADJ_S[v_drug,v_chem],
                ADJ_S[v_dis,v_chem]))
   
-  row = row * type_query
+  row_ = rep(0,length(type_query))
+  row_[which(type_query!=0)] = row
+  
+  row = row_ * type_query
   
 #   if((length(v_nano) > 0) & (length(v_drug)>0) & (length(v_chem)>0) & (length(v_dis)>0)){
 #     row = sign(c(ADJ_S[v_nano,v_dis],
