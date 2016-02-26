@@ -84,6 +84,11 @@ barplot_patter_output = function(input,output,MList,graph_gw){
 
 genes_data_table_output = function(input,output,MList,MM_list,proxy,graph_s,g,g_geni2,items_list,query_type){
   output$genes_data_table = DT::renderDataTable({
+    gene_sets_list = list(c1_file,KEGG_file,biocarta_file,reactome_file,
+                          c3Mir_file,c3Tft_file,c4_file,c5_file,c6_file,c7_file)
+    gene_sets_name = c("Positional Gene Sets","KEGG","Biocarta","Reactome","microRNA targets","Trascription factor targets",
+                       "Computational Gene Sets","GO gene sets","Oncogenic Signatures","Immunologic Signatures")
+    
     type = input$NetworkPattern
     type = as.integer(gsub(pattern = "M",x =type,replacement = ""))
     
@@ -156,12 +161,36 @@ genes_data_table_output = function(input,output,MList,MM_list,proxy,graph_s,g,g_
       
     }
     
+    entrez = gsub(x = rownames(ADJ),pattern = "_at",replacement = "")
+    
+    entrez_group_path = list()
+    entrez_subgroup_path = list()
+    
+    for(i in entrez_){
+      ipath_g = c()
+      ipath_sg = c()
+      
+      for(il in 1:length(gene_sets_list)){
+        list_ = gene_sets_list[[il]]
+        for(j in 1:length(list_$genesets)){
+          gs = list_$genesets[j]
+          if(i %in% gs[[1]]){
+            ipath_sg = c(ipath_sg,list_$geneset.names[j])
+            ipath_g = c(ipath_g,gene_sets_name[il])
+          }
+        }
+      }
+      entrez_group_path[[i]]=unique(ipath_g)
+      entrez_subgroup_path[[i]]=unique(ipath_sg)
+      
+    }
+    
     x <- org.Hs.egSYMBOL
     # Get the gene symbol that are mapped to an entrez gene identifiers
     mapped_genes <- mappedkeys(x)
     # Convert to a list
     xx <- as.list(x[mapped_genes])
-    entrez = gsub(x = rownames(ADJ),pattern = "_at",replacement = "")
+    #entrez = gsub(x = rownames(ADJ),pattern = "_at",replacement = "")
     xx[entrez] -> MYSYMBOL
     MYSYMBOL = unlist(MYSYMBOL)
     
@@ -215,12 +244,6 @@ enrich_clique = function(input,output,MList,MM_list,proxy,graph_s,g,items_list,q
   output$enriched_clique<- renderNanoCluster({
     
     type = input$NetworkPattern
-    #     clique_type = input$clique_type
-    #     
-    #     validate(
-    #       need(input$NetworkPattern != "", "Please select a pattern type")
-    #     )
-    #     
     type = as.integer(gsub(pattern = "M",x =type,replacement = ""))
     s = input$clique_data_table_rows_selected
     
@@ -240,7 +263,6 @@ enrich_clique = function(input,output,MList,MM_list,proxy,graph_s,g,items_list,q
     message("In enrich_clique: clique_list: ",clique_list,"\n")
 
     th = input$EnrichTh
-   # sets = input$EnrichType
     
     th_l = rep(th/100,length(V(g_)$name))
     message("In enrich_clique: th_l: ",th_l,"\n")

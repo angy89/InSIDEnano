@@ -278,10 +278,22 @@ apply_thresholds = function(W_ADJ,THS){
   W_ADJ[disease,chemical][which(W_ADJ[disease,chemical]>0 & W_ADJ[disease,chemical]<THS$th_dc_p)] = 0 #disease chemical
   W_ADJ[disease,chemical][which(W_ADJ[disease,chemical]<0 & W_ADJ[disease,chemical]>THS$th_dc_n)] = 0
   
-  W_ADJ[nano,nano] = 0
-  W_ADJ[drugs,drugs] = 0
-  W_ADJ[disease,disease] = 0
-  W_ADJ[chemical,chemical] = 0
+  W_ADJ[nano,nano][which(W_ADJ[nano,nano]>0 & W_ADJ[nano,nano]<THS$th_nn_p)] = 0 #disease chemical
+  W_ADJ[nano,nano][which(W_ADJ[nano,nano]<0 & W_ADJ[nano,nano]>THS$th_nn_n)] = 0
+  
+  W_ADJ[drugs,drugs][which(W_ADJ[drugs,drugs]>0 & W_ADJ[drugs,drugs]<THS$th_drdr_p)] = 0 #disease chemical
+  W_ADJ[drugs,drugs][which(W_ADJ[drugs,drugs]<0 & W_ADJ[drugs,drugs]>THS$th_drdr_n)] = 0
+  
+  W_ADJ[chemical,chemical][which(W_ADJ[chemical,chemical]>0 & W_ADJ[chemical,chemical]<THS$th_cc_p)] = 0 #disease chemical
+  W_ADJ[chemical,chemical][which(W_ADJ[chemical,chemical]<0 & W_ADJ[chemical,chemical]>THS$th_cc_n)] = 0
+  
+  W_ADJ[disease,disease][which(W_ADJ[disease,disease]>0 & W_ADJ[disease,disease]<THS$th_didi_p)] = 0 #disease disease
+  W_ADJ[disease,disease][which(W_ADJ[disease,disease]<0 & W_ADJ[disease,disease]>THS$th_didi_n)] = 0
+  
+  #   W_ADJ[nano,nano] = 0
+  #   W_ADJ[drugs,drugs] = 0
+  #   W_ADJ[disease,disease] = 0
+  #   W_ADJ[chemical,chemical] = 0
   
   W_ADJ[selected_nodes,selected_nodes] = W2[selected_nodes,selected_nodes]
   return(W_ADJ)
@@ -304,18 +316,33 @@ find_thresholds = function(W_ADJ,th_p){
   W = W_ADJ[nano,drugs]
   th_nd_p = quantile(W[which(W>0)],th_p)#threshold per nano drugs positiva
   th_nd_n = quantile(W[which(W<0)],th_n)#threshold per nano drugs negativa
-  W = W_ADJ[disease,drugs]
-  th_dd_p = quantile(W[which(W>0)],th_p)#threshold per disease drugs positiva
-  th_dd_n = quantile(W[which(W<0)],th_n)#threshold per disease drugs negativa
   W = W_ADJ[nano,chemical]
   th_nc_p = quantile(W[which(W>0)],th_p)#threshold per nano chemical positiva
   th_nc_n = quantile(W[which(W<0)],th_n)#threshold per nano chemical negativa
-  W = W_ADJ[drugs,chemical]
-  th_drc_p = quantile(W[which(W>0)],th_p)#threshold per drugs chemical positiva
-  th_drc_n = quantile(W[which(W<0)],th_n)#threshold per drugs chemical negativa
+  
+  W = W_ADJ[disease,drugs]
+  th_dd_p = quantile(W[which(W>0)],th_p)#threshold per disease drugs positiva
+  th_dd_n = quantile(W[which(W<0)],th_n)#threshold per disease drugs negativa
   W = W_ADJ[disease,chemical]
   th_dc_p = quantile(W[which(W>0)],th_p)#threshold per disease chemical positiva
   th_dc_n = quantile(W[which(W<0)],th_n)#threshold per disease chemical negativa
+  
+  W = W_ADJ[drugs,chemical]
+  th_drc_p = quantile(W[which(W>0)],th_p)#threshold per drugs chemical positiva
+  th_drc_n = quantile(W[which(W<0)],th_n)#threshold per drugs chemical negativa
+  
+  W = W_ADJ[nano,nano]
+  th_nn_p = quantile(W[which(W>0)],th_p) #threshold per nano disease positiva
+  th_nn_n = quantile(W[which(W<0)],th_n) #threshold per nano disease negativa
+  W = W_ADJ[drugs,drugs]
+  th_drdr_p = quantile(W[which(W>0)],th_p) #threshold per nano disease positiva
+  th_drdr_n = quantile(W[which(W<0)],th_n) #threshold per nano disease negativa
+  W = W_ADJ[disease,disease]
+  th_didi_p = quantile(W[which(W>0)],th_p) #threshold per nano disease positiva
+  th_didi_n = quantile(W[which(W<0)],th_n) #threshold per nano disease negativa
+  W = W_ADJ[chemical,chemical]
+  th_cc_p = quantile(W[which(W>0)],th_p) #threshold per nano disease positiva
+  th_cc_n = quantile(W[which(W<0)],th_n) #threshold per nano disease negativa
   
   THS = list(th_ndis_p=th_ndis_p,
              th_ndis_n=th_ndis_n,
@@ -328,10 +355,98 @@ find_thresholds = function(W_ADJ,th_p){
              th_drc_p=th_drc_p,
              th_drc_n=th_drc_n,
              th_dc_p=th_dc_p,
-             th_dc_n=th_dc_n)
+             th_dc_n=th_dc_n,
+             th_nn_p=th_nn_p,
+             th_nn_n=th_nn_n,
+             th_drdr_p=th_drdr_p,
+             th_drdr_n=th_drdr_n,
+             th_didi_p=th_didi_p,
+             th_didi_n=th_didi_n,
+             th_cc_p=th_cc_p,
+             th_cc_n=th_cc_n
+  )
   
   return(THS)
 }
+
+# apply_thresholds = function(W_ADJ,THS){
+#   if(DEBUGGING) cat("Apply threshold function \n")
+#   W2 = W_ADJ
+#   W_ADJ[nano,disease][which(W_ADJ[nano,disease]>0 & W_ADJ[nano,disease]<THS$th_ndis_p)] = 0 #nano disease
+#   W_ADJ[nano,disease][which(W_ADJ[nano,disease]<0 & W_ADJ[nano,disease]>THS$th_ndis_n)] = 0
+#   
+#   W_ADJ[nano,drugs][which(W_ADJ[nano,drugs]>0 & W_ADJ[nano,drugs]<THS$th_nd_p)] = 0 #nano drugs
+#   W_ADJ[nano,drugs][which(W_ADJ[nano,drugs]<0 & W_ADJ[nano,drugs]>THS$th_nd_n)] = 0
+#   
+#   W_ADJ[disease,drugs][which(W_ADJ[disease,drugs]>0 & W_ADJ[disease,drugs]<THS$th_dd_p)] = 0 #disease drugs
+#   W_ADJ[disease,drugs][which(W_ADJ[disease,drugs]<0 & W_ADJ[disease,drugs]>THS$th_dd_n)] = 0
+#   
+#   W_ADJ[nano,chemical][which(W_ADJ[nano,chemical]>0 & W_ADJ[nano,chemical]<THS$th_nc_p)] = 0 #nano chemical
+#   W_ADJ[nano,chemical][which(W_ADJ[nano,chemical]<0 & W_ADJ[nano,chemical]>THS$th_nc_n)] = 0
+#   
+#   W_ADJ[drugs,chemical][which(W_ADJ[drugs,chemical]>0 & W_ADJ[drugs,chemical]<THS$th_dd_p)] = 0 #drugs chemical
+#   W_ADJ[drugs,chemical][which(W_ADJ[drugs,chemical]<0 & W_ADJ[drugs,chemical]>THS$th_dd_n)] = 0
+#   
+#   W_ADJ[nano,chemical][which(W_ADJ[nano,chemical]>0 & W_ADJ[nano,chemical]<THS$th_drc_p)] = 0 #nano chemical
+#   W_ADJ[nano,chemical][which(W_ADJ[nano,chemical]<0 & W_ADJ[nano,chemical]>THS$th_drc_n)] = 0
+#   
+#   W_ADJ[disease,chemical][which(W_ADJ[disease,chemical]>0 & W_ADJ[disease,chemical]<THS$th_dc_p)] = 0 #disease chemical
+#   W_ADJ[disease,chemical][which(W_ADJ[disease,chemical]<0 & W_ADJ[disease,chemical]>THS$th_dc_n)] = 0
+#   
+#   W_ADJ[nano,nano] = 0
+#   W_ADJ[drugs,drugs] = 0
+#   W_ADJ[disease,disease] = 0
+#   W_ADJ[chemical,chemical] = 0
+#   
+#   W_ADJ[selected_nodes,selected_nodes] = W2[selected_nodes,selected_nodes]
+#   return(W_ADJ)
+# }
+# 
+# find_thresholds = function(W_ADJ,th_p){
+#   if(DEBUGGING) cat("Find threshold function \n")
+#   
+#   diag(W_ADJ) = 0
+#   th_n = 1-th_p
+#   
+#   if(DEBUGGING){
+#     cat("dim(W_ADJ)", dim(W_ADJ), "\n")
+#     cat("th ", th_p, "\n")
+#   }
+#   
+#   W = W_ADJ[nano,disease]
+#   th_ndis_p = quantile(W[which(W>0)],th_p) #threshold per nano disease positiva
+#   th_ndis_n = quantile(W[which(W<0)],th_n) #threshold per nano disease negativa
+#   W = W_ADJ[nano,drugs]
+#   th_nd_p = quantile(W[which(W>0)],th_p)#threshold per nano drugs positiva
+#   th_nd_n = quantile(W[which(W<0)],th_n)#threshold per nano drugs negativa
+#   W = W_ADJ[disease,drugs]
+#   th_dd_p = quantile(W[which(W>0)],th_p)#threshold per disease drugs positiva
+#   th_dd_n = quantile(W[which(W<0)],th_n)#threshold per disease drugs negativa
+#   W = W_ADJ[nano,chemical]
+#   th_nc_p = quantile(W[which(W>0)],th_p)#threshold per nano chemical positiva
+#   th_nc_n = quantile(W[which(W<0)],th_n)#threshold per nano chemical negativa
+#   W = W_ADJ[drugs,chemical]
+#   th_drc_p = quantile(W[which(W>0)],th_p)#threshold per drugs chemical positiva
+#   th_drc_n = quantile(W[which(W<0)],th_n)#threshold per drugs chemical negativa
+#   W = W_ADJ[disease,chemical]
+#   th_dc_p = quantile(W[which(W>0)],th_p)#threshold per disease chemical positiva
+#   th_dc_n = quantile(W[which(W<0)],th_n)#threshold per disease chemical negativa
+#   
+#   THS = list(th_ndis_p=th_ndis_p,
+#              th_ndis_n=th_ndis_n,
+#              th_nd_p=th_nd_p,
+#              th_nd_n=th_nd_n,
+#              th_dd_p=th_dd_p,
+#              th_dd_n=th_dd_n,
+#              th_nc_p=th_nc_p,
+#              th_nc_n=th_nc_n,
+#              th_drc_p=th_drc_p,
+#              th_drc_n=th_drc_n,
+#              th_dc_p=th_dc_p,
+#              th_dc_n=th_dc_n)
+#   
+#   return(THS)
+# }
 
 creating_graph = function(W_ADJ,node_type){
 

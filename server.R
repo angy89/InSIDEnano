@@ -28,6 +28,7 @@ shinyServer(function(input, output,session){
       })
       
       free_query_UI(input,output)
+      items_query_UI(input,output)
       conditionl_query_UI(input,output)
       UI_query(input,output,nano,drugs,chemical,disease)
       
@@ -155,13 +156,16 @@ shinyServer(function(input, output,session){
         
       })
       
+      observeEvent(input$Go_couple,{
+        couple_query(input,output,disease_list,selected_nodes,W_ADJ,th_p = input$th_slider_couple/100,node_type,chemMat,join10,g,g_geni2,items_list)
+      })
+      
       observeEvent(input$LoadQuery, {
         if(DEBUGGING){
           message("Loading Query...\n")
         }
         
         load_query_from_table(input,output,LOG_CONDITIONAL,items_list)
-        
       })  
       
       observeEvent(input$Refresh_query_table,{

@@ -88,26 +88,103 @@ shinyUI(navbarPage("",
                             )
                             
                    ),
-#                    tabPanel("Load Query",
+                   #                    tabPanel("Load Query",
+                   #                             fluidRow(
+                   #                               wellPanel(
+                   #                                 HTML("</br>This area allow the user to load results of the past query</br>"),
+                   #                                 htmlOutput("checkLOGIN_load")
+                   #                               )  
+                   #                             ),
+                   #                             fluidRow(
+                   #                               wellPanel(
+                   #                                 fluidRow(actionButton(inputId = "Refresh_query_table",label  = "Refresh Table",icon("circle-arrow-right", lib = "glyphicon"))),
+                   #                                 fluidRow(
+                   #                                   column(10,DT::dataTableOutput('previous_query')),
+                   #                                   column(2,uiOutput("LoadQuery"))
+                   #                                   
+                   #                                 )
+                   #                               )          
+                   #                             )
+                   #                             
+                   #                    ),
+                   tabPanel("Single Query",
 #                             fluidRow(
-#                               wellPanel(
-#                                 HTML("</br>This area allow the user to load results of the past query</br>"),
-#                                 htmlOutput("checkLOGIN_load")
-#                               )  
+#                               column(6,
+#                                      fluidRow(
+#                                        wellPanel(
+#                                          HTML("</br>The Free Analysis allows to extrapolate subnetworks of nodes connected to one or more query items.</br>"),
+#                                          HTML("The results of the query depends on the strenght of similarity. </br>
+#                                         In case of multiple query items, the final subnetwork will be the union of all the subtenetwork related to each item.
+#                                         </br></br></br>")
+#                                          # htmlOutput("checkLOGIN_free")
+#                                           )
+#                                      ),
+#                                      fluidRow(
+#                                         wellPanel(
+#                                             fluidRow(
+#                                               column(6, uiOutput("disease_couple",width=500,height=900)),
+#                                               column(6, uiOutput("th_slider_couple"))
+#                                             ),
+#                                             fluidRow(
+#                                                column(4, uiOutput("Go_couple")),
+#                                                column(4, uiOutput("refresh_couple"))                                         
+#                                             )
+#                                         )
+#                                      )
+#                               )
 #                             ),
+                            fluidRow(
+                              wellPanel(
+                                HTML("</br>The Free Analysis allows to extrapolate subnetworks of nodes connected to one or more query items.</br>"),
+                                HTML("The results of the query depends on the strenght of similarity. </br>
+                                                                    In case of multiple query items, the final subnetwork will be the union of all the subtenetwork related to each item.
+                                                                    </br></br></br>")
+                                # htmlOutput("checkLOGIN_free")
+                              )
+                            ),
+                            fluidRow(
+                              wellPanel(
+                                fluidRow(
+                                  column(6, uiOutput("disease_couple",width=500,height=900)),
+                                  column(6, uiOutput("th_slider_couple"))
+                                ),
+                                fluidRow(
+                                  column(4, uiOutput("Go_couple")),
+                                  column(4, uiOutput("refresh_couple"))                                         
+                                )
+                              )
+                            ),
+                             
 #                             fluidRow(
-#                               wellPanel(
-#                                 fluidRow(actionButton(inputId = "Refresh_query_table",label  = "Refresh Table",icon("circle-arrow-right", lib = "glyphicon"))),
-#                                 fluidRow(
-#                                   column(10,DT::dataTableOutput('previous_query')),
-#                                   column(2,uiOutput("LoadQuery"))
-#                                   
-#                                 )
-#                               )          
-#                             )
-#                             
-#                    ),
-                   
+#                               column(3,wellPanel(plotOutput(("nano_couple_boxplot")))),
+#                               column(3,wellPanel(plotOutput(("drug_couple_boxplot")))),
+#                               column(3,wellPanel(plotOutput(("chemical_couple_boxplot")))),
+#                               column(3,wellPanel(plotOutput(("disease_couple_boxplot"))))
+#                             ),
+                            tabsetPanel(
+                              tabPanel("Statistic",
+                                       fluidRow(
+                                        column(6,wellPanel(plotOutput("boxplot_statistics"))),
+                                        column(6,wellPanel(plotOutput("barplot_statistics")))
+                                        )
+                              ),
+                              tabPanel("Tables",
+                                       fluidRow(
+                                         column(3,"Nanomaterials"),
+                                         column(3,"Drugs"),
+                                         column(3,"Chemicals"),
+                                         column(3,"Diseases")
+                                       ),
+                                       fluidRow(
+                                         column(3,wellPanel(DT::dataTableOutput(("nano_couple_table")))),
+                                         column(3,wellPanel(DT::dataTableOutput(("drug_couple_table")))),
+                                         column(3,wellPanel(DT::dataTableOutput(("chemical_couple_table")))),
+                                         column(3,wellPanel(DT::dataTableOutput(("disease_couple_table"))))
+                                       )
+                              )
+                            )
+                            
+                   ),
                    tabPanel("Free Query",
                             fluidRow(
                               wellPanel(
@@ -253,12 +330,12 @@ shinyUI(navbarPage("",
                                      )
                               )
                             ),
-#                             fluidRow(
-#                               wellPanel(
-#                                 HTML("</br>This area allow the user to load results of the past query</br>"),
-#                                 htmlOutput("checkLOGIN_load")
-#                               )  
-#                             ),
+                            #                             fluidRow(
+                            #                               wellPanel(
+                            #                                 HTML("</br>This area allow the user to load results of the past query</br>"),
+                            #                                 htmlOutput("checkLOGIN_load")
+                            #                               )  
+                            #                             ),
                             fluidRow(
                               wellPanel(
                                 fluidRow(
@@ -277,19 +354,19 @@ shinyUI(navbarPage("",
                               tabPanel("Items Subnetwork", 
                                        sidebarPanel(
                                          fluidRow(column(12,uiOutput("NodesOfInterest"))),
-#                                          fluidRow(
-#                                            column(12, checkboxGroupInput("sub_checkGroup", 
-#                                                                          label = "Object Network", 
-#                                                                          choices = list("Nanomaterials" = "nano", 
-#                                                                                         "Drugs" = "drugs", "Chemical" = "chemical",
-#                                                                                         "Disease" = "disease"),selected = c("nano","drugs","disease")))
-#                                          ),
-#                                          fluidRow(column(12,selectInput("sub_Edges",
-#                                                                         label="Select the type of edges",
-#                                                                         choices = list("Positive" = "P",
-#                                                                                        "Negative" = "N",
-#                                                                                        "Both" = "B"),selected="B"))
-#                                          ),
+                                         #                                          fluidRow(
+                                         #                                            column(12, checkboxGroupInput("sub_checkGroup", 
+                                         #                                                                          label = "Object Network", 
+                                         #                                                                          choices = list("Nanomaterials" = "nano", 
+                                         #                                                                                         "Drugs" = "drugs", "Chemical" = "chemical",
+                                         #                                                                                         "Disease" = "disease"),selected = c("nano","drugs","disease")))
+                                         #                                          ),
+                                         #                                          fluidRow(column(12,selectInput("sub_Edges",
+                                         #                                                                         label="Select the type of edges",
+                                         #                                                                         choices = list("Positive" = "P",
+                                         #                                                                                        "Negative" = "N",
+                                         #                                                                                        "Both" = "B"),selected="B"))
+                                         #                                          ),
                                          fluidRow(
                                            column(12, selectInput("sub_ATCGroup", 
                                                                   label ="Drugs ATC code", multiple = TRUE,
@@ -337,11 +414,11 @@ shinyUI(navbarPage("",
                                        tabsetPanel(
                                          tabPanel("Statistic",
                                                   wellPanel(
-                                                      fluidRow(
-                                                        column(4,uiOutput("bubbleCoupleChoice")),
-                                                        column(4,numericInput(inputId = "percentuale",label = "% of elements to show",value = 10,min = 1,max = 100,step=5))
-                                                      ),
-                                                      fluidRow(column(8,plotOutput('trendPlot',width ="1200px",height="700px")))#plotlyOutput   
+                                                    fluidRow(
+                                                      column(4,uiOutput("bubbleCoupleChoice")),
+                                                      column(4,numericInput(inputId = "percentuale",label = "% of elements to show",value = 10,min = 1,max = 100,step=5))
+                                                    ),
+                                                    fluidRow(column(8,plotOutput('trendPlot',width ="1200px",height="700px")))#plotlyOutput   
                                                   )
                                          ),#End tabpanel statistic
                                          tabPanel("Enrichment",
@@ -353,7 +430,7 @@ shinyUI(navbarPage("",
                                                                wellPanel(
                                                                  sliderInput("EnrichTh", label = "Connection Strenght",
                                                                              min = 1, max = 99, value = 99,step=1)
-                                                                 )),
+                                                               )),
                                                              fluidRow(wellPanel(nanoClusterOutput('enriched_clique', height = 500)))
                                                       ),
                                                       column(6,wellPanel(DT::dataTableOutput('genes_data_table')))
@@ -376,7 +453,7 @@ shinyUI(navbarPage("",
                                                     ),
                                                     column(8,wellPanel(DT::dataTableOutput('articleTable')))
                                                   )
-                                          )
+                                         )
                                        )#end tabset
                               )#End tabpanel Pattern
                    ),#end query menu
