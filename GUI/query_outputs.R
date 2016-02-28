@@ -166,7 +166,7 @@ genes_data_table_output = function(input,output,MList,MM_list,proxy,graph_s,g,g_
     entrez_group_path = list()
     entrez_subgroup_path = list()
     
-    for(i in entrez_){
+    for(i in entrez){
       ipath_g = c()
       ipath_sg = c()
       

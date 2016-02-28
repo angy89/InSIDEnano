@@ -30,7 +30,7 @@ couple_query = function(input,output,disease_list,selected_nodes,W_ADJ,th_p = in
 
     
     tab[,2] = round(as.numeric(as.vector(tab$weight)),2)
-    tab <- tab[order(tab$weight, decreasing=TRUE),]
+    tab <- tab[order(abs(tab$weight), decreasing=TRUE),]
     
     nano_t = tab[tab$name %in% nano,]
     drug_t = tab[tab$name %in% drugs,]
