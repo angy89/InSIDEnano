@@ -53,19 +53,26 @@ pubmed_search = function(input,output,word2){
       title = (Title(fetch))
       year = YearAccepted(fetch) 
       volume = Volume(fetch)
-      
+      pubmed_id = PMID(fetch)
       
       authors_list = list()
       for(i in 1:length(authors)){
         authors_list[[i]] = paste(paste(authors[[i]][,1],authors[[i]][,2]),collapse=",")
       }
-      paper_info = data.frame(article_title,title,year,volume,unlist(authors_list))
-      
-      DT::datatable(paper_info)
             
-    })
-    
-  })
+      pid = paste0('<a href="http://www.ncbi.nlm.nih.gov/pubmed/',pubmed_id,'">',pubmed_id,'</a>',sep="")
+      paper_info = data.frame(article_title,title,year,volume,unlist(authors_list),pid)
+      colnames(paper_info)=c("Title","Journal","Year","Volume","Authors","PMID")
+      
+      paper_info = paper_info[order(paper_info$Year,decreasing = TRUE),]
+      
+      DT::datatable(paper_info,
+      options = list(target = 'row+column',scrollX=TRUE,scrollY = "400px", scrollCollapse = TRUE,paging=FALSE),
+      escape=FALSE,rownames = FALSE,
+      selection = "single")
+            
+    })    
+})
   
   output$wordPlot<-renderPlot({
     d1<-input$date1
