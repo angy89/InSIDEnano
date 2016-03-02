@@ -42,6 +42,10 @@ c5_file = GSA.read.gmt(filename = paste(APP_PATH,"MSigDB/c5.all.v4.0.entrez.gmt"
 c6_file = GSA.read.gmt(filename = paste(APP_PATH,"MSigDB/c6.all.v4.0.entrez.gmt",sep=""))
 c7_file = GSA.read.gmt(filename = paste(APP_PATH,"MSigDB/c7.all.v4.0.entrez.gmt",sep=""))
 
+gene_sets_list = list(c1_file,KEGG_file,biocarta_file,reactome_file,
+                      c3Mir_file,c3Tft_file,c4_file,c5_file,c6_file,c7_file)
+gene_sets_name = c("Positional Gene Sets","KEGG","Biocarta","Reactome","microRNA targets","Trascription factor targets",
+                   "Computational Gene Sets","GO gene sets","Oncogenic Signatures","Immunologic Signatures")
 
 # #for gene_query
 # load(paste(APP_PATH,"matrix_gene_disease_01_80.RData",sep=""))
@@ -89,7 +93,7 @@ proxy = NULL
 proxy_query = NULL
 DEBUGGING = TRUE
 genes_input = c()
-
+enriched_ADJ = NULL
 
 ATC_choice_list = list("ALL" = "ALL",
                        "(A) Alimentary tract and metabolism" = "A", 

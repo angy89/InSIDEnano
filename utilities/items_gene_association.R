@@ -79,3 +79,16 @@ for(i in items){
 close(pb)
 
 save(items_list,file = "~/INSIdEapp/items_gene_association_complete_no_genes.RData")
+
+all_genes = V(g)$name[which(V(g)$node_type=="gene")]
+all_genes = gsub(pattern = "_at",replacement = "",x = all_genes)
+
+items_gene_list = list()
+pb= txtProgressBar(min=1,max=length(c(nano,drugs,chemical,disease)),style=3)
+k=1
+for(i in c(nano,drugs,chemical,disease)){
+  items_gene_list[[i]] = all_genes %in% items_list[[i]]$gene_for_each_sets_list # fare un altro for per ogni set di geni
+  setTxtProgressBar(pb,k)
+  k = k+1
+}
+close(pb)

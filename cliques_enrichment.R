@@ -1,13 +1,67 @@
+item_enrichment = function(input,output,items_list){
+  output$single_items_genes_data_table = DT::renderDataTable({
+
+    item = input$clique_item
+    
+    message("in item_enrichment: item --> ",item,"\n")
+    message("in item_enrichment: dim(enriched_ADJ --> ",dim(enriched_ADJ),"\n")
+    
+    gene_item = items_list[[item]]$entrez.genes
+    gene_item = gsub(pattern = "_at",x = gene_item,replacement = "")
+    
+    message("in item_enrichment: gene_item --> ",gene_item,"\n")
+    
+    gene_wei = items_list[[item]]$edge.weigth
+    message("in item_enrichment: gene_wei --> ",gene_wei,"\n")
+    
+    nomi_ = names(enriched_ADJ[item,which(enriched_ADJ[item,]!=0)])
+    message("in item_enrichment: nomi_ --> ",nomi_,"\n")
+    
+    validate(need(nrow(enriched_ADJ)!=0,"Please select a clique"))
+    
+    sets_list = list()
+    x <- org.Hs.egSYMBOL
+    mapped_genes <- mappedkeys(x)
+    xx <- as.list(x[mapped_genes])
+    
+    for(n in nomi_){
+      for(i in 1:length(gene_sets_list)){
+        for(j in 1:length(gene_sets_list[[i]]$geneset.names)){
+          if(gene_sets_list[[i]]$geneset.names[[j]] == n){
+            gsl = gene_item[gene_item %in% gene_sets_list[[i]]$genesets[[j]]]
+            gw = gene_wei[gene_item %in% gene_sets_list[[i]]$genesets[[j]]] 
+            xx[gsl] -> MYSYMBOL
+            MYSYMBOL = unlist(MYSYMBOL)
+            sets_list[[gene_sets_list[[i]]$geneset.names[[j]]]] = rbind(MYSYMBOL,gw)
+          }
+        }
+      }
+    }
+  
+    mat_to_plot = matrix(0,nrow = 1,ncol = 2)
+    for(i in 1:length(sets_list)){
+      glist = ""
+      for(j in 1:length(sets_list[[i]][1,])){
+        if(as.numeric(sets_list[[i]][2,j])>=0){
+          glist = paste(glist,'<font color="red">',sets_list[[i]][1,j],'</font>;')
+        }
+        if(as.numeric(sets_list[[i]][2,j])<0){
+          glist = paste(glist,'<font color="green">',sets_list[[i]][1,j],'</font>;')
+        }
+      }
+      new_row = c(names(sets_list)[i],glist)
+      mat_to_plot = rbind(mat_to_plot,new_row)
+    }
+    mat_to_plot = mat_to_plot[-1,]
+    rownames(mat_to_plot) = NULL
+    colnames(mat_to_plot) = c("Group","Genes")  
+    DT::datatable(mat_to_plot,escape = FALSE)
+    
+  })
+}
+
 cliques_enrichment = function(clique_list,g,g_,gene_sets_list,gene_sets_name,th_l,items_list){
-  if(DEBUGGING){
-    message("In clique_enrichment: clique_list.length: ",length(clique_list),"\n")
-    message("In clique_enrichment: vcount(g): ",vcount(g),"\n")
-    message("In clique_enrichment: vcount(g_): ",vcount(g_),"\n")
-    message("In clique_enrichment: gene_sets_list.length: ",length(gene_sets_list),"\n")
-    message("In clique_enrichment: gene_sets_name.length: ",length(gene_sets_name),"\n")
-    message("In clique_enrichment: th_l.length: ",length(th_l),"\n")
-    message("In clique_enrichment: items_list.length: ",length(items_list),"\n")    
-  }    
+ 
 
   ncliques = length(clique_list)
   nElem_clique = length(clique_list[[1]])
@@ -89,24 +143,24 @@ cliques_enrichment = function(clique_list,g,g_,gene_sets_list,gene_sets_name,th_
     message("In cliques_enrichment: build dataframe of enriched graph\n")
   }
   
-  vds_m = enriched_ADJ[vds,]
-  vds_m[which(vds_m>0)]=1
-  View(as.matrix(vds_m))
+#   vds_m = enriched_ADJ[vds,]
+#   vds_m[which(vds_m>0)]=1
+#   View(as.matrix(vds_m))
+#   
+#   vds_mm = matrix(0,ncol=1,nrow=length(vds))
+#   
+#   for(i in names(table(node_type))){
+#     idx_i = which(node_type==i)
+#     vds_mm = cbind(vds_mm,rowSums(as.matrix(vds_m[,idx_i])))
+#   }
+#   
+#   vds_mm = vds_mm[,-1]
+#   colnames(vds_mm) = names(table(node_type))
+#   
+#   vds_m_sum = colSums(vds_m)
+#   vds_m_sum[vds_m_sum==length(vds)]
   
-  vds_mm = matrix(0,ncol=1,nrow=length(vds))
-  
-  for(i in names(table(node_type))){
-    idx_i = which(node_type==i)
-    vds_mm = cbind(vds_mm,rowSums(as.matrix(vds_m[,idx_i])))
-  }
-  
-  vds_mm = vds_mm[,-1]
-  colnames(vds_mm) = names(table(node_type))
-  
-  vds_m_sum = colSums(vds_m)
-  vds_m_sum[vds_m_sum==length(vds)]
-  
-  return(data_frame)
+  return(list(data_frame = data_frame,enriched_ADJ=enriched_ADJ))
 }
 
 # cliques_enrichment = function(clique_list,g,g_,gene_sets_list,gene_sets_name,th_l){

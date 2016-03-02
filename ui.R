@@ -433,7 +433,13 @@ shinyUI(navbarPage("",
                                                                )),
                                                              fluidRow(wellPanel(nanoClusterOutput('enriched_clique', height = 500)))
                                                       ),
-                                                      column(6,wellPanel(DT::dataTableOutput('genes_data_table')))
+                                                      column(6,
+                                                             fluidRow(wellPanel(DT::dataTableOutput('genes_data_table'))),
+                                                             fluidRow(
+                                                              column(6,fluidRow(uiOutput("clique_item"))) 
+                                                             ),
+                                                             fluidRow(DT::dataTableOutput("single_items_genes_data_table"))
+                                                      )
                                                     )
                                                   )
                                          ),#end tabpanel Enrichment

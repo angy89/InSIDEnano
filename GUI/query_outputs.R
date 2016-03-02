@@ -158,7 +158,6 @@ genes_data_table_output = function(input,output,MList,MM_list,proxy,graph_s,g,g_
       ADJ = matrix(data = ADJ,nrow = 1,ncol = length(ADJ))
       rownames(ADJ) = names(genes_elem)
       colnames(ADJ) = names(il)
-      
     }
     
     entrez = gsub(x = rownames(ADJ),pattern = "_at",replacement = "")
@@ -182,7 +181,6 @@ genes_data_table_output = function(input,output,MList,MM_list,proxy,graph_s,g,g_
       }
       entrez_group_path[[i]]=unique(ipath_g)
       entrez_subgroup_path[[i]]=unique(ipath_sg)
-      
     }
     
     x <- org.Hs.egSYMBOL
@@ -254,10 +252,10 @@ enrich_clique = function(input,output,MList,MM_list,proxy,graph_s,g,items_list,q
     }
     if(query_type == "CONDITIONAL"){
       g_ = generate_g_cliques(input,output,graph_s,proxy,MM_list,MList)
-    }
+    }    
     
     clique_list = list(V(g_)$name)
-    clique_list = list(c("Asthma","MWCNT","amitriptyline"))
+    #clique_list = list(c("Asthma","MWCNT","amitriptyline"))
     message("In enrich_clique: clique_list: ",clique_list,"\n")
 
     th = input$EnrichTh
@@ -271,8 +269,13 @@ enrich_clique = function(input,output,MList,MM_list,proxy,graph_s,g,items_list,q
                        "Computational Gene Sets","GO gene sets","Oncogenic Signatures","Immunologic Signatures")
     
     message("In enrich_clique: gene_sets_name: ",gene_sets_name)
-    DF = cliques_enrichment(clique_list = clique_list,g = g,g_ = g_,gene_sets_list = gene_sets_list,gene_sets_name = gene_sets_name,th_l = th_l,items_list = items_list)   
     
+   # save(clique_list,g_,th_l,MList,MM_list,graph_s,query_type,file="/home/neuronelab/InsideNano/utilities/debug.RData")
+    
+    res = cliques_enrichment(clique_list = clique_list,g = g,g_ = g_,gene_sets_list = gene_sets_list,gene_sets_name = gene_sets_name,th_l = th_l,items_list = items_list)   
+    
+    assign("enriched_ADJ", res$enriched_ADJ, envir = .GlobalEnv)
+    DF = res$data_frame
     edges = DF$edges
     vertices = DF$vertices
     colnames(vertices)[3]="size"
@@ -289,6 +292,8 @@ enrich_clique = function(input,output,MList,MM_list,proxy,graph_s,g,items_list,q
                 linkDistance = JS(paste0("function(d){return d.value*",10,
                                          "}")))
   })
+    
+  
 }
 
 plot_clique_graph = function(input,output,MM_list,graph_s,proxy){

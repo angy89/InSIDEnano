@@ -1,3 +1,29 @@
+query_item_list = function(input,output,MList){
+  
+  
+  output$clique_item = renderUI({
+    selected_row = input$clique_data_table_rows_selected
+    if(length(selected_row)==0){
+      selected_row=1
+    }
+    
+    type = input$NetworkPattern
+    
+    validate(
+      need(input$NetworkPattern != "", "Please select a pattern type")
+    )
+    type = as.integer(gsub(pattern = "M",x =type,replacement = ""))
+    
+    Mi = MList[[type]]
+    row_ = Mi[selected_row,]
+    row_ = row_[row_!=""]
+    
+    selectInput(inputId = "clique_item",label = "Select an item to enrich",choices = row_,selected = row_[1])
+    
+  })
+  
+}
+
 pubmed_query_creation = function(input,output,MList){
    
   output$queryText <- renderUI({
@@ -1175,7 +1201,6 @@ load_query_from_table = function(input,output,LOG_CONDITIONAL,items_list){
    
   selected_row = input$previous_query_rows_selected
     
-  
   RData_file = paste(LOCAL_PATH,"Log_folder/",as.character(LOG_CONDITIONAL[selected_row+1,9]),sep="")
   
   nano_query = LOG_CONDITIONAL[selected_row+1,"Nano"]
@@ -1200,17 +1225,6 @@ load_query_from_table = function(input,output,LOG_CONDITIONAL,items_list){
     chemical_query = strsplit(x = as.character(chemical_query),split = "_")
   }
   
-  if(DEBUGGING){
-    message("In load_query_from_table::nano_query:",nano_query,"\n")
-    message("In load_query_from_table::drugs_query:",drugs_query,"\n")
-    message("In load_query_from_table::disease_query:",disease_query,"\n")
-    message("In load_query_from_table::chemical_query:",chemical_query,"\n")
-    message("In load_query_from_table::th_query:",th_query,"\n")
-    message("In load_query_from_table::n1_query:",n1_query,"\n")
-    message("In load_query_from_table::n2_query:",n2_query,"\n")
-    message("In load_query_from_table::type_query:",type_query,"\n")
-    
-  }
   conditional_query_UI_set_query_values(input,output,nano_query,drugs_query,disease_query,chemical_query,th_query,n1_query,n2_query,type_query)
     
 #   load_conditional_query(input=input,output=output,RData_file = RData_file,items_list = items_list,g)  
@@ -1259,23 +1273,23 @@ load_query_from_table = function(input,output,LOG_CONDITIONAL,items_list){
     
     proxy = dataTableProxy("clique_data_table")
     incProgress(1, detail = "Preparing Barplot output...")
+    pubmed_query_creation(input,output,MList)
+    query_item_list(input,output,MList)
     
    # barplot_pattern_conditional_query(input,output,MList,graph_gw) #in conditional_query_output.R
     barplot_patter_conditional_query_input(input,output,MList)
     barplot_pattern_conditional_query(input,output,MList)
-     
-   pubmed_query_creation(input,output,MList)
-   
-
-   clique_graph_cq_plot(input,output,MList,MM_list,proxy,graph_s)#in conditional_query_output.R
     
-   incProgress(1, detail = "Preparing Genes Data table Output...")
+    clique_graph_cq_plot(input,output,MList,MM_list,proxy,graph_s)#in conditional_query_output.R
+    
+    incProgress(1, detail = "Preparing Genes Data table Output...")
     
     genes_data_table_output(input,output,MList,MM_list,proxy,graph_s,g,g_geni2,items_list,"CONDITIONAL") #in conditional_query_output.R
     incProgress(1, detail = "Enrich Cliques...")
     
     enrich_clique(input,output,MList,MM_list,proxy,graph_s,g,items_list,"CONDITIONAL")
-    
+    item_enrichment(input,output,items_list)
+  
     incProgress(1, detail = "Plot subnetwork and statistics...")
     
     plot_force_based_subnetwork_query_resutls(input,output,ADJ_S,chemMat,good_cliques,join10) #in qury_outputs.R

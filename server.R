@@ -33,26 +33,28 @@ shinyServer(function(input, output,session){
       UI_query(input,output,nano,drugs,chemical,disease)
       
       
-      withProgress(message = 'Progress...', min = 1,max = 4, {
-        #load(paste(APP_PATH,"graph_without_genes_also_intra_classes_edges_with_properties80.RData",sep=""))
-        load(paste(APP_PATH,"node_type.RData",sep=""))
+      withProgress(message = 'Progress...', min = 1,max = 5, {
+        load(paste(APP_PATH,"graph_without_genes_also_intra_classes_edges_with_properties80.RData",sep=""))
+        #load(paste(APP_PATH,"node_type.RData",sep=""))
         
-        incProgress(1, detail = "Data Loaded 1/4")
+        incProgress(1, detail = "Data Loaded 1/5")
         
-       # load(paste(APP_PATH,"graph_without_genes_also_intra_classes_edges_network_estimation80_2.RData",sep="")) #W_ADJ; W2_ADJ
-        load(paste(APP_PATH,"W_ADJ.RData",sep=""))
+        load(paste(APP_PATH,"graph_without_genes_also_intra_classes_edges_network_estimation80_2.RData",sep="")) #W_ADJ; W2_ADJ
+        #load(paste(APP_PATH,"W_ADJ.RData",sep=""))
         
-        incProgress(1, detail = "Data Loaded 2/4")
+        incProgress(1, detail = "Data Loaded 2/5")
         
         load(paste(APP_PATH,"gene_network_KEGG_th99.RData",sep="")) #g_geni2; edges; vertices
         load(paste(APP_PATH,"KEGG_PATH_ADJ.RData",sep="")) #KEGG_ADJ
-        incProgress(1, detail = "Data Loaded 3/4")
+        incProgress(1, detail = "Data Loaded 3/5")
         
         load(paste(APP_PATH,"big_net_with_chemical_up_down80_2_th_30.RData",sep="")) #g
+        incProgress(1, detail = "Data Loaded 4/5")
+        
         load(paste(APP_PATH,"items_gene_association_complete_no_genes.RData",sep="")) #items_list
         load(paste(LOCAL_PATH,"LOG.RData",sep=""))#LOG_CONDITIONAL
         
-        incProgress(1, detail = "Data Loaded 4/4")
+        incProgress(1, detail = "Data Loaded 5/5")
         incProgress(1, detail = "Waiting For input!")
         
       })
@@ -183,11 +185,7 @@ shinyServer(function(input, output,session){
         proxy_query = dataTableProxy("previous_query")
         
       })
-      
-     
-        
-      
-      
+
       #       observeEvent(input$Go3, {
       #         if(DEBUGGING) cat("GENE QUERY\n")
       #         gene_query(input,output,disease_list,selected_nodes,W_ADJ,th_p = input$th_slider3/100,node_type,chemMat,join10,g,g_geni2,gene_input)
