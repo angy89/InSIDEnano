@@ -443,7 +443,8 @@ shinyUI(navbarPage("",
                                                            wellPanel(
                                                              helpText("Type a word below and search PubMed to find documents that contain that word in the text.
                                                              You can even type multiple words. You can search authors, topics, any acronym, etc."),
-                                                             textInput("text", label = h3("Keyord(s)"), value = "MWCNT Asthma"),
+                                                             #textInput("queryText", label = h3("Keyord(s)"), value = "(Asthma AND MWCNT)"),
+                                                             uiOutput("queryText"),
                                                              helpText("You can specify the start and end dates of your search, use the format YYYY/MM/DD"),
                                                              textInput("date1", label = h3("From"),value="1999/01/01"),
                                                              textInput("date2", label = h3("To"),  value = format(Sys.time(), "%Y/%d/%m")),

@@ -34,19 +34,23 @@ shinyServer(function(input, output,session){
       
       
       withProgress(message = 'Progress...', min = 1,max = 4, {
-        load(paste(APP_PATH,"graph_without_genes_also_intra_classes_edges_with_properties80.RData",sep=""))
+        #load(paste(APP_PATH,"graph_without_genes_also_intra_classes_edges_with_properties80.RData",sep=""))
+        load(paste(APP_PATH,"node_type.RData",sep=""))
+        
         incProgress(1, detail = "Data Loaded 1/4")
         
-        load(paste(APP_PATH,"graph_without_genes_also_intra_classes_edges_network_estimation80_2.RData",sep=""))
+       # load(paste(APP_PATH,"graph_without_genes_also_intra_classes_edges_network_estimation80_2.RData",sep="")) #W_ADJ; W2_ADJ
+        load(paste(APP_PATH,"W_ADJ.RData",sep=""))
+        
         incProgress(1, detail = "Data Loaded 2/4")
         
-        load(paste(APP_PATH,"gene_network_KEGG_th99.RData",sep=""))
-        load(paste(APP_PATH,"KEGG_PATH_ADJ.RData",sep=""))
+        load(paste(APP_PATH,"gene_network_KEGG_th99.RData",sep="")) #g_geni2; edges; vertices
+        load(paste(APP_PATH,"KEGG_PATH_ADJ.RData",sep="")) #KEGG_ADJ
         incProgress(1, detail = "Data Loaded 3/4")
         
-        load(paste(APP_PATH,"big_net_with_chemical_up_down80_2_th_30.RData",sep=""))
+        load(paste(APP_PATH,"big_net_with_chemical_up_down80_2_th_30.RData",sep="")) #g
         load(paste(APP_PATH,"items_gene_association_complete_no_genes.RData",sep="")) #items_list
-        load(paste(LOCAL_PATH,"LOG.RData",sep=""))
+        load(paste(LOCAL_PATH,"LOG.RData",sep=""))#LOG_CONDITIONAL
         
         incProgress(1, detail = "Data Loaded 4/4")
         incProgress(1, detail = "Waiting For input!")
@@ -123,10 +127,15 @@ shinyServer(function(input, output,session){
           if(DEBUGGING){
             cat("Load conditional query \n")  
           }
-          load_conditional_query(input,output,log_file_to_load,items_list)
+          load_conditional_query(session,input,output,log_file_to_load,items_list)
         }  
-        
+                
       }) #End Listener 2
+      
+      observeEvent(input$wordButton,{
+        pubmed_search(input,output)#,word2)
+        
+      })
       
       observeEvent(input$action1_cluster, {
         res = ADJ_matrix(W_ADJ, input,output,nano,drugs,chemical,disease,chemMat,join10)
@@ -175,9 +184,7 @@ shinyServer(function(input, output,session){
         
       })
       
-      word2<-eventReactive(input$wordButton, {input$text})
-      
-      pubmed_search(input,output,word2)
+     
         
       
       

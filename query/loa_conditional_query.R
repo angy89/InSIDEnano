@@ -1,4 +1,4 @@
-load_conditional_query = function(input,output,RData_file,items_list,g){
+load_conditional_query = function(session,input,output,RData_file,items_list,g){
   
   
   withProgress(message = 'Progress...', min = 1,max = 6, {
@@ -46,6 +46,9 @@ load_conditional_query = function(input,output,RData_file,items_list,g){
     barplot_pattern_conditional_query(input,output,MList)
     
     clique_graph_cq_plot(input,output,MList,MM_list,proxy,graph_s)#in conditional_query_output.R
+    pubmed_query_creation(input,output,MList)
+
+   
     incProgress(1, detail = "Preparing Genes Data table Output...")
     
     genes_data_table_output(input,output,MList,MM_list,proxy,graph_s,g,g_geni2,items_list,"CONDITIONAL") #in conditional_query_output.R
@@ -60,6 +63,6 @@ load_conditional_query = function(input,output,RData_file,items_list,g){
     plot_gene_subnetwork(input,output,ADJ_S,chemMat,good_cliques,join10,g,g_geni2)#in qury_outputs.R
     plot_gene_subnetwork_statistics(input,output,ADJ_S,chemMat,good_cliques,join10,g,g_geni2)#in qury_outputs.R
     
-  })
+   })
   
 }

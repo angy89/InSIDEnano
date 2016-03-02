@@ -1,33 +1,79 @@
-pubmed_search = function(input,output,word2){
+pubmed_query_creation = function(input,output,MList){
+   
+  output$queryText <- renderUI({
+    selected_row = input$clique_data_table_rows_selected
+    if(length(selected_row)==0){
+      selected_row=1
+    }
+    
+    type = input$NetworkPattern
+    
+    validate(
+      need(input$NetworkPattern != "", "Please select a pattern type")
+    )
+    type = as.integer(gsub(pattern = "M",x =type,replacement = ""))
+    
+    if(DEBUGGING){
+      cat("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAaaaaaa\n")
+      message("In pubmed query creation:: clique_type: ",type," selected_row: ",selected_row,"\n" )
+    }
+    
+    Mi = MList[[type]]
+    row_ = Mi[selected_row,]
+    row_ = row_[row_!=""]
+    grid = expand.grid(row_,row_)
+    grid = grid[which(grid[,1]!=grid[,2]),]
+    
+    query = ""
+    for(i in 1:nrow(grid)){
+      if(i<nrow(grid)){
+        query = paste(query,"(",grid[i,1]," AND ",grid[i,2],") OR ",sep="")
+      }else{
+        query = paste(query,"(",grid[i,1]," AND ",grid[i,2],")",sep="")
+      }
+      
+    }
+    
+    textInput(inputId="queryText",
+                    label = h3("Keyord(s)"),
+                    value = query)
+  })
+  
+}
+
+pubmed_search = function(input,output){
   output$articleTable<-DT::renderDataTable({
     d1<-input$date1
     d2<-input$date2
+   
     
-    cat("Query input: ",word2(),"date1: ",d1,"date2: ",d2,"\n")
+    #cat("Query input: ",word2(),"date1: ",d1,"date2: ",d2,"\n")
     
-    word2 = strsplit(x = word2(),split = " ")
+    #word2 = strsplit(x = word2(),split = " ")
+    word2 = input$queryText
     
-    validate(need(word2()!="","Please insert query object"))
+    validate(need(word2!="","Please insert query object"))
     validate(need(d1!="","Please insert starting date"))
     validate(need(d2!="","Please insert ending date"))
     
-    query_ = ""
-    for(i in 1:length(word2[[1]])){
-      if(i<length(word2[[1]])){
-        query_ = paste(query_,word2[[1]][i]," AND ",sep="")
-      }else{
-        query_ = paste(query_,word2[[1]][i],"",sep="")
-      }
-    }
+    query_=word2
+#     query_ = ""
+#     for(i in 1:length(word2[[1]])){
+#       if(i<length(word2[[1]])){
+#         query_ = paste(query_,word2[[1]][i]," AND ",sep="")
+#       }else{
+#         query_ = paste(query_,word2[[1]][i],"",sep="")
+#       }
+#     }
     
     withProgress(message = 'Progress...', min = 1,max = 3, {
-      cat("Query input: ",query_,"date1: ",d1,"date2: ",d2,"\n")
+      #cat("Query input: ",query_,"date1: ",d1,"date2: ",d2,"\n")
       url <- EUtilsQuery(query_, type = "esearch", db = "pubmed")
       lines <- readLines(url, warn = FALSE, encoding = "unknown")
       res <- RISmed:::ParseTags(lines)
       EMPTYCHECK <- length(grep("<eSearchResult><Count>0<\\/Count>", 
                                 lines)) != 0
-      incProgress(1, detail = "")
+      #incProgress(1, detail = "")
       
       #    validate(need(EMPTYCHECK!=TRUE,"No results for the query"))
       
@@ -60,16 +106,16 @@ pubmed_search = function(input,output,word2){
         authors_list[[i]] = paste(paste(authors[[i]][,1],authors[[i]][,2]),collapse=",")
       }
             
-      pid = paste0('<a href="http://www.ncbi.nlm.nih.gov/pubmed/',pubmed_id,'">',pubmed_id,'</a>',sep="")
+      pid = paste0('<a target="_blank" href="http://www.ncbi.nlm.nih.gov/pubmed/',pubmed_id,'">',pubmed_id,'</a>',sep="")
       paper_info = data.frame(article_title,title,year,volume,unlist(authors_list),pid)
       colnames(paper_info)=c("Title","Journal","Year","Volume","Authors","PMID")
       
       paper_info = paper_info[order(paper_info$Year,decreasing = TRUE),]
       
-      DT::datatable(paper_info,
-      options = list(target = 'row+column',scrollX=TRUE,scrollY = "400px", scrollCollapse = TRUE,paging=FALSE),
-      escape=FALSE,rownames = FALSE,
-      selection = "single")
+      DT::datatable(paper_info,escape=FALSE,selection="single")
+#       options = list(target = 'row+column',scrollX=TRUE,scrollY = "400px", scrollCollapse = TRUE,paging=FALSE),
+#       escape=FALSE,rownames = FALSE,
+#       selection = "single")
             
     })    
 })
@@ -78,22 +124,24 @@ pubmed_search = function(input,output,word2){
     d1<-input$date1
     d2<-input$date2
     
-    cat("Query input: ",word2(),"date1: ",d1,"date2: ",d2,"\n")
+    #cat("Query input: ",word2(),"date1: ",d1,"date2: ",d2,"\n")
     
-    word2 = strsplit(x = word2(),split = " ")
+    #word2 = strsplit(x = word2(),split = " ")
+    word2 = input$queryText
     
-    validate(need(word2()!="","Please insert query object"))
+    validate(need(word2!="","Please insert query object"))
     validate(need(d1!="","Please insert starting date"))
     validate(need(d2!="","Please insert ending date"))
     
-    query_ = ""
-    for(i in 1:length(word2[[1]])){
-      if(i<length(word2[[1]])){
-        query_ = paste(query_,word2[[1]][i]," AND ",sep="")
-      }else{
-        query_ = paste(query_,word2[[1]][i],"",sep="")
-      }
-    }
+    query_=word2
+#     query_ = ""
+#     for(i in 1:length(word2[[1]])){
+#       if(i<length(word2[[1]])){
+#         query_ = paste(query_,word2[[1]][i]," AND ",sep="")
+#       }else{
+#         query_ = paste(query_,word2[[1]][i],"",sep="")
+#       }
+#     }
     
     withProgress(message = 'Progress...', min = 1,max = 3, {
       cat("Query input: ",query_,"date1: ",d1,"date2: ",d2,"\n")
@@ -1215,9 +1263,13 @@ load_query_from_table = function(input,output,LOG_CONDITIONAL,items_list){
    # barplot_pattern_conditional_query(input,output,MList,graph_gw) #in conditional_query_output.R
     barplot_patter_conditional_query_input(input,output,MList)
     barplot_pattern_conditional_query(input,output,MList)
+     
+   pubmed_query_creation(input,output,MList)
    
-    clique_graph_cq_plot(input,output,MList,MM_list,proxy,graph_s)#in conditional_query_output.R
-    incProgress(1, detail = "Preparing Genes Data table Output...")
+
+   clique_graph_cq_plot(input,output,MList,MM_list,proxy,graph_s)#in conditional_query_output.R
+    
+   incProgress(1, detail = "Preparing Genes Data table Output...")
     
     genes_data_table_output(input,output,MList,MM_list,proxy,graph_s,g,g_geni2,items_list,"CONDITIONAL") #in conditional_query_output.R
     incProgress(1, detail = "Enrich Cliques...")

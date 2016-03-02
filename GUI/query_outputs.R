@@ -238,8 +238,6 @@ genes_data_table_output = function(input,output,MList,MM_list,proxy,graph_s,g,g_
   })
 }
 
-
-
 enrich_clique = function(input,output,MList,MM_list,proxy,graph_s,g,items_list,query_type){  
   output$enriched_clique<- renderNanoCluster({
     
@@ -259,7 +257,7 @@ enrich_clique = function(input,output,MList,MM_list,proxy,graph_s,g,items_list,q
     }
     
     clique_list = list(V(g_)$name)
-    #clique_list = list(c("AgNP","salbutamol","11-deoxyprostaglandin E1"))
+    clique_list = list(c("Asthma","MWCNT","amitriptyline"))
     message("In enrich_clique: clique_list: ",clique_list,"\n")
 
     th = input$EnrichTh
