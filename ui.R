@@ -520,7 +520,6 @@ shinyUI(navbarPage("",
                                        mainPanel(
                                          wellPanel(nanoClusterOutput("cluster_output"))
                                        )        
-                                       
                               ),
                               tabPanel("Nano clustering",
                                        fluidRow(

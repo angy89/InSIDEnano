@@ -38,8 +38,9 @@ shinyServer(function(input, output,session){
         #load(paste(APP_PATH,"node_type.RData",sep=""))
         
         incProgress(1, detail = "Data Loaded 1/5")
-        
         load(paste(APP_PATH,"graph_without_genes_also_intra_classes_edges_network_estimation80_2.RData",sep="")) #W_ADJ; W2_ADJ
+        W_ADJ = ADJ
+        
         #load(paste(APP_PATH,"W_ADJ.RData",sep=""))
         
         incProgress(1, detail = "Data Loaded 2/5")
