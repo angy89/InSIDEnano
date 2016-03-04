@@ -44,6 +44,13 @@ shinyServer(function(input, output,session){
         W_ADJ = ADJ
         
         cat("W_ADJ=ADJ: ",length(which(W_ADJ==0)),"\n")
+        par(mfrow=c(3,2))
+        hist(W_ADJ[nano,drugs])
+        hist(W_ADJ[nano,chemical])
+        hist(W_ADJ[nano,disease])
+        hist(W_ADJ[drugs,chemical])
+        hist(W_ADJ[drugs,disease])
+        hist(W_ADJ[disease,chemical])
         
         
         #load(paste(APP_PATH,"W_ADJ.RData",sep=""))

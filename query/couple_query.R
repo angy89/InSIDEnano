@@ -13,11 +13,38 @@ couple_query = function(input,output,disease_list,selected_nodes,W_ADJ,th_p = in
     }
     
     incProgress(1, detail = "Thresholding...")
-  
+   
+    
+    cat("in couple_query:: W_ADJ=ADJ: ",length(which(W_ADJ==0)),"\n")
+    par(mfrow=c(2,5))
+    hist(W_ADJ[nano,nano])
+    hist(W_ADJ[drugs,drugs])
+    hist(W_ADJ[chemical,chemical])
+    hist(W_ADJ[disease,disease])
+    hist(W_ADJ[nano,drugs])
+    hist(W_ADJ[nano,chemical])
+    hist(W_ADJ[nano,disease])
+    hist(W_ADJ[drugs,chemical])
+    hist(W_ADJ[drugs,disease])
+    hist(W_ADJ[disease,chemical])
+    
     THS = find_thresholds(W_ADJ,th_p) #in query_utilities.R
     
     incProgress(1, detail = "Removing edges under threshold...")
     W_ADJ = apply_thresholds(W_ADJ,THS) #in query_utilities.R
+    
+    cat("in couple_query:: W_ADJ=ADJ: ",length(which(W_ADJ==0)),"\n")
+    par(mfrow=c(2,5))
+    hist(W_ADJ[nano,nano])
+    hist(W_ADJ[drugs,drugs])
+    hist(W_ADJ[chemical,chemical])
+    hist(W_ADJ[disease,disease])
+    hist(W_ADJ[nano,drugs])
+    hist(W_ADJ[nano,chemical])
+    hist(W_ADJ[nano,disease])
+    hist(W_ADJ[drugs,chemical])
+    hist(W_ADJ[drugs,disease])
+    hist(W_ADJ[disease,chemical])
     
     incProgress(1, detail = "Creating graph...")
     graph_gw = creating_graph(W_ADJ,node_type) #in query_utilities.R
