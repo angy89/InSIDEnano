@@ -84,9 +84,9 @@ couple_query = function(input,output,disease_list,selected_nodes,W_ADJ,th_p = in
       ndi_n = num_dise[num_dise<0]
       
       par(mfrow=c(2,1),oma = c(5,4,0,0) + 0.1,mar=c(1, 1, 1, 12) + 0.1,xpd=TRUE)
-      boxplot(nn_p,ndr_p,nc_p,ndi_p,col="red",main="Connections Weight",names=c("Nano","Drugs","Chemical","Disease"),horizontal = TRUE)
+      boxplot(nn_p,ndr_p,nc_p,ndi_p,col="red",main="Connections Weight",names=c("Nano","Drugs","Chemical","Disease"),horizontal = FALSE)
       legend(x = "topright",inset=c(-0.2,0),legend = c("Positive","Negative"),fill=c("red","green")) 
-      boxplot(nn_n,ndr_n,nc_n,ndi_n,col="green",names=c("Nano","Drugs","Chemical","Disease"),horizontal = TRUE)
+      boxplot(nn_n,ndr_n,nc_n,ndi_n,col="green",names=c("Nano","Drugs","Chemical","Disease"),horizontal = FALSE)
       
 #       legend(x = "topright",inset=c(-0.2,0),legend = c("Positive","Negative"),fill=c("red","green")) 
       
@@ -113,21 +113,22 @@ couple_query = function(input,output,disease_list,selected_nodes,W_ADJ,th_p = in
       num_chem = as.numeric(chemical_t[,2])
       num_dise = as.numeric(disease_t[,2])
       
-      nn_p = num_nano[num_nano>=0]
-      nn_n = num_nano[num_nano<0]
+      nn_p = num_nano[num_nano>=0] /length(nano)
+      nn_n = num_nano[num_nano<0]/length(nano)
       
-      ndr_p = num_drug[num_drug>=0]
-      ndr_n = num_drug[num_drug<0]
+      ndr_p = num_drug[num_drug>=0]/length(drugs)
+      ndr_n = num_drug[num_drug<0]/length(drugs)
       
-      nc_p = num_chem[num_chem>=0]
-      nc_n = num_chem[num_chem<0]
+      nc_p = num_chem[num_chem>=0]/length(chemical)
+      nc_n = num_chem[num_chem<0]/length(chemical)
       
-      ndi_p = num_dise[num_dise>=0]
-      ndi_n = num_dise[num_dise<0]
+      ndi_p = num_dise[num_dise>=0]/length(disease)
+      ndi_n = num_dise[num_dise<0]/length(disease)
       
       vect_p = c(length(nn_p),length(ndr_p),length(nc_p),length(ndi_p))
       vect_n = c(length(nn_n),length(ndr_n),length(nc_n),length(ndi_n))
       par(mfrow=c(2,1),xpd=TRUE,oma = c(5,4,0,0) + 0.1,mar=c(1, 2, 2, 1) + 0.1)
+      names(vect_n)= c("Nanos","Drugs","Chemicals","Diseases")
       barplot(vect_p,col="red",main = "Number of positive connections")      
       barplot(vect_n,col="green",main="Number of negative connections")
       #       legend(x = "topright",inset=c(-0.2,0),legend = c("Positive","Negative"),fill=c("red","green")) 

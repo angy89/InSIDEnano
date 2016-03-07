@@ -41,17 +41,25 @@ shinyServer(function(input, output,session){
         load(paste(APP_PATH,"graph_without_genes_also_intra_classes_edges_network_estimation80_2.RData",sep="")) #W_ADJ; W2_ADJ
         
         cat("W_ADJ: ",length(which(W_ADJ==0)),"\n")
+#         W_ADJ = clr(abs(ADJ))
+#         W_ADJ = W_ADJ * sign(ADJ)
         W_ADJ = ADJ
+        diag(W_ADJ) = 0
+        
         
         cat("W_ADJ=ADJ: ",length(which(W_ADJ==0)),"\n")
-        par(mfrow=c(3,2))
-        hist(W_ADJ[nano,drugs])
-        hist(W_ADJ[nano,chemical])
-        hist(W_ADJ[nano,disease])
-        hist(W_ADJ[drugs,chemical])
-        hist(W_ADJ[drugs,disease])
-        hist(W_ADJ[disease,chemical])
-        
+#         par(mfrow=c(2,5))
+#         hist(W_ADJ[nano,nano])
+#         hist(W_ADJ[drugs,drugs])
+#         hist(W_ADJ[chemical,chemical])
+#         hist(W_ADJ[disease,disease])
+#         hist(W_ADJ[nano,drugs])
+#         hist(W_ADJ[nano,chemical])
+#         hist(W_ADJ[nano,disease])
+#         hist(W_ADJ[drugs,chemical])
+#         hist(W_ADJ[drugs,disease])
+#         hist(W_ADJ[disease,chemical])
+#         
         
         #load(paste(APP_PATH,"W_ADJ.RData",sep=""))
         

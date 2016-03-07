@@ -145,7 +145,7 @@ shinyUI(navbarPage("",
                             fluidRow(
                               wellPanel(
                                 fluidRow(
-                                  column(6, uiOutput("disease_couple",width=500,height=900)),
+                                  column(6, uiOutput("disease_couple",width=500,height=1200)),
                                   column(6, uiOutput("th_slider_couple"))
                                 ),
                                 fluidRow(
