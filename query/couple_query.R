@@ -1,6 +1,6 @@
 range01 <- function(x){(x-min(x))/(max(x)-min(x))}
 
-couple_query2 = function(input,output,disease_list,selected_nodes,ADJ,ADJ01_RANK,th_p = input$th_slider/100,node_type,chemMat,join10,g,g_geni2,items_list){
+couple_query2 = function(input,output,disease_list,selected_nodes,ADJ,ADJ01,ADJ01_RANK,th_p = input$th_slider/100,node_type,chemMat,join10,g,g_geni2,items_list){
   output$infoFree <- renderUI({HTML(info_free_query_text)}) 
   
   withProgress(message = 'Progress...', min = 1,max = 10, {
@@ -15,7 +15,7 @@ couple_query2 = function(input,output,disease_list,selected_nodes,ADJ,ADJ01_RANK
     incProgress(1, detail = "Thresholding...")
     
     
-    cat("in couple_query:: W_ADJ=ADJ: ",length(which(W_ADJ==0)),"\n")
+    #cat("in couple_query:: W_ADJ=ADJ: ",length(which(W_ADJ==0)),"\n")
     
     nElem = round(nrow(ADJ01_RANK)*th_p) 
     
@@ -28,7 +28,8 @@ couple_query2 = function(input,output,disease_list,selected_nodes,ADJ,ADJ01_RANK
     # moltiplicando la matrice ADJ_RW01 per la sua trasposta, ottengo l'intersezione del k-vicinato (che è una matrice simmetrica)
     # moltiplicando poi per ADJ risalgo ai pesi originali
     W_ADJ = ADJ_RW01* t(ADJ_RW01)* sign(ADJ)
-
+    #W_ADJ = ADJ_RW01* t(ADJ_RW01)* ADJ01
+   
     incProgress(1, detail = "Removing edges under threshold...")
    
     incProgress(1, detail = "Creating graph...")
