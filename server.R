@@ -136,7 +136,8 @@ shinyServer(function(input, output,session){
           if(DEBUGGING){
             cat("New conditional query \n")  
           }
-          conditional_query(input,output,disease_list,selected_nodes,W_ADJ,th_p = input$th_slider2/100,node_type,chemMat,join10,g,g_geni2,LOG_CONDITIONAL,items_list)
+          conditional_query2(input,output,disease_list,selected_nodes,ADJ,ADJ01,ADJ01_RANK,th_p = input$th_slider2/100,node_type,chemMat,join10,g,g_geni2,LOG_CONDITIONAL,items_list)
+          #conditional_query(input,output,disease_list,selected_nodes,W_ADJ,th_p = input$th_slider2/100,node_type,chemMat,join10,g,g_geni2,LOG_CONDITIONAL,items_list)
         }else{
           if(DEBUGGING){
             cat("Load conditional query \n")  
@@ -179,8 +180,11 @@ shinyServer(function(input, output,session){
         
       })
       
-      observeEvent(input$Go_couple,{
-        couple_query2(input,output,disease_list,selected_nodes,ADJ,ADJ01,ADJ01_RANK,th_p = input$th_slider/100,node_type,chemMat,join10,g,g_geni2,items_list)
+      observeEvent(input$Go_couple,{        
+        couple_query2(input,output,disease_list,selected_nodes,ADJ,ADJ01,ADJ01_RANK,
+                      th_p = input$th_slider_couple/100,node_type,chemMat,
+                      join10,g,g_geni2,
+                      items_list)
       })
       
       observeEvent(input$LoadQuery, {

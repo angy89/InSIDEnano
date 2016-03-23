@@ -5,8 +5,35 @@ couple_query2 = function(input,output,disease_list,selected_nodes,ADJ,ADJ01,ADJ0
   
   withProgress(message = 'Progress...', min = 1,max = 10, {
     validate(need(input$disease_couple != "", "Please select a Disease"))
-    
+    validate(need(length(th_p)!=0,"Please select a th"))
     query_node = input$disease_couple
+    
+    output$nano_couple_table = renderDataTable({
+      mat = matrix("",1,2)
+      colnames(mat) = c("name","rank")
+      
+      DT::datatable(mat,escape=FALSE,selection = "single")
+    })
+    
+    output$drug_couple_table = renderDataTable({
+      mat = matrix("",1,2)
+      colnames(mat) = c("name","rank")
+      
+      DT::datatable(mat,escape=FALSE,selection = "single")
+    })
+    output$chemical_couple_table = renderDataTable({
+      mat = matrix("",1,2)
+      colnames(mat) = c("name","rank")
+      
+      DT::datatable(mat,escape=FALSE,selection = "single")
+    })
+    output$disease_couple_table = renderDataTable({
+      mat = matrix("",1,2)
+      colnames(mat) = c("name","rank")
+      
+      DT::datatable(mat,escape=FALSE,selection = "single")
+    })
+    
     if(DEBUGGING){
       message("query_node:: ",query_node,"\n")
       message("input$th_slider/100:: ",th_p,"\n")
@@ -14,10 +41,9 @@ couple_query2 = function(input,output,disease_list,selected_nodes,ADJ,ADJ01,ADJ0
     
     incProgress(1, detail = "Thresholding...")
     
-    
     #cat("in couple_query:: W_ADJ=ADJ: ",length(which(W_ADJ==0)),"\n")
     
-    nElem = round(nrow(ADJ01_RANK)*th_p) 
+    nElem = round(nrow(ADJ01_RANK)*th_p)
     
     ADJ_RW = ADJ01_RANK  
     ADJ_RW[ADJ_RW>nElem] = 0
@@ -38,15 +64,15 @@ couple_query2 = function(input,output,disease_list,selected_nodes,ADJ,ADJ01,ADJ0
     neigh = ADJ_RW[which(ADJ_RW[,query_node]!=0),query_node]
     tab = cbind(names(neigh),W_ADJ[names(neigh),query_node],neigh)
     colnames(tab)=c("name","Weight","Rank")
-   # tab = as.data.frame(tab)
+    rownames(tab) = NULL
+    tab = as.data.frame(tab)
     
     incProgress(1, detail = "Creating results...")
     
-    nano_t = tab[rownames(tab) %in% nano,]
-    drug_t = tab[rownames(tab) %in% drugs,]
-    chemical_t = tab[rownames(tab) %in% chemical,]
-    disease_t = tab[rownames(tab) %in% disease,]
-    
+    nano_t = tab[tab$name %in% nano,]
+    drug_t = tab[tab$name %in% drugs,]
+    chemical_t = tab[tab$name %in% chemical,]
+    disease_t = tab[tab$name %in% disease,]
     
     output$boxplot_statistics = renderPlot({
       num_nano = as.numeric(nano_t[,2])
@@ -146,6 +172,7 @@ couple_query2 = function(input,output,disease_list,selected_nodes,ADJ,ADJ01,ADJ0
       #colnames(datTab) = c("Name","Weight")
       output$nano_couple_table = renderDataTable({
         validate(need(nrow(nano_t)>0,"No connections with nano"))
+        nano_t = nano_t[,c(1,3)]
         DT::datatable(nano_t,escape=FALSE,selection = "single")
       })
       
@@ -183,6 +210,7 @@ couple_query2 = function(input,output,disease_list,selected_nodes,ADJ,ADJ01,ADJ0
       #       colnames(datTab) = c("Name","Weight")
       output$drug_couple_table = renderDataTable({
         validate(need(nrow(drug_t)>0,"No connections with drugs"))
+        drug_t = drug_t[,c(1,3)]
         DT::datatable(drug_t,escape=FALSE,selection = "single") 
       })
     }
@@ -216,6 +244,8 @@ couple_query2 = function(input,output,disease_list,selected_nodes,ADJ,ADJ01,ADJ0
       #       colnames(datTab) = c("Name","Weight")
       output$chemical_couple_table = renderDataTable({
         validate(need(nrow(chemical_t)>0,"No connections with drugs"))
+        chemical_t = chemical_t[,c(1,3)]
+        
         DT::datatable(chemical_t,escape=FALSE,selection = "single") 
       })
     }
@@ -250,6 +280,8 @@ couple_query2 = function(input,output,disease_list,selected_nodes,ADJ,ADJ01,ADJ0
       #       colnames(datTab) = c("Name","Weight")
       output$disease_couple_table = renderDataTable({
         validate(need(nrow(disease_t)>0,"No connections with drugs"))
+        disease_t = disease_t[,c(1,3)]
+        
         DT::datatable(disease_t,escape=FALSE,selection = "single") 
       })
     }
