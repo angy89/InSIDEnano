@@ -73,6 +73,7 @@ couple_query2 = function(input,output,disease_list,selected_nodes,ADJ,ADJ01,ADJ0
     drug_t = tab[tab$name %in% drugs,]
     chemical_t = tab[tab$name %in% chemical,]
     disease_t = tab[tab$name %in% disease,]
+  
     
     output$boxplot_statistics = renderPlot({
       num_nano = as.numeric(nano_t[,2])
@@ -173,6 +174,10 @@ couple_query2 = function(input,output,disease_list,selected_nodes,ADJ,ADJ01,ADJ0
       output$nano_couple_table = renderDataTable({
         validate(need(nrow(nano_t)>0,"No connections with nano"))
         nano_t = nano_t[,c(1,3)]
+       # nano_t = as.data.frame(nano_t)
+        nano_t = nano_t[order(as.numeric(as.vector(nano_t[,2]))),]
+        
+        #nano_t[,2] = as.numeric(as.vector(nano_t[,2]))
         DT::datatable(nano_t,escape=FALSE,selection = "single")
       })
       
@@ -211,6 +216,10 @@ couple_query2 = function(input,output,disease_list,selected_nodes,ADJ,ADJ01,ADJ0
       output$drug_couple_table = renderDataTable({
         validate(need(nrow(drug_t)>0,"No connections with drugs"))
         drug_t = drug_t[,c(1,3)]
+        #drug_t = as.data.frame(drug_t)
+        #drug_t[,2] = as.numeric(as.vector(drug_t[,2]))
+        drug_t = drug_t[order(as.numeric(as.vector(drug_t[,2]))),]
+        
         DT::datatable(drug_t,escape=FALSE,selection = "single") 
       })
     }
@@ -245,6 +254,9 @@ couple_query2 = function(input,output,disease_list,selected_nodes,ADJ,ADJ01,ADJ0
       output$chemical_couple_table = renderDataTable({
         validate(need(nrow(chemical_t)>0,"No connections with drugs"))
         chemical_t = chemical_t[,c(1,3)]
+        #chemical_t = as.data.frame(chemical_t)
+        #chemical_t[,2] = as.numeric(as.vector(chemical_t[,2]))
+        chemical_t = chemical_t[order(as.numeric(as.vector(chemical_t[,2]))),]
         
         DT::datatable(chemical_t,escape=FALSE,selection = "single") 
       })
@@ -281,6 +293,9 @@ couple_query2 = function(input,output,disease_list,selected_nodes,ADJ,ADJ01,ADJ0
       output$disease_couple_table = renderDataTable({
         validate(need(nrow(disease_t)>0,"No connections with drugs"))
         disease_t = disease_t[,c(1,3)]
+        #disease_t = as.data.frame(disease_t)
+        #disease_t[,2] = as.numeric(as.vector(disease_t[,2]))
+        disease_t = disease_t[order(as.numeric(as.vector(disease_t[,2]))),]
         
         DT::datatable(disease_t,escape=FALSE,selection = "single") 
       })
