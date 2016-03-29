@@ -58,7 +58,7 @@ gene_sets_name = c("Positional Gene Sets","KEGG","Biocarta","Reactome","microRNA
 # load(paste(APP_PATH,"degree.RData",sep=""))
 # load(paste(APP_PATH,"KTDD_adjacency_red.RData",sep=""))
 
-load(paste(APP_PATH,"entities.RData",sep="")) #nano; drug; chemical; disease
+load(paste(APP_PATH,"unique_entities.RData",sep="")) #nano; drug; chemical; disease
 load(paste(APP_PATH,"nano_top_table.RData",sep=""))#toSave
 
 x <- org.Hs.egSYMBOL
