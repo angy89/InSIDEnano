@@ -52,7 +52,7 @@ couple_query3 = function(input,output,disease_list,selected_nodes,ADJ,ADJ01,ADJ0
     
     # moltiplicando la matrice ADJ_RW01 per la sua trasposta, ottengo l'intersezione del k-vicinato (che è una matrice simmetrica)
     # moltiplicando poi per ADJ risalgo ai pesi originali
-  #  W_ADJ = ADJ_RW01* t(ADJ_RW01)* sign(ADJ)
+   # W_ADJ = ADJ_RW01* t(ADJ_RW01)* sign(ADJ)
     
     incProgress(1, detail = "Removing edges under threshold...")
     
@@ -60,9 +60,9 @@ couple_query3 = function(input,output,disease_list,selected_nodes,ADJ,ADJ01,ADJ0
     
    # ADJ_RW = ADJ_RW * (ADJ_RW01* t(ADJ_RW01)) 
     neigh = ADJ_RW[which(ADJ_RW[,query_node]!=0),query_node]
-    tab = cbind(names(neigh),sign(ADJ[neigh,query_node]),neigh)    
+    tab = cbind(names(neigh),sign(ADJ[neigh,query_node]),neigh,round(ADJ01[neigh,query_node],2)*sign(ADJ[neigh,query_node]))    
 #tab = cbind(names(neigh),W_ADJ[names(neigh),query_node],neigh)
-    colnames(tab)=c("name","Weight","Rank")
+    colnames(tab)=c("name","Weight","Rank","UW")
     rownames(tab) = NULL
     tab = as.data.frame(tab)
     
@@ -75,10 +75,10 @@ couple_query3 = function(input,output,disease_list,selected_nodes,ADJ,ADJ01,ADJ0
     
     
     output$boxplot_statistics = renderPlot({
-      num_nano = as.numeric(nano_t[,2])
-      num_drug = as.numeric(drug_t[,2])
-      num_chem = as.numeric(chemical_t[,2])
-      num_dise = as.numeric(disease_t[,2])
+      num_nano = as.numeric(nano_t[,4])
+      num_drug = as.numeric(drug_t[,4])
+      num_chem = as.numeric(chemical_t[,4])
+      num_dise = as.numeric(disease_t[,4])
       
       nn_p = num_nano[num_nano>=0]
       nn_n = num_nano[num_nano<0]
@@ -100,10 +100,10 @@ couple_query3 = function(input,output,disease_list,selected_nodes,ADJ,ADJ01,ADJ0
     })
     
     output$barplot_statistics = renderPlot({
-      num_nano = as.numeric(nano_t[,2])
-      num_drug = as.numeric(drug_t[,2])
-      num_chem = as.numeric(chemical_t[,2])
-      num_dise = as.numeric(disease_t[,2])
+      num_nano = as.numeric(nano_t[,4])
+      num_drug = as.numeric(drug_t[,4])
+      num_chem = as.numeric(chemical_t[,4])
+      num_dise = as.numeric(disease_t[,4])
       
       nn_p = num_nano[num_nano>=0] /length(nano)
       nn_n = num_nano[num_nano<0]/length(nano)

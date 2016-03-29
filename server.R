@@ -181,7 +181,7 @@ shinyServer(function(input, output,session){
       })
       
       observeEvent(input$Go_couple,{        
-        couple_query3(input,output,disease_list,selected_nodes,ADJ,ADJ01_UNIFORM,ADJ_UNIFORM_RANK,
+        couple_query3(input,output,disease_list,selected_nodes,ADJ,ADJ_UNIFORM,ADJ_UNIFORM_RANK,
                       th_p = input$th_slider_couple/100,node_type,chemMat,
                       join10,g,g_geni2,
                       items_list)
