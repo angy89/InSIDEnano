@@ -41,8 +41,8 @@ shinyServer(function(input, output,session){
         load(paste(APP_PATH,"graph_without_genes_also_intra_classes_edges_network_estimation80_2.RData",sep=""))
         rm(W_ADJ)
         load(paste(APP_PATH,"W_ADJ_clr_all_subset_positive_and_negative.RData",sep="")) #W_ADJ; W2_ADJ
-        load(paste(APP_PATH,"network_without_genes_uniform.RData",sep="")) #ADJ01 #ADJ_UNIFORM
-        load(paste(APP_PATH,"RankedUniformNetwork.RData",sep="")) #ADJ01_RANK #ADJ_UNIFORM_RANK
+        load(paste(APP_PATH,"network_without_genes_uniform2.RData",sep="")) #ADJ01 #ADJ_UNIFORM
+        load(paste(APP_PATH,"RankedUniformNetwork2.RData",sep="")) #ADJ01_RANK #ADJ_UNIFORM_RANK
         
 #         cat("W_ADJ: ",length(which(W_ADJ==0)),"\n")
 # #         W_ADJ = aracne(abs(ADJ))
