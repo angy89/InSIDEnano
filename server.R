@@ -115,9 +115,14 @@ shinyServer(function(input, output,session){
         cat("waiting for input \n")
       
       observeEvent(input$Go, {
-        free_query(input,output,disease_list,selected_nodes,W_ADJ,
-                   th_p = input$th_slider/100,node_type,chemMat,join10,g,g_geni2,items_list) #in free_query.R,
+#         free_query(input,output,disease_list,selected_nodes,W_ADJ,
+#                    th_p = input$th_slider/100,node_type,chemMat,join10,g,g_geni2,items_list) #in free_query.R,
+        free_query2(input,output,disease_list,selected_nodes,ADJ,ADJ_UNIFORM,ADJ_UNIFORM_RANK,th_p = input$th_slider/100,node_type,chemMat,join10,g,g_geni2,items_list)
       }) #End Listener 1
+
+#       observeEvent(input$Check,{
+#         free_query_size(input,output,disease_list,selected_nodes,ADJ,ADJ_UNIFORM,ADJ_UNIFORM_RANK,th_p = input$th_slider/100,node_type,chemMat,join10,g,g_geni2,items_list)
+#       })
       
       #ANGELA
       observeEvent(input$Go2, {

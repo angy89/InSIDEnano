@@ -23,7 +23,9 @@ free_query_UI = function(input,output){
                                "Nano-Drug" = 8),selected = 1)
   })
   
-  
+  output$Check = renderUI({
+    actionButton(inputId = "Check",label  = "Check",icon("circle-arrow-right", lib = "glyphicon"))
+  })
   
   output$Go = renderUI({
     actionButton(inputId = "Go",label  = "Start",icon("circle-arrow-right", lib = "glyphicon"))

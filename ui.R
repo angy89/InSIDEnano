@@ -203,14 +203,18 @@ shinyUI(navbarPage("",
                                          column(6, uiOutput("th_slider"))
                                        ),
                                        fluidRow(
-                                         column(4, uiOutput("Go")),
-                                         column(4, uiOutput("refresh_free")),
-                                         column(4, uiOutput("ok"))
+                                         #column(3, uiOutput("Check")),
+                                         column(3, uiOutput("Go")),
+                                         column(3, uiOutput("refresh_free")),
+                                         column(3, uiOutput("ok"))
                                          
                                        )
                                      )
                               ),
-                              column(4,wellPanel(htmlOutput("infoFree")))
+                              column(4,
+                                     fluidRow(wellPanel(htmlOutput("infoFree"))),
+                                     fluidRow(wellPanel(htmlOutput("querySize")))
+                              )
                             ),
                             wellPanel(
                               fluidRow(column(8,uiOutput("plotTripel_total"))),
