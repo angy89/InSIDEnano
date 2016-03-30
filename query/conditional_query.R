@@ -1,5 +1,7 @@
 conditional_query2 = function(input,output,disease_list,selected_nodes,ADJ,ADJ01,ADJ01_RANK,th_p = input$th_slider/100,node_type,chemMat,join10,g,g_geni2,LOG_CONDITIONAL,items_list){
   output$info2_1 <- renderUI({HTML(info_text)}) 
+  ADJ = ADJ[rownames(ADJ01),colnames(ADJ01)]
+  
   CLIQUE_TYPE = input$clique_type
   if(DEBUGGING)
     cat("CLIQUE_TYPE", CLIQUE_TYPE, "\n")
@@ -32,10 +34,10 @@ conditional_query2 = function(input,output,disease_list,selected_nodes,ADJ,ADJ01
 #     incProgress(1, detail = "Thresholding...")
 #     THS = find_thresholds(W_ADJ,th_p = input$th_slider2/100 ) #in query_utilities.R
 #     
-#     incProgress(1, detail = "Removing edges under threshold...")
+    incProgress(1, detail = "Removing edges under threshold...")
 #     W_ADJ = apply_thresholds(W_ADJ,THS) #in query_utilities.R
 
-    nElem = round(nrow(ADJ01_RANK)*th_p) 
+    nElem = round(nrow(ADJ01_RANK)*th_p)
     
     ADJ_RW = ADJ01_RANK  
     ADJ_RW[ADJ_RW>nElem] = 0
@@ -45,7 +47,17 @@ conditional_query2 = function(input,output,disease_list,selected_nodes,ADJ,ADJ01
     
     # moltiplicando la matrice ADJ_RW01 per la sua trasposta, ottengo l'intersezione del k-vicinato (che è una matrice simmetrica)
     # moltiplicando poi per ADJ risalgo ai pesi originali
-    W_ADJ = ADJ_RW01* t(ADJ_RW01)* sign(ADJ)
+    WW_ADJ = ADJ_RW01* t(ADJ_RW01)* sign(ADJ)
+    ADJ_RW = ADJ_RW * (ADJ_RW01* t(ADJ_RW01)) 
+
+    
+    W_ADJ = round(ADJ01,2)*sign(WW_ADJ)
+
+    incProgress(1, detail = "Removing edges under threshold...")
+    
+    incProgress(1, detail = "Creating graph...")
+    
+  
     
     nano_qn_e = CQN$nano_query
     drug_qn_e = CQN$drug_query

@@ -33,7 +33,7 @@ clique_3_search = function(ADJ,type="NDD"){
       for(di in n_dis){
         
         and_sum = (ADJ[n,dr]!=0) & (ADJ[dr,di]!=0) & (ADJ[di,n]!=0)
-        cat("AND_SUM::::::::::: ",and_sum,"\n")
+        #cat("AND_SUM::::::::::: ",and_sum,"\n")
         if(and_sum){
           cliq = c(n,dr,di)
           names(cliq) = c(n,dr,di)
