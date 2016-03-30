@@ -2,7 +2,7 @@ range01 <- function(x){(x-min(x))/(max(x)-min(x))}
 
 couple_query3 = function(input,output,disease_list,selected_nodes,ADJ,ADJ01,ADJ01_RANK,th_p = input$th_slider/100,node_type,chemMat,join10,g,g_geni2,items_list){
   output$infoFree <- renderUI({HTML(info_free_query_text)}) 
-  
+  ADJ = ADJ[rownames(ADJ01),colnames(ADJ01)]
   withProgress(message = 'Progress...', min = 1,max = 10, {
     validate(need(input$disease_couple != "", "Please select a Disease"))
     validate(need(length(th_p)!=0,"Please select a th"))
@@ -61,7 +61,8 @@ couple_query3 = function(input,output,disease_list,selected_nodes,ADJ,ADJ01,ADJ0
     ADJ_RW = ADJ_RW * (ADJ_RW01* t(ADJ_RW01)) 
     neigh = ADJ_RW[which(ADJ_RW[,query_node]!=0),query_node]
     #tab = cbind(names(neigh),sign(ADJ[neigh,query_node]),neigh,round(ADJ01[neigh,query_node],2)*sign(ADJ[neigh,query_node]))    
-    tab = cbind(names(neigh),W_ADJ[names(neigh),query_node],neigh)
+    #tab = cbind(names(neigh),W_ADJ[names(neigh),query_node],neigh)
+    tab = cbind(names(neigh),W_ADJ[names(neigh),query_node],neigh,round(ADJ01[neigh,query_node],2)*sign(W_ADJ[names(neigh),query_node]))
     colnames(tab)=c("name","Weight","Rank","UW")
     rownames(tab) = NULL
     tab = as.data.frame(tab)
@@ -99,25 +100,25 @@ couple_query3 = function(input,output,disease_list,selected_nodes,ADJ,ADJ01,ADJ0
     })
     
     output$barplot_statistics = renderPlot({
-      num_nano = as.numeric(nano_t[,4])
-      num_drug = as.numeric(drug_t[,4])
-      num_chem = as.numeric(chemical_t[,4])
-      num_dise = as.numeric(disease_t[,4])
+      num_nano = as.numeric(as.vector(nano_t[,2]))
+      num_drug = as.numeric(as.vector(drug_t[,2]))
+      num_chem = as.numeric(as.vector(chemical_t[,2])) 
+      num_dise = as.numeric(as.vector(disease_t[,2]) )
       
-      nn_p = num_nano[num_nano>=0] /length(nano)
-      nn_n = num_nano[num_nano<0]/length(nano)
+      nn_p = length(num_nano[num_nano>=0]) /length(nano)
+      nn_n = length(num_nano[num_nano<0])/length(nano)
       
-      ndr_p = num_drug[num_drug>=0]/length(drugs)
-      ndr_n = num_drug[num_drug<0]/length(drugs)
+      ndr_p = length(num_drug[num_drug>=0])/length(drugs)
+      ndr_n = length(num_drug[num_drug<0])/length(drugs)
       
-      nc_p = num_chem[num_chem>=0]/length(chemical)
-      nc_n = num_chem[num_chem<0]/length(chemical)
+      nc_p = length(num_chem[num_chem>=0])/length(chemical)
+      nc_n = length(num_chem[num_chem<0])/length(chemical)
       
-      ndi_p = num_dise[num_dise>=0]/length(disease)
-      ndi_n = num_dise[num_dise<0]/length(disease)
+      ndi_p = length(num_dise[num_dise>=0])/length(disease)
+      ndi_n = length(num_dise[num_dise<0])/length(disease)
       
-      vect_p = c(length(nn_p),length(ndr_p),length(nc_p),length(ndi_p))
-      vect_n = c(length(nn_n),length(ndr_n),length(nc_n),length(ndi_n))
+      vect_p = c(nn_p,ndr_p,nc_p,ndi_p)
+      vect_n = c(nn_n,ndr_n,nc_n,ndi_n)
       par(mfrow=c(2,1),xpd=TRUE,oma = c(5,4,0,0) + 0.1,mar=c(1, 2, 2, 1) + 0.1)
       names(vect_n)= c("Nanos","Drugs","Chemicals","Diseases")
       barplot(vect_p,col="red",main = "Number of positive connections")      
