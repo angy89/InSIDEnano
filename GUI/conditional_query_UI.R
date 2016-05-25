@@ -24,7 +24,7 @@ conditionl_query_UI = function(input,output){
   })
   
   output$th_slider2 = renderUI({
-    sliderInput("th_slider2", label = "Strenght of Similarity", min = 10, max = 99, value = 99,step=1)
+    sliderInput("th_slider2", label = "Strenght of Similarity", min = 1, max = 99, value = 99,step=1)
   })
   
   output$percentuale_somma = renderUI({
